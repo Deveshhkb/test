@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Dingdong Poker Dice</title>
+
+    <link id="dynamicStyles" rel="stylesheet" href="">
+    <link id="favicon" rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+
+<body class="prevent-select">
+ <div id = "main_on_start" class="main_on_start">
+
+ </div>
+    <section id="fill" class="">
+       
+
+        <div id="fullscreenActive" style="visibility: hidden;">
+            <div class="wheel-scroll">
+                <!-- <img src="/v2/js/dingdong/newPokerDice/assets/common/full-screen-animation-click.gif" alt=""> -->
+            </div>
+        </div>
+
+        <div id="game_container" style="visibility: hidden;">
+            <div style="height: 1080px;display: flex;flex-direction: column;justify-content: space-between;">
+                <div id="top_landscape">
+                    <div>
+                        <div class="buttom-left ">
+                            <p class="landscape_view">DingDong Poker Dice Rp <span id="minBetValue2"></span></p>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="buttom-right">
+                            <p class="landscape_view" id="currentTime_playerid_l">08:00 ID : 12345</p>
+                        </div>
+                    </div>
+                </div>
+   
+                <!-- ....................................... -->
+                <div id='bg-patch' style="display: none;">
+                </div>
+
+
+                <div id="mobile_div" class="mobile">
+                
+                </div>
+            
+
+                <!-- add fav function end -->
+                 <!-- jackport popup  start-->
+                
+             <div class="marquee" id="marqueeContainer_bb" style="display: none;">
+            <div class="marquee-text"></div>
+            </div>
+        
+
+             <div id="invalidPopup" class="popupInput" data-i18n="game_section.invalidPopup" style="display : none" >
+                  Invalid input. <br> Please enter a value in multiples of 100.
+            </div>
+
+
+            
+
+                        <!-- <div class="click-text">
+                                <h2 id="click-content" data-i18n="video-loader_section.click_to_refresh">Click to Refresh
+                                </h2>
+                            </div> -->
+                    </div>
+                   
+
+  
+            </div>
+        </div>
+
+    </section>
+
+    <div id="scrolling" class="overlay02" style="visibility: hidden;">
+        <!-- <span id="hsize"></span> -->
+    </div>
+    <script>
+        var myDevice = "";
+        var myOrientation = ""
+        var loadingVar;
+        var loadingContainer;
+        var loadingBar;
+        var percentageElement;
+        var isloadingComplete = false;
+        var isFullScreenios = false;
+        var overlayDiv;
+      
+        
+        
+        let skipResize = false;
+
+        function isDeviceWidthInRange(minWidth, maxWidth) {
+            // Get the width of the device's screen
+            var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+            // Check if the width falls within the specified range
+            return screenWidth >= minWidth && screenWidth <= maxWidth;
+        }
+
+        // Usage example:
+        var isDeviceInTargetRange = isDeviceWidthInRange(0, (window.innerWidth || document.documentElement.clientWidth ||
+            document.body.clientWidth));
+        if (isDeviceInTargetRange) {} else {}
+
+        
+
+        /* Detect devices and browser */
+        var getBrowser = {
+            isUBrowser: /UBrowser/.test(navigator.userAgent) || /UCBrowser/.test(navigator.userAgent),
+            isAndroid: /Android/.test(navigator.userAgent),
+            isAppsAndroid: /apps-android/.test(navigator.userAgent),
+            isCordova: !!window.cordova,
+            isEdge: /Edge/.test(navigator.userAgent) || /EdgA/.test(navigator.userAgent),
+            isFirefox: /Firefox/.test(navigator.userAgent),
+            isChrome: /Google Inc/.test(navigator.vendor),
+            isChromeIOS: /CriOS/.test(navigator.userAgent),
+            isFirefoxIOS: /FxiOS/.test(navigator.userAgent),
+            isChromiumBased: !!window.chrome && !/Edge/.test(navigator.userAgent),
+            isIE: /Trident/.test(navigator.userAgent),
+            isIOS: /(iPhone|iPad|iPod)/.test(navigator.platform) || /(iPhone|iPad|iPod)/.test(navigator.userAgent),
+            isOpera: /OPR/.test(navigator.userAgent),
+            isSafari: /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent),
+            isTouchScreen: ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch,
+            isWebComponentsSupported: 'registerElement' in document && 'import' in document.createElement('link') &&
+                'content' in document.createElement('template'),
+            isiPhone8: /iPhone\s8/.test(navigator.userAgent)
+        };
+
+        navigator.sayswho = (function() {
+            var ua = navigator.userAgent,
+                tem,
+                M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+            if (/trident/i.test(M[1])) {
+                tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+                return 'IE ' + (tem[1] || '');
+            }
+            if (M[1] === 'Chrome') {
+                tem = ua.match(/\bOPR\/(\d+)/);
+                if (tem != null) return 'Opera ' + tem[1];
+            }
+            M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+            if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
+            return M.join(' ');
+        })();
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+
+        // Function to detect if the user is on a mobile device
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function iOSversion() {
+            if (/iP(hone|od|ad)/.test(navigator.platform)) {
+                // supports iOS 2.0 and later: <http://bit.ly/TJjs1V>
+                var v = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
+                return [parseInt(v[1], 10), parseInt(v[2], 10), parseInt(v[3] || 0, 10)];
+            } else {
+                return [0, 0, 0];
+            }
+        }
+
+        ver = iOSversion();
+
+        if (ver[0] >= 14) {
+            if (window.orientation === 0) {
+            } else if (window.orientation === 90) {
+            }
+            window.addEventListener("orientationchange", (event) => {
+                if (window.orientation === 0) {
+                }
+                if (window.orientation === 90) {
+                }
+            });
+        }
+
+        function checkiOSVersion(minVersion, callback) {
+            if (/iP(hone|od|ad)/.test(navigator.platform)) {
+                var v = (navigator.appVersion).match(/OS (\d+)_(\d+)_?(\d+)?/);
+                if (v !== null && parseInt(v[1], 10) >= minVersion) {
+                    callback(v);
+                }
+            }
+        }
+
+        checkiOSVersion(14, function(version) {
+            if (window.orientation === 0) {
+                //alert("iOS version specific orientation: " + window.orientation);
+            } else if (window.orientation === 90) {
+                //alert("iOS version specific orientation: " + window.orientation);
+            }
+            window.addEventListener("orientationchange", (event) => {
+                if (window.orientation === 0) {
+                    //alert("iOS version specific change: " + window.orientation);
+                }
+                if (window.orientation === 90) {
+                    //alert("iOS version specific change: " + window.orientation);
+                }
+            });
+        });
+        // Function to handle orientation changes
+        function handleOrientationChange(txt) {
+            skipResize = false;
+            // alert("handleOrientationChange");
+            var landscapeStylesheet = document.getElementById('landscape-stylesheet');
+            if (window.orientation === 0) {
+                if (myDevice == "mobile" && (getBrowser.isIOS || getBrowser.isAndroid)) {
+                    document.getElementById("buttom").style.bottom = "5%";
+                    document.getElementById("top_landscape").style.top = "96%";
+                    document.getElementById("top_landscape").style.display = "block";
+                    $(".prevent-select-bal").show();
+                    $(".mo_balance").show();
+                    $(".prevent-select-bal-l").hide();
+                    $(".mo_balance_l").hide();
+                    // document.getElementById("hkb_logo_id").style.width = "65%";
+                    landscapeStylesheet.enabled = false;
+                }
+                myOrientation = "portrait";
+                if (getBrowser.isIOS) {
+                    //isFullScreenios = true;
+                    document.getElementById("fullscreen-loading-patch").style.display = "block";
+                }
+                if (txt != "onload") {
+                    onOrientationChanged(myOrientation);
+                }
+                // alert("Portrait orientation");
+            } else {
+                if (myDevice == "mobile" && (getBrowser.isIOS || getBrowser.isAndroid)) {
+                    document.getElementById("buttom").style.bottom = "3%";
+                    document.getElementById("top_landscape").style.top = "0%";
+                }
+                if (myDevice == "mobile" && getBrowser.isAndroid && (navigator.userAgent.indexOf("OPR/") >= 0)) {
+                    // document.getElementById("hkb_logo_id").style.width = "20%";
+                    //document.querySelector(".wheel-scroll").style.height = "180%";
+                } else if (myDevice == "mobile" && getBrowser.isAndroid && getBrowser.isChrome) {
+                    // document.getElementById("hkb_logo_id").style.width = "20%";
+                    //document.querySelector(".wheel-scroll").style.height = "185vh";
+                }
+                myOrientation = "landscape";
+                if (txt != "onload") {
+                    onOrientationChanged(myOrientation);
+                }
+            }
+        }
+
+        // Check if the user is on a mobile device
+        if (isMobileDevice()) {
+            myDevice = "mobile";
+            window.addEventListener("orientationchange", handleOrientationChange);
+            handleOrientationChange("onload");
+        } else {
+            myOrientation = "";
+            myDevice = "desktop";
+        }
+
+        // Additional code to track progress for specific resources (e.g., images)
+        var loadedResources = 0;
+        const gameAssets = [
+           '',
+  ];
+
+
+  var totalResources = gameAssets.length;
+  async function simulateLoading() {
+    for (let asset of gameAssets) {
+      await loadSingleAsset(asset);
+      loadedResources++;
+      const percentage = Math.floor((loadedResources / totalResources) * 100);
+      updateLoadingBar(percentage);
+    }
+
+    isloadingComplete = true;
+    load_index();
+  }
+
+  function loadSingleAsset(src) {
+    return new Promise((resolve) => {
+      const ext = src.split('.').pop().toLowerCase();
+
+      if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+        const img = new Image();
+        img.onload = img.onerror = resolve;
+        img.src = src;
+      } else if (ext === 'js') {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = script.onerror = resolve;
+        document.head.appendChild(script);
+      } else {
+        // Other file types (like JSON, etc.)
+        fetch(src).then(resolve).catch(resolve);
+      }
+    });
+  }
+
+  document.onreadystatechange = async function () {
+
+    if (document.readyState === "interactive") {
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (isloadingComplete) {
+      load_index();
+    }
+  });
+
+
+  function updateLoadingBar(percentage) {
+    loadingBar.style.width = percentage + '%';
+    percentageElement.style.left = percentage + '%';
+    percentageElement.innerText = Math.round(percentage) + '%';
+  }
+        // Function to be executed when HTML content is loaded
+        function onDOMContentLoaded() {
+            startGameSession();
+            $('[data-toggle="tooltip"]').tooltip();
+            initialize();
+        }
+        // Function to be executed when all resources, including Three.js, are loaded
+        function onPageLoaded() {
+            load_index()
+        }
+        var index_flag = 0;
+        var detectModel = "high";
+
+        function load_index() {
+          
+            if (index_flag == 0) {
+                index_flag = 1;
+                if (myDevice == "desktop") {
+                    const operastyle = document.createElement('style');
+                    if (getBrowser.isOpera) {
+                        operastyle.textContent = `
+                            input[type="range"]::-webkit-slider-thumb {
+                                background-color: #0080FF !important; /* Change to your desired color */
+                            }
+                        `;
+                    }
+                    document.head.appendChild(operastyle);
+                }
+            }
+
+        }
+
+        // Attach event listeners
+        document.addEventListener('DOMContentLoaded', onDOMContentLoaded);
+        window.addEventListener('load', onPageLoaded);
+
+        const overlay = document.getElementById('scrolling');
+        var initialTouchY = null;
+            var initialHeight = overlay.clientHeight;
+            var minHeight = 100;
+           
+            overlay.addEventListener('touchstart', function(event) {
+                initialTouchY = event.touches[0].clientY;
+            });
+
+            overlay.addEventListener('touchmove', function(event) {
+                if (initialTouchY !== null) {
+                    var touchY = event.touches[0].clientY;
+                    var touchDeltaY = initialTouchY - touchY;
+
+                    var newHeight = initialHeight + touchDeltaY;
+                    if (newHeight >= minHeight && newHeight <= 300 * window.innerHeight / 100) {
+                        overlay.style.height = `${newHeight}px`;
+                    }
+                }
+            });
+
+            overlay.addEventListener('touchend', function(event) {
+                initialTouchY = null;
+                initialHeight = overlay.clientHeight;
+                //document.getElementById("hsize").innerHTML = initialHeight + " " + overlay.style.height + " " +window.innerHeight;
+                if(window.innerHeight > 460){
+                    if (overlay.clientHeight >= window.innerHeight - 50) {
+                        document.getElementById("fullscreen-loading-patch").style.display = "none";
+
+                    } else if (overlay.clientHeight <= minHeight) {
+                        alert('Overlay is at minimum height');
+                    } else {
+                        alert('not full screen or minimum height');
+                    }
+                }
+                
+            });
+
+        function fillDiv(div, proportional) {
+            
+            var currentWidth = div.outerWidth();
+            var currentHeight = div.outerHeight();
+
+            var availableHeight = window.innerHeight;
+            var availableWidth = window.innerWidth;
+
+            var scaleX = availableWidth / currentWidth;
+            var scaleY = availableHeight / currentHeight;
+
+            if (proportional) {
+                scaleX = Math.min(scaleX, scaleY);
+                scaleY = scaleX;
+            }
+            // div.css({width:scaleX});
+            var translationX = Math.round((availableWidth - currentWidth * scaleX) / 2);
+            var translationY = Math.round((availableHeight - currentHeight * scaleY) / 2);
+
+            var newScale = Math.min(scaleX, scaleY);
+            var prevScale = div.data('prevScale');
+            var tolerance = 0.01;
+
+
+            if (prevScale !== undefined) {
+               // var prevScale = div.data('prevScale');
+                if (newScale > prevScale + tolerance) {
+                    div.data('scaleStatus', 'up');
+                    //alert("up");
+                    if (getBrowser.isIOS) {
+                        isFullScreenios = true;
+                        //document.getElementById("hsize").innerHTML = initialViewportHeight + " " + window.innerHeight;
+                        if(myOrientation == "landscape"){
+                            document.getElementById("fullscreen-loading-patch").style.display = "none";
+                        }   
+                    }
+                } else if (newScale < prevScale - tolerance) {
+                    div.data('scaleStatus', 'down');
+                    if (getBrowser.isIOS) {
+                        //isFullScreenios = false;
+                        
+                        resetOverlay();
+                        //alert("fill");
+                        if(isTypeMsg){
+                            return;
+                        }
+                        document.getElementById("fullscreen-loading-patch").style.display = "block";
+                        document.getElementById("android-hand-cursor").style.display = "none";
+                        document.getElementById("ios-hand-cursor").style.display = "block";
+                        document.getElementById("fullscreen-loading-patch").style.zIndex = "99999";
+
+                        //document.getElementById("hsize").innerHTML = "BLOCK";
+                    }
+                } else {
+                    div.data('scaleStatus', 'unchanged');
+                }
+            }
+            // Store the current scale for the next comparison
+            div.data('prevScale', newScale);
+            
+            div.css({
+                position: "fixed",
+                left: "0px",
+                top: "0px",
+                "-webkit-transform": "translate(" +
+                    translationX +
+                    "px, " +
+                    translationY +
+                    "px) scale3d(" +
+                    scaleX +
+                    ", " +
+                    scaleY +
+                    ", 1)",
+                "-webkit-transform-origin": "0 0",
+            });
+        }
+
+        function onOrientationChanged(txt) {
+            var div = $("#fill");
+            if (txt == "portrait") {
+
+                div.removeClass("fill_wh_l");
+                div_vid.removeClass("v_wh_l");
+                div.addClass("fill_wh_p");
+                div_vid.addClass("v_wh_p");
+            } else {
+                document.getElementById("popup01").style.visibility = "hidden";
+                div.removeClass("fill_wh_p");
+                div_vid.removeClass("v_wh_p");
+
+                div.addClass("fill_wh_l");
+                div_vid.addClass("v_wh_l");
+            }
+        }
+
+        function initialize() {
+            var div = $("#fill");
+        
+            // on load set wrapper fit 1920 x 1080
+            
+            fillDiv(div, true);
+            
+            setTimeout(function() {
+                fillDiv(div, true);
+            }, 500)
+
+            setTimeout(function() {
+                document.getElementById("main_on_start").style.display = "none";
+                if (loadingVar) {
+                    loadingVar.style.visibility = "visible"; // change to visible after testing
+                }
+            }, 1000)
+
+            if (myDevice == "mobile") {
+                
+                if (myOrientation == "portrait") {
+                   
+                    div.addClass("fill_wh_p");
+                    div_vid.addClass("v_wh_p");
+
+                } else {
+
+                    div.addClass("fill_wh_l");
+                    div_vid.addClass("v_wh_l");
+                }
+            } else {
+
+                div.addClass("fill_wh_d");
+                div_vid.addClass("v_wh_d");
+            }
+
+            function updateDimensions() {
+                fillDiv(div, true);
+                setTimeout(function() {
+                    fillDiv(div, true);
+                }, 500)
+            }
+            window.addEventListener("resize", updateDimensions);
+            $("#inputEditAmount").on("focus", function () {
+                skipResize = true;
+            });
+        }
+
+    </script>
+
+</body>
+
+</html>
