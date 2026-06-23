@@ -1,0 +1,52 @@
+.band {
+  position: relative;
+  isolation: isolate;
+  background-image: url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  padding: 64px 0;
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, rgba(10, 37, 64, 0.94), rgba(21, 101, 192, 0.82));
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.title {
+  color: #fff;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 800;
+  max-width: 560px;
+}
+.text {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.86);
+  max-width: 540px;
+}
+
+.actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  .inner {
+    flex-direction: column;
+    text-align: center;
+    align-items: stretch;
+  }
+  .actions {
+    justify-content: center;
+  }
+}

@@ -1,0 +1,195 @@
+/* ============================================================
+   SwiftLane Logistics — Global styles & design tokens
+   ============================================================ */
+
+:root {
+  /* Brand colours */
+  --color-blue-900: #06192e;
+  --color-blue-800: #0a2540;
+  --color-blue-700: #0d3a66;
+  --color-blue-600: #1565c0;
+  --color-blue-500: #2c7be5;
+  --color-blue-100: #e8f1fb;
+
+  --color-orange-600: #e56a00;
+  --color-orange-500: #ff7a00;
+  --color-orange-400: #ff9533;
+  --color-orange-100: #fff1e3;
+
+  --color-white: #ffffff;
+  --color-gray-50: #f6f8fb;
+  --color-gray-100: #eef2f7;
+  --color-gray-200: #dde4ed;
+  --color-gray-400: #97a3b4;
+  --color-gray-600: #5b6675;
+  --color-gray-800: #28323e;
+
+  /* Semantic */
+  --color-bg: var(--color-white);
+  --color-text: var(--color-gray-800);
+  --color-muted: var(--color-gray-600);
+  --color-primary: var(--color-blue-600);
+  --color-accent: var(--color-orange-500);
+
+  /* Typography */
+  --font-heading: 'Poppins', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* Layout */
+  --container: 1200px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+
+  --shadow-sm: 0 2px 8px rgba(10, 37, 64, 0.06);
+  --shadow-md: 0 12px 30px rgba(10, 37, 64, 0.1);
+  --shadow-lg: 0 24px 60px rgba(10, 37, 64, 0.16);
+
+  --header-height: 76px;
+  --transition: 0.25s ease;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  line-height: 1.2;
+  color: var(--color-blue-800);
+  font-weight: 700;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-orange-400);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Layout helpers ---------- */
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section {
+  padding: 72px 0;
+}
+
+.section--tight {
+  padding: 48px 0;
+}
+
+.section--alt {
+  background: var(--color-gray-50);
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+/* Visually hidden but accessible to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 2000;
+  background: var(--color-orange-500);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: top var(--transition);
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+/* ---------- Scroll-reveal animation utility ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ---------- Responsive type scale ---------- */
+@media (max-width: 600px) {
+  .section {
+    padding: 52px 0;
+  }
+}

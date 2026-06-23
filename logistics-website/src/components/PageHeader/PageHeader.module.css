@@ -1,0 +1,59 @@
+.header {
+  position: relative;
+  background-image: url('https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  padding: 86px 0 70px;
+  isolation: isolate;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, rgba(6, 25, 46, 0.92), rgba(13, 58, 102, 0.78));
+}
+
+.inner {
+  text-align: center;
+}
+
+.title {
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+}
+
+.subtitle {
+  margin: 14px auto 0;
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.08rem;
+}
+
+.breadcrumb {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+.breadcrumb a {
+  color: var(--color-orange-400);
+}
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.85);
+}
+.crumb svg {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+}

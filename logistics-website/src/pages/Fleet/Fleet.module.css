@@ -1,0 +1,116 @@
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.highlight {
+  text-align: center;
+  background: var(--color-blue-100);
+  border-radius: var(--radius-md);
+  padding: 26px 16px;
+  transition: transform var(--transition);
+}
+.highlight:hover {
+  transform: translateY(-4px);
+}
+.highlight strong {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 2rem;
+  color: var(--color-blue-700);
+  line-height: 1;
+}
+.highlight span {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px;
+}
+
+/* Capacity table */
+.tableWrap {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  background: #fff;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+}
+.table thead {
+  background: var(--color-blue-800);
+  color: #fff;
+}
+.table th {
+  text-align: left;
+  padding: 16px 22px;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+}
+.table td {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--color-gray-100);
+  color: var(--color-gray-800);
+}
+.table tbody tr:hover {
+  background: var(--color-gray-50);
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+@media (max-width: 980px) {
+  .highlights {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  /* Responsive stacked table */
+  .table {
+    min-width: 0;
+  }
+  .table thead {
+    display: none;
+  }
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+  .table tr {
+    border-bottom: 8px solid var(--color-gray-50);
+    padding: 8px 0;
+  }
+  .table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--color-gray-100);
+    padding: 12px 20px;
+    text-align: right;
+  }
+  .table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--color-blue-700);
+    text-align: left;
+  }
+}
