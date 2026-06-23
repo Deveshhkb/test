@@ -3,6 +3,9 @@ import { siteConfig } from '@/lib/config';
 import { getAllTempleSlugs } from '@/services/temple.service';
 import { getAllBlogSlugs } from '@/services/content.service';
 
+// Required so the route can be emitted as a static file during `output: export`.
+export const dynamic = 'force-static';
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteConfig.url;
   const now = new Date();
