@@ -1,11 +1,20 @@
 // Central site configuration used across SEO, navigation and the footer.
 
+// Canonical site origin used for metadataBase, robots and every sitemap URL.
+// Override per environment with NEXT_PUBLIC_SITE_URL (e.g. a custom domain or
+// Vercel URL). Defaults to the GitHub Pages deployment configured in
+// next.config.mjs so crawlers and shared links resolve to the live site.
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://deveshhkb.github.io/test').replace(
+  /\/$/,
+  '',
+);
+
 export const siteConfig = {
   name: 'Ayodhya Tirtham',
   tagline: 'Premium Spiritual Pilgrimage Journeys',
   description:
     'Ayodhya Tirtham is a premium pilgrimage tourism platform offering curated temple darshans, sacred yatras, festivals and spiritual wellness retreats across India.',
-  url: 'https://ayodhya-tirtham.example.com',
+  url: siteUrl,
   ogImage: 'https://images.unsplash.com/photo-1604608672516-f1b9b1d37076?auto=format&fit=crop&w=1200&q=80',
   keywords: [
     'pilgrimage tourism',

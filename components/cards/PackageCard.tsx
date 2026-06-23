@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FiClock, FiMapPin, FiCheck } from 'react-icons/fi';
 import type { TourPackage } from '@/types';
@@ -65,12 +66,12 @@ export default function PackageCard({ pkg, index = 0 }: { pkg: TourPackage; inde
           ))}
         </ul>
 
-        <a
-          href={`#book-${pkg.slug}`}
+        <Link
+          href={`/packages?pkg=${pkg.slug}#book`}
           className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-saffron-500 to-gold-500 px-6 py-3 text-sm font-semibold text-white shadow-gold transition-all hover:shadow-gold-lg"
         >
           Book This Yatra
-        </a>
+        </Link>
       </div>
     </motion.article>
   );

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getBlogPosts } from '@/services/content.service';
 import PageHero from '@/components/ui/PageHero';
@@ -19,7 +20,9 @@ export default async function BlogPage() {
         crumbs={[{ label: 'Blog' }]}
         image="https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1920&q=80"
       />
-      <BlogList posts={posts} />
+      <Suspense fallback={<div className="section container">Loading articles…</div>}>
+        <BlogList posts={posts} />
+      </Suspense>
     </>
   );
 }

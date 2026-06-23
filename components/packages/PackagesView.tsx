@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FiCheckCircle } from 'react-icons/fi';
 import type { TourPackage } from '@/types';
@@ -9,8 +10,21 @@ import PackageCard from '@/components/cards/PackageCard';
 import { formatPrice } from '@/utils';
 
 export default function PackagesView({ packages }: { packages: TourPackage[] }) {
-  const [selected, setSelected] = useState(packages[0]?.slug ?? '');
+  const params = useSearchParams();
+  const requested = params.get('pkg');
+
+  const [selected, setSelected] = useState(
+    () => (requested && packages.some((p) => p.slug === requested) ? requested : packages[0]?.slug) ?? '',
+  );
   const [booked, setBooked] = useState(false);
+
+  // Preselect (and keep in sync with) the package requested via ?pkg=slug so a
+  // "Book This Yatra" click from any card lands on that package's booking form.
+  useEffect(() => {
+    if (requested && packages.some((p) => p.slug === requested)) {
+      setSelected(requested);
+    }
+  }, [requested, packages]);
 
   const active = packages.find((p) => p.slug === selected) ?? packages[0];
 
@@ -26,7 +40,7 @@ export default function PackagesView({ packages }: { packages: TourPackage[] }) 
         {/* Itinerary + booking */}
         {active && (
           <motion.div
-            id={`book-${active.slug}`}
+            id="book"
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"

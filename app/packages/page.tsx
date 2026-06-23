@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getPackages } from '@/services/content.service';
 import PageHero from '@/components/ui/PageHero';
@@ -20,7 +21,9 @@ export default async function PackagesPage() {
         crumbs={[{ label: 'Packages' }]}
         image="https://images.unsplash.com/photo-1606298855672-3efb63017be8?auto=format&fit=crop&w=1920&q=80"
       />
-      <PackagesView packages={packages} />
+      <Suspense fallback={<div className="section container">Loading packages…</div>}>
+        <PackagesView packages={packages} />
+      </Suspense>
     </>
   );
 }

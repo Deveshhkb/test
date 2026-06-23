@@ -1,25 +1,33 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { FiSearch } from 'react-icons/fi';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { FiSearch, FiX } from 'react-icons/fi';
 import type { BlogPost } from '@/types';
 import { blogCategories } from '@/lib/data/blog';
 import BlogCard from '@/components/cards/BlogCard';
 import { cn } from '@/utils';
 
 export default function BlogList({ posts }: { posts: BlogPost[] }) {
+  const router = useRouter();
+  const params = useSearchParams();
+  const tag = params.get('tag');
+
   const [category, setCategory] = useState('All');
   const [query, setQuery] = useState('');
+
+  const clearTag = () => router.push('/blog');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return posts.filter((p) => {
+      const matchTag = !tag || p.tags.includes(tag);
       const matchCat = category === 'All' || p.category === category;
       const matchQuery =
         !q || p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q);
-      return matchCat && matchQuery;
+      return matchTag && matchCat && matchQuery;
     });
-  }, [posts, category, query]);
+  }, [posts, tag, category, query]);
 
   return (
     <section className="section">
@@ -52,6 +60,20 @@ export default function BlogList({ posts }: { posts: BlogPost[] }) {
             />
           </span>
         </div>
+
+        {tag && (
+          <div className="mb-6 flex items-center justify-center gap-2 text-sm text-royal-900/70">
+            <span>
+              Showing articles tagged <span className="font-semibold text-royal-950">#{tag}</span>
+            </span>
+            <button
+              onClick={clearTag}
+              className="inline-flex items-center gap-1 rounded-full bg-gold-100 px-3 py-1 font-medium text-gold-700 transition-colors hover:bg-gold-200"
+            >
+              <FiX /> Clear
+            </button>
+          </div>
+        )}
 
         {filtered.length === 0 ? (
           <div className="rounded-3xl bg-gold-50 py-20 text-center">

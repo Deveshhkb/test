@@ -20,7 +20,19 @@ export default function EventsList({ events }: { events: EventItem[] }) {
     [filter, events],
   );
 
-  const featured = events.find((e) => e.featured) ?? events[0];
+  // Highlight the soonest *upcoming* featured event (events arrive sorted by
+  // date ascending). Fall back to the next upcoming event, then to the most
+  // recent one, so the hero never shows a stale "Happening now" countdown.
+  const featured = useMemo(() => {
+    const now = Date.now();
+    const upcoming = events.filter((e) => +new Date(e.date) >= now);
+    return (
+      upcoming.find((e) => e.featured) ??
+      upcoming[0] ??
+      events.find((e) => e.featured) ??
+      events[events.length - 1]
+    );
+  }, [events]);
 
   return (
     <section className="section">
