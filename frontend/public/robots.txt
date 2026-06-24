@@ -1,0 +1,13 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
+
+# Host
+Host: https://www.ayodhyatirtham.com
+
+# Sitemaps
+Sitemap: https://www.ayodhyatirtham.com/sitemap.xml

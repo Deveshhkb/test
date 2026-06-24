@@ -1,0 +1,49 @@
+{
+  "brand": "অযোধ্যা তীর্থম্",
+  "tagline": "পবিত্র যাত্রা, দিব্য স্মৃতি",
+  "nav": {
+    "home": "হোম",
+    "destinations": "গন্তব্য",
+    "temples": "মন্দির",
+    "packages": "ট্যুর প্যাকেজ",
+    "hotels": "হোটেল",
+    "cabs": "ক্যাব",
+    "gallery": "গ্যালারি",
+    "blog": "ব্লগ",
+    "about": "আমাদের সম্পর্কে",
+    "contact": "যোগাযোগ",
+    "login": "লগইন",
+    "register": "নিবন্ধন",
+    "dashboard": "ড্যাশবোর্ড",
+    "logout": "লগআউট"
+  },
+  "hero": {
+    "title": "আপনার আধ্যাত্মিক যাত্রা বুক করুন",
+    "subtitle": "অযোধ্যা, বারাণসী, প্রয়াগরাজ এবং ভারতের পবিত্রতম তীর্থস্থানের দিব্যতা উপভোগ করুন।",
+    "searchPlaceholder": "গন্তব্য, মন্দির বা প্যাকেজ খুঁজুন...",
+    "ctaPrimary": "প্যাকেজ দেখুন",
+    "ctaSecondary": "আমার যাত্রা পরিকল্পনা করুন"
+  },
+  "common": {
+    "bookNow": "এখনই বুক করুন",
+    "enquireNow": "অনুসন্ধান করুন",
+    "viewDetails": "বিস্তারিত দেখুন",
+    "readMore": "আরও পড়ুন",
+    "viewAll": "সব দেখুন",
+    "search": "খুঁজুন",
+    "filter": "ফিল্টার",
+    "sort": "সাজান",
+    "from": "থেকে",
+    "submit": "জমা দিন"
+  },
+  "sections": {
+    "featuredDestinationsTitle": "বিশেষ গন্তব্য",
+    "popularPackagesTitle": "জনপ্রিয় ট্যুর প্যাকেজ",
+    "whyChooseUsTitle": "কেন আমাদের বেছে নেবেন",
+    "testimonialsTitle": "তীর্থযাত্রীরা যা বলেন",
+    "galleryTitle": "দিব্যতার ঝলক",
+    "blogTitle": "আমাদের ব্লগ থেকে",
+    "contactCtaTitle": "আপনার পবিত্র যাত্রা শুরু করতে প্রস্তুত?",
+    "contactCtaButton": "বিনামূল্যে কোট নিন"
+  }
+}

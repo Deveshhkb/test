@@ -1,0 +1,49 @@
+{
+  "brand": "અયોધ્યા તીર્થમ્",
+  "tagline": "પવિત્ર યાત્રાઓ, દિવ્ય સ્મૃતિઓ",
+  "nav": {
+    "home": "હોમ",
+    "destinations": "સ્થળો",
+    "temples": "મંદિરો",
+    "packages": "ટૂર પેકેજ",
+    "hotels": "હોટેલ",
+    "cabs": "કેબ",
+    "gallery": "ગેલેરી",
+    "blog": "બ્લોગ",
+    "about": "અમારા વિશે",
+    "contact": "સંપર્ક",
+    "login": "લોગિન",
+    "register": "રજિસ્ટર",
+    "dashboard": "ડેશબોર્ડ",
+    "logout": "લોગઆઉટ"
+  },
+  "hero": {
+    "title": "તમારી આધ્યાત્મિક યાત્રા બુક કરો",
+    "subtitle": "અયોધ્યા, વારાણસી, પ્રયાગરાજ અને ભારતના પવિત્રતમ તીર્થસ્થાનોની દિવ્યતાનો અનુભવ કરો.",
+    "searchPlaceholder": "સ્થળો, મંદિરો અથવા પેકેજ શોધો...",
+    "ctaPrimary": "પેકેજ જુઓ",
+    "ctaSecondary": "મારી યાત્રા બનાવો"
+  },
+  "common": {
+    "bookNow": "હમણાં બુક કરો",
+    "enquireNow": "પૂછપરછ કરો",
+    "viewDetails": "વિગતો જુઓ",
+    "readMore": "વધુ વાંચો",
+    "viewAll": "બધું જુઓ",
+    "search": "શોધો",
+    "filter": "ફિલ્ટર",
+    "sort": "ક્રમમાં",
+    "from": "થી",
+    "submit": "સબમિટ કરો"
+  },
+  "sections": {
+    "featuredDestinationsTitle": "વિશેષ સ્થળો",
+    "popularPackagesTitle": "લોકપ્રિય ટૂર પેકેજ",
+    "whyChooseUsTitle": "અમને કેમ પસંદ કરો",
+    "testimonialsTitle": "શ્રદ્ધાળુઓ શું કહે છે",
+    "galleryTitle": "દિવ્યતાની ઝલક",
+    "blogTitle": "અમારા બ્લોગથી",
+    "contactCtaTitle": "તમારી પવિત્ર યાત્રા શરૂ કરવા તૈયાર છો?",
+    "contactCtaButton": "મફત ક્વોટ મેળવો"
+  }
+}

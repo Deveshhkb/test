@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #ff7a00;
+  --color-secondary: #d4af37;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-white text-ink font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5 {
+    @apply font-heading font-semibold tracking-tight;
+  }
+  ::selection {
+    @apply bg-primary/20 text-primary-700;
+  }
+}
+
+@layer components {
+  .container-px {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white shadow-glow hover:bg-primary-600 focus:ring-primary;
+  }
+  .btn-secondary {
+    @apply btn bg-secondary text-ink hover:bg-secondary-600 focus:ring-secondary;
+  }
+  .btn-outline {
+    @apply btn border-2 border-white/80 text-white hover:bg-white hover:text-ink;
+  }
+  .btn-ghost {
+    @apply btn border border-gray-200 bg-white text-ink hover:border-primary hover:text-primary;
+  }
+  .card {
+    @apply overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-gray-100 transition-all duration-300;
+  }
+  .section {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+  .section-eyebrow {
+    @apply mb-2 inline-block text-sm font-semibold uppercase tracking-widest text-primary;
+  }
+  .section-title {
+    @apply text-3xl font-bold text-ink sm:text-4xl;
+  }
+  .input {
+    @apply w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-gray-700;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700;
+  }
+}
+
+/* Lightweight scroll-reveal used as a no-JS-dependency fallback */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+/* Swiper overrides */
+.swiper-pagination-bullet-active {
+  background: var(--color-primary) !important;
+}
+.swiper-button-next,
+.swiper-button-prev {
+  color: var(--color-primary) !important;
+}
