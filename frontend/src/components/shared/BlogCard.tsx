@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { FaRegClock, FaCalendarAlt } from 'react-icons/fa';
 import type { BlogPost } from '@/lib/types';
-import { localize } from '@/lib/localize';
+import { localize, formatDate } from '@/lib/localize';
 
 export default function BlogCard({ post }: { post: BlogPost }) {
   const { t, i18n } = useTranslation();
@@ -19,7 +19,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
       </Link>
       <div className="flex flex-1 flex-col p-5">
         <div className="mb-2 flex items-center gap-4 text-xs text-gray-400">
-          <span className="flex items-center gap-1"><FaCalendarAlt className="h-3 w-3" /> {new Date(post.date).toLocaleDateString()}</span>
+          <span className="flex items-center gap-1"><FaCalendarAlt className="h-3 w-3" /> {formatDate(post.date)}</span>
           <span className="flex items-center gap-1"><FaRegClock className="h-3 w-3" /> {post.readTime} {t('blog.minRead')}</span>
         </div>
         <h3 className="font-heading text-lg font-semibold text-ink">

@@ -18,3 +18,16 @@ export function formatINR(amount: number): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+/**
+ * Deterministic date formatting (fixed locale + UTC) so server and client render
+ * identical text and avoid hydration mismatches.
+ */
+export function formatDate(date: string | Date): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(date));
+}

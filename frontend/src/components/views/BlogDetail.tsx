@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { FaRegClock, FaCalendarAlt, FaUser, FaTag } from 'react-icons/fa';
 import type { BlogPost } from '@/lib/types';
-import { localize } from '@/lib/localize';
+import { localize, formatDate } from '@/lib/localize';
 import { blogs } from '@/data/content';
 import PageHeader from '@/components/shared/PageHeader';
 import BlogCard from '@/components/shared/BlogCard';
@@ -23,7 +23,7 @@ export default function BlogDetail({ post }: { post: BlogPost }) {
           <Reveal>
             <div className="mb-6 flex flex-wrap items-center gap-4 text-sm text-gray-400">
               <span className="flex items-center gap-1"><FaUser className="h-3 w-3" /> Ayodhya Tirtham</span>
-              <span className="flex items-center gap-1"><FaCalendarAlt className="h-3 w-3" /> {new Date(post.date).toLocaleDateString()}</span>
+              <span className="flex items-center gap-1"><FaCalendarAlt className="h-3 w-3" /> {formatDate(post.date)}</span>
               <span className="flex items-center gap-1"><FaRegClock className="h-3 w-3" /> {post.readTime} {t('blog.minRead')}</span>
               <span className="chip">{post.category}</span>
             </div>

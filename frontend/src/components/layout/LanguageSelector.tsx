@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaGlobe, FaChevronDown } from 'react-icons/fa';
 import { LANGUAGES } from '@/i18n/languages';
+import { LANG_STORAGE_KEY } from '@/i18n/config';
 
 export default function LanguageSelector({ light = false }: { light?: boolean }) {
   const { i18n } = useTranslation();
@@ -21,6 +22,7 @@ export default function LanguageSelector({ light = false }: { light?: boolean })
 
   const change = (code: string) => {
     i18n.changeLanguage(code);
+    localStorage.setItem(LANG_STORAGE_KEY, code); // persist choice across visits
     setOpen(false);
   };
 
