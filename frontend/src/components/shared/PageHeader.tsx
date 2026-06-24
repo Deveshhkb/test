@@ -11,7 +11,7 @@ const DEFAULT = 'https://images.unsplash.com/photo-1609920658906-8223bd289001?au
 /** Reusable inner-page hero banner with overlay. */
 export default function PageHeader({ title, subtitle, image = DEFAULT }: Props) {
   return (
-    <header className="relative flex h-[42vh] min-h-[280px] items-center justify-center overflow-hidden">
+    <header className="relative flex h-[42vh] min-h-[280px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#2a1500] via-primary-700 to-primary">
       <Image src={image} alt={title} fill priority className="object-cover" sizes="100vw" />
       <div className="absolute inset-0 bg-hero-gradient" />
       <div className="container-px relative z-10 text-center text-white">

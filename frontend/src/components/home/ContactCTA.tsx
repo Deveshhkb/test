@@ -8,7 +8,7 @@ import Reveal from '@/components/shared/Reveal';
 export default function ContactCTA() {
   const { t } = useTranslation();
   return (
-    <section className="relative overflow-hidden py-20">
+    <section className="relative overflow-hidden bg-gradient-to-br from-[#2a1500] via-primary-700 to-primary py-20">
       <Image
         src="https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1920&q=70"
         alt=""

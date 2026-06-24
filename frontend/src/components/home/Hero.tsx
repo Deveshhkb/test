@@ -39,8 +39,13 @@ export default function Hero() {
   );
 
   return (
-    <section ref={container} className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
-      {/* Background slider with smooth Ken Burns parallax */}
+    <section
+      ref={container}
+      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-gradient-to-br from-[#2a1500] via-primary-700 to-primary"
+    >
+      {/* Background slider with smooth Ken Burns parallax.
+          The section keeps a gradient background so the hero stays legible even
+          if the remote images are slow or blocked. */}
       <Swiper
         modules={[Autoplay, EffectFade, Pagination]}
         effect="fade"
