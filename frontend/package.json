@@ -2,6 +2,7 @@
   "name": "ayodhya-tirtham-frontend",
   "version": "1.0.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Next.js frontend for the Ayodhya Pilgrimage & Tourism platform",
   "scripts": {
     "dev": "next dev",

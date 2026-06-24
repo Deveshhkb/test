@@ -187,4 +187,9 @@ See [`backend/.env.example`](backend/.env.example) and
 
 ## License
 
-MIT
+**Proprietary — All Rights Reserved.**
+
+Copyright © 2026 Ayodhya Tirtham. This source code and all associated assets are
+the exclusive property of the owner. No part of this project may be copied,
+reproduced, modified, distributed, or used — in whole or in part — without prior
+written permission. See [`LICENSE`](LICENSE).
