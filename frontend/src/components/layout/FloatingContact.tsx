@@ -2,8 +2,8 @@
 
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
 
-const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '919999999999';
-const PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || '+919999999999';
+const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '917305064090';
+const PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || '+917305064090';
 
 /** Floating WhatsApp + Call buttons present on every page. */
 export default function FloatingContact() {

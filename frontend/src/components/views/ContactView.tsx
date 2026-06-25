@@ -6,15 +6,15 @@ import PageHeader from '@/components/shared/PageHeader';
 import Reveal from '@/components/shared/Reveal';
 import EnquiryForm from '@/components/shared/EnquiryForm';
 
-const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '919999999999';
+const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '917305064090';
 
 export default function ContactView() {
   const { t } = useTranslation();
 
   const cards = [
-    { Icon: FaPhoneAlt, label: t('contact.callUs'), value: '+91-99999-99999', href: 'tel:+919999999999' },
+    { Icon: FaPhoneAlt, label: t('contact.callUs'), value: '+91 73050 64090', href: 'tel:+917305064090' },
     { Icon: FaWhatsapp, label: t('contact.whatsapp'), value: 'Chat with us', href: `https://wa.me/${WHATSAPP}` },
-    { Icon: FaEnvelope, label: t('contact.emailUs'), value: 'info@ayodhyatirtham.com', href: 'mailto:info@ayodhyatirtham.com' },
+    { Icon: FaEnvelope, label: t('contact.emailUs'), value: 'deveshsingh3420@gmail.com', href: 'mailto:deveshsingh3420@gmail.com' },
     { Icon: FaMapMarkerAlt, label: t('contact.address'), value: 'Ram Path, Ayodhya, UP 224123' },
   ];
 

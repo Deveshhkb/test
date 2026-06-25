@@ -69,8 +69,8 @@ export default function Footer() {
             ))}
           </ul>
           <ul className="mt-5 space-y-2.5 text-sm text-gray-400">
-            <li className="flex items-center gap-2"><FaPhoneAlt className="h-3.5 w-3.5 text-primary" /> +91-99999-99999</li>
-            <li className="flex items-center gap-2"><FaEnvelope className="h-3.5 w-3.5 text-primary" /> info@ayodhyatirtham.com</li>
+            <li className="flex items-center gap-2"><FaPhoneAlt className="h-3.5 w-3.5 text-primary" /> +91 73050 64090</li>
+            <li className="flex items-center gap-2"><FaEnvelope className="h-3.5 w-3.5 text-primary" /> deveshsingh3420@gmail.com</li>
             <li className="flex items-start gap-2"><FaMapMarkerAlt className="mt-0.5 h-3.5 w-3.5 text-primary" /> Ram Path, Ayodhya, UP 224123</li>
           </ul>
         </div>
