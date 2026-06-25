@@ -12,7 +12,7 @@ const nextConfig = {
   },
   async rewrites() {
     // Proxy API calls to the backend during local development.
-    const api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const api = process.env.NEXT_PUBLIC_API_URL || 'https://api.ayodhyatour.cloudpunch.in/api';
     return [{ source: '/api/:path*', destination: `${api}/:path*` }];
   },
 };
