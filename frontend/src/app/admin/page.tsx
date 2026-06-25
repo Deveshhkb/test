@@ -7,6 +7,8 @@ import { FaUsers, FaSuitcase, FaRupeeSign, FaEnvelopeOpenText, FaBoxOpen, FaMapM
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { formatINR } from '@/lib/localize';
+import AdminResourceManager from '@/components/views/admin/AdminResourceManager';
+import { RESOURCE_CONFIGS, MODULE_TO_RESOURCE } from '@/components/views/admin/resourceConfigs';
 
 interface Stats {
   totalUsers: number;
@@ -33,6 +35,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState('');
+  const [activeResource, setActiveResource] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'admin')) router.push('/login');
@@ -54,6 +57,17 @@ export default function AdminPage() {
     { label: t('admin.revenue'), value: stats ? formatINR(stats.revenue) : '—', Icon: FaRupeeSign, color: 'bg-green-500' },
     { label: t('admin.newEnquiries'), value: stats?.newEnquiries ?? '—', Icon: FaEnvelopeOpenText, color: 'bg-secondary-600' },
   ];
+
+  // A module is open → show its CRUD manager instead of the dashboard.
+  if (activeResource && RESOURCE_CONFIGS[activeResource]) {
+    return (
+      <div className="bg-gray-50 pt-16">
+        <div className="container-px py-12">
+          <AdminResourceManager config={RESOURCE_CONFIGS[activeResource]} onBack={() => setActiveResource(null)} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 pt-16">
@@ -80,7 +94,11 @@ export default function AdminPage() {
         <h2 className="mb-4 mt-12 font-heading text-lg font-semibold">Modules</h2>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {MODULES.map(({ key, Icon }) => (
-            <button key={key} className="card group flex flex-col items-start gap-3 p-6 text-left transition hover:border-primary">
+            <button
+              key={key}
+              onClick={() => setActiveResource(MODULE_TO_RESOURCE[key])}
+              className="card group flex flex-col items-start gap-3 p-6 text-left transition hover:border-primary"
+            >
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-50 text-primary transition group-hover:bg-primary group-hover:text-white">
                 <Icon className="h-5 w-5" />
               </span>
