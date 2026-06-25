@@ -8,7 +8,7 @@ import { cabs } from '@/data/content';
 import { formatINR } from '@/lib/localize';
 import PageHeader from '@/components/shared/PageHeader';
 import Reveal from '@/components/shared/Reveal';
-import { api, getErrorMessage } from '@/lib/api';
+import { api, isNetworkError } from '@/lib/api';
 
 const TRIP_TYPES = ['oneWay', 'roundTrip', 'airport', 'railway'] as const;
 
@@ -31,7 +31,7 @@ export default function CabsView() {
       });
       setDone(true);
     } catch (err) {
-      if (getErrorMessage(err).toLowerCase().includes('network')) setDone(true);
+      if (isNetworkError(err)) setDone(true);
     }
   };
 

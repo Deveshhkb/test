@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaCheckCircle } from 'react-icons/fa';
-import { api, getErrorMessage } from '@/lib/api';
+import { api, getErrorMessage, isNetworkError } from '@/lib/api';
 
 interface Props {
   source?: string;
@@ -31,7 +31,7 @@ export default function EnquiryForm({ source = 'contact', subject = '', compact 
     } catch (err) {
       // The static demo can run without a backend; treat network errors as success
       // so the UX is still demonstrable, but surface real validation errors.
-      if (getErrorMessage(err).toLowerCase().includes('network')) {
+      if (isNetworkError(err)) {
         setStatus('success');
         setForm({ name: '', email: '', mobile: '', message: '' });
       } else {
