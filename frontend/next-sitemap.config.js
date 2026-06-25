@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.ayodhyatirtham.com',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://ayodhyatour.cloudpunch.in',
   generateRobotsTxt: true,
   sitemapSize: 7000,
   changefreq: 'weekly',
@@ -10,7 +10,7 @@ module.exports = {
       { userAgent: '*', allow: '/', disallow: ['/admin', '/dashboard', '/login', '/register'] },
     ],
     additionalSitemaps: [
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.ayodhyatirtham.com'}/sitemap.xml`,
+      `${process.env.NEXT_PUBLIC_SITE_URL || 'https://ayodhyatour.cloudpunch.in'}/sitemap.xml`,
     ],
   },
   exclude: ['/dashboard', '/admin', '/login', '/register'],

@@ -7,7 +7,7 @@ Disallow: /login
 Disallow: /register
 
 # Host
-Host: https://www.ayodhyatirtham.com
+Host: https://ayodhyatour.cloudpunch.in
 
 # Sitemaps
-Sitemap: https://www.ayodhyatirtham.com/sitemap.xml
+Sitemap: https://ayodhyatour.cloudpunch.in/sitemap.xml

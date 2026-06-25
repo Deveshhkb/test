@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.ayodhyatirtham.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ayodhyatour.cloudpunch.in';
 const SITE_NAME = 'Ayodhya Tirtham';
 const DEFAULT_OG = `${SITE_URL}/og-image.jpg`;
 
