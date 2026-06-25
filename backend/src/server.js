@@ -18,12 +18,30 @@ app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL?.split(',') || '*',
-    credentials: true,
-  })
-);
+// ---- CORS ----
+// The production frontend domain and localhost are always allowed, plus any
+// extra origins from CLIENT_URL (comma-separated). This guarantees the live
+// site works even if CLIENT_URL is misconfigured on the server.
+const DEFAULT_ORIGINS = ['https://ayodhyatour.cloudpunch.in', 'http://localhost:3000'];
+const envOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const allowedOrigins = [...new Set([...DEFAULT_ORIGINS, ...envOrigins])];
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow non-browser requests (curl, server-to-server) that have no origin.
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // explicitly answer preflight requests
 
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
