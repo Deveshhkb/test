@@ -8,6 +8,9 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'i.pravatar.cc' },
+      // Uploaded images served by the backend
+      { protocol: 'https', hostname: 'api.ayodhyatour.cloudpunch.in' },
+      { protocol: 'http', hostname: 'localhost' },
     ],
   },
   async rewrites() {

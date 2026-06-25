@@ -8,15 +8,24 @@ import rateLimit from 'express-rate-limit';
 
 import connectDB from './config/db.js';
 import apiRoutes from './routes/index.js';
+import { uploadDir } from './middleware/upload.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
 
-// Security & performance middleware
-app.use(helmet());
+// Trust the reverse proxy (nginx) so HTTPS/IP detection works behind it.
+app.set('trust proxy', 1);
+
+// Security & performance middleware.
+// crossOriginResourcePolicy: cross-origin lets the frontend domain embed
+// uploaded images served from this API domain.
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded images
+app.use('/uploads', express.static(uploadDir));
 
 // ---- CORS ----
 // The production frontend domain and localhost are always allowed, plus any

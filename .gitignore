@@ -28,6 +28,9 @@ yarn-debug.log*
 next-env.d.ts
 .vercel
 
+# Uploaded files (user content)
+backend/uploads/
+
 # Sitemap (generated)
 frontend/public/sitemap*.xml
 frontend/public/robots.txt.bak

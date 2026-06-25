@@ -2,7 +2,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaTimes, FaArrowLeft } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaTimes, FaArrowLeft, FaUpload } from 'react-icons/fa';
 import { api, getErrorMessage } from '@/lib/api';
 import type { AdminField, ResourceConfig } from './resourceConfigs';
 
@@ -292,17 +292,7 @@ function FieldInput({ field, value, onChange }: { field: AdminField; value: any;
         </div>
       );
     case 'image':
-      return (
-        <div>
-          {label}
-          <input className="input" value={value ?? ''} onChange={(e) => onChange(e.target.value)} placeholder="https://..." />
-          {value ? (
-            // Plain img (not next/image) so any host works in the admin preview.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={value} alt="preview" className="mt-2 h-24 w-full rounded-lg object-cover" />
-          ) : null}
-        </div>
-      );
+      return <ImageField field={field} value={value} onChange={onChange} />;
     case 'localized':
       return (
         <div className="grid gap-2 sm:grid-cols-2">
@@ -337,4 +327,48 @@ function FieldInput({ field, value, onChange }: { field: AdminField; value: any;
         </div>
       );
   }
+}
+
+// Image field: upload a file from the device (returns a hosted URL) OR paste a URL.
+function ImageField({ field, value, onChange }: { field: AdminField; value: any; onChange: (v: any) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setErr('');
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const { data } = await api.post('/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      onChange(data.url);
+    } catch (e2) {
+      setErr(getErrorMessage(e2));
+    } finally {
+      setUploading(false);
+      e.target.value = ''; // allow re-selecting the same file
+    }
+  };
+
+  return (
+    <div>
+      <label className="label">{field.label}</label>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="btn-ghost cursor-pointer !py-2">
+          <FaUpload className="h-3.5 w-3.5" /> {uploading ? 'Uploading…' : 'Upload image'}
+          <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
+        </label>
+        <span className="text-xs text-gray-400">or paste a URL below</span>
+      </div>
+      <input className="input mt-2" value={value ?? ''} onChange={(e) => onChange(e.target.value)} placeholder="https://..." />
+      {err && <p className="mt-1 text-xs text-red-500">{err}</p>}
+      {value ? (
+        // Plain img (not next/image) so any host works in the admin preview.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={value} alt="preview" className="mt-2 h-24 w-full rounded-lg object-cover" />
+      ) : null}
+    </div>
+  );
 }

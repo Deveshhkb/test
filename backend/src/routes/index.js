@@ -14,6 +14,7 @@ import authRoutes from './authRoutes.js';
 import bookingRoutes from './bookingRoutes.js';
 import enquiryRoutes from './enquiryRoutes.js';
 import adminRoutes from './adminRoutes.js';
+import uploadRoutes from './uploadRoutes.js';
 
 const router = express.Router();
 
@@ -33,6 +34,9 @@ router.use('/testimonials', buildResourceRouter(Testimonial, { searchFields: ['n
 // Transactional
 router.use('/bookings', bookingRoutes);
 router.use('/enquiries', enquiryRoutes);
+
+// File uploads (admin)
+router.use('/upload', uploadRoutes);
 
 // Admin
 router.use('/admin', adminRoutes);
