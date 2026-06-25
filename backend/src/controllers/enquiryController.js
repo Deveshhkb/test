@@ -1,9 +1,23 @@
 import Enquiry from '../models/Enquiry.js';
 import { asyncHandler } from '../middleware/error.js';
+import { sendMail, enquiryEmailHtml } from '../utils/mailer.js';
 
 // @route POST /api/enquiries  (public)
 export const createEnquiry = asyncHandler(async (req, res) => {
   const enquiry = await Enquiry.create(req.body);
+
+  // Email the enquiry details to the admin inbox. Non-blocking: a mail failure
+  // must not stop the enquiry from being accepted.
+  const to = process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL;
+  if (to) {
+    sendMail({
+      to,
+      subject: `New Enquiry: ${enquiry.subject || 'General'} — ${enquiry.name}`,
+      replyTo: enquiry.email,
+      html: enquiryEmailHtml(enquiry),
+    }).catch((err) => console.error('✖ Enquiry email failed:', err.message));
+  }
+
   res.status(201).json({ success: true, message: 'Thank you! Our team will contact you shortly.', data: enquiry });
 });
 
