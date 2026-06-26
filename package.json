@@ -1,4 +1,18 @@
 {
+  "name": "novastyle-commerce",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NovaStyle — a production-ready fashion e-commerce platform (storefront, API, and admin).",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm --workspace apps/backend run dev",
+    "dev:frontend": "npm --workspace apps/frontend run dev",
+    "dev:admin": "npm --workspace apps/admin run dev",
+    "seed": "npm --workspace apps/backend run seed",
+    "build": "npm --workspace apps/frontend run build && npm --workspace apps/admin run build"
+  },
   "dependencies": {
     "gsap": "^3.13.0"
   }
