@@ -25,13 +25,23 @@ export async function generateMetadata({
 
 export default async function CategoryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ category: string }>;
+  searchParams: Promise<{ sub?: string }>;
 }) {
   const { category } = await params;
+  const { sub } = await searchParams;
   const known = KNOWN[category];
-  const title = known?.title || category;
-  const query = known?.query || { category };
+  let title = known?.title || category;
+  const query: Record<string, string> = { ...(known?.query || { category }) };
 
-  return <ProductListing title={title} baseQuery={query} />;
+  // A sub-category from the mega menu narrows results via text search
+  // (e.g. /men?sub=hoodies). "All ..." entries just show the full category.
+  if (sub && !sub.startsWith('all ')) {
+    query.search = sub;
+    title = `${known?.title || category} · ${sub.replace(/\b\w/g, (c) => c.toUpperCase())}`;
+  }
+
+  return <ProductListing key={sub || category} title={title} baseQuery={query} />;
 }

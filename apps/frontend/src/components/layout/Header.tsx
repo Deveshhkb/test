@@ -3,34 +3,123 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Heart, ShoppingBag, User, Menu, X, ChevronDown } from 'lucide-react';
+import {
+  Search,
+  Heart,
+  ShoppingBag,
+  User,
+  Menu,
+  X,
+  ChevronDown,
+  Tag,
+  Sparkles,
+  Shirt,
+  Footprints,
+  Wind,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import SearchOverlay from './SearchOverlay';
 
-const NAV = [
+interface MegaLink {
+  label: string;
+  href: string;
+}
+interface MegaColumn {
+  title: string;
+  links: MegaLink[];
+}
+interface Special {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+}
+interface NavItem {
+  label: string;
+  href: string;
+  columns?: MegaColumn[];
+  specials?: Special[];
+}
+
+// Build a category page link with an optional sub-category query.
+const sub = (base: string, q: string): MegaLink => ({
+  label: q,
+  href: `/${base}?sub=${encodeURIComponent(q.toLowerCase())}`,
+});
+
+const SPECIALS: Special[] = [
+  { label: 'Clearance Store', href: '/collections/best-sellers', icon: Tag },
+  { label: 'Buy 3 @ ₹1199', href: '/collections/trending', icon: Shirt },
+  { label: 'Buy 2 @ ₹1199', href: '/collections/trending', icon: Sparkles },
+  { label: 'Sneaker Drop', href: '/footwear', icon: Footprints },
+  { label: 'NovaAir Light', href: '/collections/new-arrivals', icon: Wind },
+];
+
+const NAV: NavItem[] = [
   {
     label: 'Men',
     href: '/men',
     columns: [
-      { title: 'Topwear', links: ['T-Shirts', 'Shirts', 'Hoodies', 'Sweatshirts'] },
-      { title: 'Bottomwear', links: ['Jeans', 'Chinos', 'Joggers', 'Shorts'] },
-      { title: 'Collections', links: ['New Arrivals', 'Best Sellers', 'Trending'] },
+      {
+        title: 'Topwear',
+        links: ['All Topwear', 'T-Shirts', 'Shirts', 'Polo T-Shirts', 'Oversized T-Shirts', 'Printed T-Shirts', 'Vests', 'Hoodies'].map((q) => sub('men', q)),
+      },
+      {
+        title: 'Bottomwear',
+        links: ['All Bottomwear', 'Joggers', 'Trackpants', 'Trousers & Pants', 'Jeans', 'Shorts', 'Boxers', 'Cargos'].map((q) => sub('men', q)),
+      },
+      {
+        title: 'Winterwear',
+        links: ['All Winterwear', 'Hoodies', 'Sweatshirts', 'Jackets', 'Sweaters', 'Co-ord Sets', 'Plus Size'].map((q) => sub('men', q)),
+      },
+      {
+        title: 'Innerwear & Loungewear',
+        links: ['All Loungewear', 'Vests', 'Joggers', 'Pajamas', 'Shorts', 'Boxers'].map((q) => sub('men', q)),
+      },
     ],
+    specials: SPECIALS,
   },
   {
     label: 'Women',
     href: '/women',
     columns: [
-      { title: 'Topwear', links: ['Tops', 'Crop Tops', 'Dresses', 'Co-ords'] },
-      { title: 'Bottomwear', links: ['Jeans', 'Skirts', 'Trousers'] },
-      { title: 'Collections', links: ['New Arrivals', 'Best Sellers', 'Trending'] },
+      {
+        title: 'Topwear',
+        links: ['All Topwear', 'Tops', 'T-Shirts', 'Crop Tops', 'Dresses', 'Co-ords', 'Oversized T-Shirts'].map((q) => sub('women', q)),
+      },
+      {
+        title: 'Bottomwear',
+        links: ['All Bottomwear', 'Jeans', 'Skirts', 'Trousers', 'Joggers', 'Shorts', 'Leggings'].map((q) => sub('women', q)),
+      },
+      {
+        title: 'Winterwear',
+        links: ['All Winterwear', 'Hoodies', 'Sweatshirts', 'Jackets', 'Sweaters', 'Co-ord Sets'].map((q) => sub('women', q)),
+      },
+      {
+        title: 'Innerwear & Loungewear',
+        links: ['All Loungewear', 'Camisoles', 'Pajamas', 'Shorts', 'Lounge Sets'].map((q) => sub('women', q)),
+      },
+    ],
+    specials: SPECIALS,
+  },
+  {
+    label: 'Accessories',
+    href: '/accessories',
+    columns: [
+      {
+        title: 'Bags & Backpacks',
+        links: ['All Bags', 'Backpacks', 'Sling Bags', 'Laptop Bags'].map((q) => sub('accessories', q)),
+      },
+      {
+        title: 'Personal',
+        links: ['Watches', 'Sunglasses', 'Caps', 'Wallets', 'Socks'].map((q) => sub('accessories', q)),
+      },
     ],
   },
   { label: 'Footwear', href: '/footwear' },
-  { label: 'Accessories', href: '/accessories' },
   { label: 'New Arrivals', href: '/collections/new-arrivals' },
   { label: 'Best Sellers', href: '/collections/best-sellers' },
 ];
@@ -95,27 +184,59 @@ export default function Header() {
                   {item.columns && <ChevronDown className="h-3.5 w-3.5" />}
                 </Link>
                 {item.columns && (
-                  <div className="invisible absolute left-1/2 top-full z-50 w-[560px] -translate-x-1/2 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
-                    <div className="grid grid-cols-3 gap-6 rounded-2xl border border-ink/10 bg-white p-6 shadow-xl">
-                      {item.columns.map((col) => (
-                        <div key={col.title}>
-                          <p className="mb-3 text-xs font-bold uppercase tracking-wide text-ink/40">
-                            {col.title}
+                  <div
+                    className={cn(
+                      'invisible absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100',
+                      item.specials ? 'w-[940px]' : 'w-[560px]'
+                    )}
+                  >
+                    <div className="flex gap-6 rounded-2xl border border-ink/10 bg-white p-6 shadow-xl">
+                      <div className="grid flex-1 grid-cols-4 gap-6">
+                        {item.columns.map((col) => (
+                          <div key={col.title}>
+                            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-ink/40">
+                              {col.title}
+                            </p>
+                            <ul className="space-y-2">
+                              {col.links.map((l) => (
+                                <li key={l.label}>
+                                  <Link
+                                    href={l.href}
+                                    className="text-sm text-ink/70 transition hover:text-nova-600"
+                                  >
+                                    {l.label}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+
+                      {item.specials && (
+                        <div className="w-56 shrink-0 border-l border-ink/10 pl-6">
+                          <p className="mb-4 text-xs font-bold uppercase tracking-wide text-ink/40">
+                            Specials
                           </p>
-                          <ul className="space-y-2">
-                            {col.links.map((l) => (
-                              <li key={l}>
+                          <div className="grid grid-cols-2 gap-x-3 gap-y-5">
+                            {item.specials.map((s) => {
+                              const Icon = s.icon;
+                              return (
                                 <Link
-                                  href={item.href}
-                                  className="text-sm text-ink/70 transition hover:text-nova-600"
+                                  key={s.label}
+                                  href={s.href}
+                                  className="group/sp flex flex-col items-center gap-2 text-center"
                                 >
-                                  {l}
+                                  <span className="grid h-14 w-14 place-items-center rounded-full bg-nova-50 text-nova-600 transition group-hover/sp:bg-nova-600 group-hover/sp:text-white">
+                                    <Icon className="h-6 w-6" />
+                                  </span>
+                                  <span className="text-xs font-medium text-ink/70">{s.label}</span>
                                 </Link>
-                              </li>
-                            ))}
-                          </ul>
+                              );
+                            })}
+                          </div>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 )}
