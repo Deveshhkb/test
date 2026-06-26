@@ -5,6 +5,7 @@ import Providers from '@/context/Providers';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/cart/CartDrawer';
+import PageTransition from '@/components/animation/PageTransition';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 
@@ -48,7 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <Providers>
           <Header />
-          <main className="min-h-[60vh]">{children}</main>
+          <main className="min-h-[60vh]">
+            <PageTransition>{children}</PageTransition>
+          </main>
           <Footer />
           <CartDrawer />
         </Providers>

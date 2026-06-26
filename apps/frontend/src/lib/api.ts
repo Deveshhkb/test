@@ -1,6 +1,13 @@
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+/**
+ * URL used for server-side (SSR/ISR) fetches. In containerized deploys the
+ * browser reaches the API at NEXT_PUBLIC_API_URL while the Next.js server
+ * reaches it over the internal network — set INTERNAL_API_URL for that case.
+ */
+const SERVER_API_URL = process.env.INTERNAL_API_URL || API_URL;
+
 type FetchOptions = RequestInit & { auth?: boolean };
 
 /**
@@ -36,7 +43,7 @@ export async function api<T = any>(path: string, options: FetchOptions = {}): Pr
 /** Server-side safe fetch that never throws — returns a fallback instead. */
 export async function safeApi<T>(path: string, fallback: T, revalidate = 60): Promise<T> {
   try {
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await fetch(`${SERVER_API_URL}${path}`, {
       next: { revalidate },
     });
     if (!res.ok) return fallback;

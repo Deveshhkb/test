@@ -89,6 +89,16 @@ novastyle-commerce/
 - Node.js 18+ and npm 9+
 - MongoDB (local `mongod`, Docker, or MongoDB Atlas)
 
+### Option A — One command with Docker
+Brings up MongoDB, the API, the storefront and the admin panel together:
+```bash
+docker compose up --build          # api:5000, shop:3000, admin:3001
+docker compose run --rm seed       # load demo data (run once)
+```
+Then open http://localhost:3000 (storefront) and http://localhost:3001 (admin).
+
+### Option B — Local Node
+
 ### 1. Install
 ```bash
 npm install            # installs all workspaces

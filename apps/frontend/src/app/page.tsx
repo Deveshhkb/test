@@ -5,6 +5,7 @@ import FeatureMarquee from '@/components/home/FeatureMarquee';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import ProductRail from '@/components/home/ProductRail';
 import PromoSection from '@/components/home/PromoSection';
+import BrandStory from '@/components/home/BrandStory';
 import Testimonials from '@/components/home/Testimonials';
 
 export const revalidate = 120;
@@ -50,6 +51,7 @@ export default async function HomePage() {
         products={bestSellers}
         viewAllHref="/collections/best-sellers"
       />
+      <BrandStory />
       <Testimonials />
     </>
   );
