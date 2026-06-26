@@ -10,6 +10,17 @@ export const getProductReviews = asyncHandler(async (req, res) => {
   res.json({ success: true, reviews });
 });
 
+// GET /api/reviews/admin/all  (admin) — all reviews for moderation
+export const listAllReviews = asyncHandler(async (req, res) => {
+  const filter = req.query.status ? { status: req.query.status } : {};
+  const reviews = await Review.find(filter)
+    .populate('user', 'name email')
+    .populate('product', 'title slug')
+    .sort('-createdAt')
+    .limit(100);
+  res.json({ success: true, reviews });
+});
+
 // POST /api/reviews
 export const createReview = asyncHandler(async (req, res) => {
   const { productId, rating, title, comment, photos } = req.body;
