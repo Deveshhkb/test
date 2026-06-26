@@ -42,7 +42,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en" className={inter.variable}>
-      <body>
+      {/* suppressHydrationWarning: some browser extensions (Grammarly, password
+          managers, etc.) inject attributes into <body> before React hydrates. */}
+      <body suppressHydrationWarning>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
