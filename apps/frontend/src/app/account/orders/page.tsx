@@ -81,7 +81,9 @@ export default function OrdersPage() {
             <div key={o._id} className="rounded-2xl border border-ink/10 p-5">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 pb-3">
                 <div>
-                  <p className="font-semibold">#{o.orderNumber}</p>
+                  <Link href={`/account/orders/${o._id}`} className="font-semibold hover:text-nova-600">
+                    #{o.orderNumber}
+                  </Link>
                   <p className="text-xs text-ink/50">
                     Placed on {new Date(o.createdAt).toLocaleDateString()}
                   </p>
@@ -108,9 +110,14 @@ export default function OrdersPage() {
                 ))}
               </div>
 
-              {(canCancel(o.status) || canReturn(o.status)) && (
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/10 pt-3">
-                  {canCancel(o.status) && (
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-3">
+                <Link
+                  href={`/account/orders/${o._id}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold transition hover:border-ink"
+                >
+                  Track / View details
+                </Link>
+                {canCancel(o.status) && (
                     <button
                       onClick={() => cancel(o._id)}
                       disabled={busyId === o._id}
@@ -131,7 +138,6 @@ export default function OrdersPage() {
                     </button>
                   )}
                 </div>
-              )}
 
               {o.status === 'returned' && (
                 <p className="mt-3 border-t border-ink/10 pt-3 text-sm text-ink/50">

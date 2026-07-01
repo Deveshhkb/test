@@ -109,13 +109,46 @@ export interface User {
   avatar?: string;
 }
 
+export interface OrderItem {
+  product?: string;
+  title: string;
+  image: string;
+  price: number;
+  quantity: number;
+  size?: string;
+  color?: string;
+}
+
+export interface StatusEvent {
+  status: string;
+  at: string;
+  note?: string;
+}
+
 export interface Order {
   _id: string;
   orderNumber: string;
-  items: Array<{ title: string; image: string; price: number; quantity: number; size?: string; color?: string }>;
+  items: OrderItem[];
+  itemsTotal?: number;
+  shippingFee?: number;
+  discount?: number;
+  couponCode?: string;
   grandTotal: number;
   status: string;
   paymentStatus: string;
+  paymentMethod?: string;
+  shippingMethod?: string;
+  shippingAddress?: {
+    fullName?: string;
+    phone?: string;
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+  };
+  statusHistory?: StatusEvent[];
   createdAt: string;
 }
 
