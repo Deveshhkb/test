@@ -37,11 +37,15 @@ export default function ProductRail({ title, subtitle, products, viewAllHref }: 
         navigation
         freeMode
         spaceBetween={16}
-        slidesPerView={1.4}
+        slidesPerView={2}
+        // Whole-number slides per view so cards always fit fully (no cut-off);
+        // the count scales up with screen width to use the space dynamically.
         breakpoints={{
-          480: { slidesPerView: 2.2 },
-          768: { slidesPerView: 3.2 },
-          1024: { slidesPerView: 4.2 },
+          480: { slidesPerView: 2, spaceBetween: 12 },
+          640: { slidesPerView: 3 },
+          1024: { slidesPerView: 4 },
+          1536: { slidesPerView: 5 },
+          1800: { slidesPerView: 6 },
         }}
         className="!px-1 !pb-2"
       >
