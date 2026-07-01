@@ -14,6 +14,7 @@ import {
   Users,
   Star,
   FileText,
+  Bot,
   LogOut,
   Menu,
   X,
@@ -32,6 +33,7 @@ const NAV = [
   { href: '/customers', label: 'Customers', icon: Users },
   { href: '/reviews', label: 'Reviews', icon: Star },
   { href: '/cms', label: 'CMS Pages', icon: FileText },
+  { href: '/ai', label: 'AI Assistant', icon: Bot },
 ];
 
 export default function Shell({ children }: { children: React.ReactNode }) {

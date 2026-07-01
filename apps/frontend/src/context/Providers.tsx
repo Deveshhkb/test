@@ -6,6 +6,7 @@ import { LocaleProvider } from './LocaleContext';
 import { AuthProvider } from './AuthContext';
 import { CartProvider } from './CartContext';
 import { WishlistProvider } from './WishlistContext';
+import { AiAssistantProvider } from './AiAssistantContext';
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
@@ -13,7 +14,9 @@ export default function Providers({ children }: { children: ReactNode }) {
       <LocaleProvider>
         <AuthProvider>
           <WishlistProvider>
-            <CartProvider>{children}</CartProvider>
+            <CartProvider>
+              <AiAssistantProvider>{children}</AiAssistantProvider>
+            </CartProvider>
           </WishlistProvider>
         </AuthProvider>
       </LocaleProvider>

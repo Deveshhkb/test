@@ -12,6 +12,7 @@ import addressRoutes from './addressRoutes.js';
 import uploadRoutes from './uploadRoutes.js';
 import adminRoutes from './adminRoutes.js';
 import cmsRoutes from './cmsRoutes.js';
+import aiRoutes from './aiRoutes.js';
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use('/addresses', addressRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/admin', adminRoutes);
 router.use('/cms', cmsRoutes);
+router.use('/ai', aiRoutes);
 
 export default router;
