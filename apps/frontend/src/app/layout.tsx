@@ -5,7 +5,8 @@ import Providers from '@/context/Providers';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/cart/CartDrawer';
-import PageTransition from '@/components/animation/PageTransition';
+import DesktopShell from '@/components/desktop/DesktopShell';
+import QuickActions from '@/components/desktop/QuickActions';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 
@@ -59,10 +60,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <Header />
           <main className="min-h-[60vh]">
-            <PageTransition>{children}</PageTransition>
+            <DesktopShell>{children}</DesktopShell>
           </main>
           <Footer />
           <CartDrawer />
+          <QuickActions />
         </Providers>
       </body>
     </html>

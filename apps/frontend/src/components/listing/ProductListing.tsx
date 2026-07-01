@@ -242,7 +242,7 @@ export default function ProductListing({ title, baseQuery }: Props) {
 
         <div className="flex-1">
           {loading ? (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-ink/5" />
               ))}
@@ -254,7 +254,7 @@ export default function ProductListing({ title, baseQuery }: Props) {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {products.map((p, i) => (
                   <ProductCard key={p._id} product={p} index={i} />
                 ))}

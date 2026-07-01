@@ -5,6 +5,7 @@ import FeatureMarquee from '@/components/home/FeatureMarquee';
 import CategoryGrid from '@/components/home/CategoryGrid';
 import ProductRail from '@/components/home/ProductRail';
 import PromoSection from '@/components/home/PromoSection';
+import PromoStrip from '@/components/home/PromoStrip';
 import BrandStory from '@/components/home/BrandStory';
 import Testimonials from '@/components/home/Testimonials';
 
@@ -32,6 +33,7 @@ export default async function HomePage() {
       <HeroSlider banners={bannerData.banners} />
       <FeatureMarquee />
       <CategoryGrid categories={categoryData.categories} />
+      <PromoStrip />
       <ProductRail
         title="Trending Now"
         subtitle="What everyone's wearing this week"
