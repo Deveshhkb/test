@@ -55,16 +55,15 @@ body {
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+/* Hide scrollbars everywhere while keeping scroll functionality */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / old Edge */
 }
-::-webkit-scrollbar-thumb {
-  @apply rounded-full bg-ink/20;
-}
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-ink/40;
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
 }
 
 /* Swiper overrides */
