@@ -16,12 +16,17 @@ html {
 }
 
 body {
-  @apply bg-white text-ink antialiased;
+  @apply text-ink antialiased;
+  /* Soft branded glow that fills the side gutters on wide screens
+     and fades to white, so the page feels designed rather than empty. */
+  background-color: #ffffff;
+  background-image: radial-gradient(1100px 520px at 50% -240px, #ece9ff 0%, rgba(255, 255, 255, 0) 60%);
+  background-repeat: no-repeat;
 }
 
 @layer components {
   .container-nova {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-[88rem] px-4 sm:px-6 lg:px-10;
   }
 
   .btn {
