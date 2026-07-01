@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { XCircle, RotateCcw } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatPrice, cn } from '@/lib/utils';
 import type { Order } from '@/lib/types';
@@ -17,9 +18,17 @@ const STATUS_COLORS: Record<string, string> = {
   returned: 'bg-gray-100 text-gray-700',
 };
 
+// An order can be cancelled until it ships.
+const canCancel = (status: string) =>
+  !['shipped', 'delivered', 'cancelled', 'returned'].includes(status);
+// A delivered order can be returned (backend enforces the 7-day window).
+const canReturn = (status: string) => status === 'delivered';
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     api<{ orders: Order[] }>('/orders')
@@ -28,11 +37,37 @@ export default function OrdersPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const runAction = async (id: string, action: 'cancel' | 'return', reason?: string) => {
+    setBusyId(id);
+    setError('');
+    try {
+      const { order } = await api<{ order: Order }>(`/orders/${id}/${action}`, {
+        method: 'PUT',
+        body: JSON.stringify(reason ? { reason } : {}),
+      });
+      setOrders((prev) => prev.map((o) => (o._id === id ? { ...o, status: order.status } : o)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Action failed. Please try again.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const cancel = (id: string) => {
+    if (confirm('Cancel this order? This cannot be undone.')) runAction(id, 'cancel');
+  };
+  const requestReturn = (id: string) => {
+    const reason = prompt('Reason for return (optional):') ?? '';
+    if (reason !== null) runAction(id, 'return', reason || undefined);
+  };
+
   if (loading) return <p className="text-ink/50">Loading orders...</p>;
 
   return (
     <div>
       <h1 className="text-2xl font-black">My Orders</h1>
+      {error && <p className="mt-3 rounded-lg bg-accent/10 px-3 py-2 text-sm text-accent">{error}</p>}
+
       {orders.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-ink/10 p-10 text-center">
           <p className="text-ink/50">You haven&apos;t placed any orders yet.</p>
@@ -58,6 +93,7 @@ export default function OrdersPage() {
                   <span className="font-bold">{formatPrice(o.grandTotal)}</span>
                 </div>
               </div>
+
               <div className="mt-3 flex gap-3 overflow-x-auto">
                 {o.items.map((it, i) => (
                   <div key={i} className="flex shrink-0 items-center gap-2">
@@ -71,6 +107,42 @@ export default function OrdersPage() {
                   </div>
                 ))}
               </div>
+
+              {(canCancel(o.status) || canReturn(o.status)) && (
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/10 pt-3">
+                  {canCancel(o.status) && (
+                    <button
+                      onClick={() => cancel(o._id)}
+                      disabled={busyId === o._id}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold transition hover:border-accent hover:text-accent disabled:opacity-50"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      {busyId === o._id ? 'Cancelling…' : 'Cancel Order'}
+                    </button>
+                  )}
+                  {canReturn(o.status) && (
+                    <button
+                      onClick={() => requestReturn(o._id)}
+                      disabled={busyId === o._id}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold transition hover:border-nova-600 hover:text-nova-600 disabled:opacity-50"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      {busyId === o._id ? 'Requesting…' : 'Return / Refund'}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {o.status === 'returned' && (
+                <p className="mt-3 border-t border-ink/10 pt-3 text-sm text-ink/50">
+                  Return requested — our team will process your refund within 5–7 business days.
+                </p>
+              )}
+              {o.status === 'cancelled' && (
+                <p className="mt-3 border-t border-ink/10 pt-3 text-sm text-ink/50">
+                  This order was cancelled. Any payment made will be refunded to the original source.
+                </p>
+              )}
             </div>
           ))}
         </div>

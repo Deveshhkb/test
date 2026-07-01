@@ -5,6 +5,7 @@ import {
   myOrders,
   getOrder,
   cancelOrder,
+  requestReturn,
   listAllOrders,
   updateOrderStatus,
 } from '../controllers/orderController.js';
@@ -19,6 +20,7 @@ router.post('/verify', verifyPayment);
 router.get('/admin/all', authorize('admin'), listAllOrders);
 router.get('/:id', getOrder);
 router.put('/:id/cancel', cancelOrder);
+router.put('/:id/return', requestReturn);
 router.put('/:id/status', authorize('admin'), updateOrderStatus);
 
 export default router;

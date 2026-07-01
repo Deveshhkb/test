@@ -163,6 +163,34 @@ export const cancelOrder = asyncHandler(async (req, res) => {
   res.json({ success: true, order });
 });
 
+// PUT /api/orders/:id/return  -> request a return for a delivered order
+export const requestReturn = asyncHandler(async (req, res) => {
+  const { reason } = req.body;
+  const order = await Order.findById(req.params.id);
+  if (!order) throw new ApiError(404, 'Order not found.');
+  if (order.user.toString() !== req.user._id.toString()) throw new ApiError(403, 'Not authorized.');
+  if (order.status !== 'delivered') {
+    throw new ApiError(400, 'Only delivered orders can be returned.');
+  }
+
+  // Enforce a 7-day return window from delivery.
+  const deliveredAt =
+    [...order.statusHistory].reverse().find((s) => s.status === 'delivered')?.at ||
+    order.updatedAt;
+  const daysSince = (Date.now() - new Date(deliveredAt).getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSince > 7) {
+    throw new ApiError(400, 'The 7-day return window for this order has passed.');
+  }
+
+  order.status = 'returned';
+  order.statusHistory.push({
+    status: 'returned',
+    note: reason ? `Return requested: ${reason}` : 'Return requested by customer',
+  });
+  await order.save();
+  res.json({ success: true, order });
+});
+
 // ---- Admin ----
 // GET /api/orders/admin/all
 export const listAllOrders = asyncHandler(async (req, res) => {
