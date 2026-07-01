@@ -10,6 +10,9 @@
     "dev:backend": "npm --workspace apps/backend run dev",
     "dev:frontend": "npm --workspace apps/frontend run dev",
     "dev:admin": "npm --workspace apps/admin run dev",
+    "dev": "bash scripts/dev.sh",
+    "stop": "bash scripts/stop.sh",
+    "restart": "npm run stop && npm run dev",
     "seed": "npm --workspace apps/backend run seed",
     "build": "npm --workspace apps/frontend run build && npm --workspace apps/admin run build"
   },
