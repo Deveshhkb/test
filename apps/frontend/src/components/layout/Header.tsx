@@ -23,6 +23,9 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import SearchOverlay from './SearchOverlay';
+import ThemeToggle from './ThemeToggle';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useT } from '@/context/LocaleContext';
 
 interface MegaLink {
   label: string;
@@ -39,6 +42,7 @@ interface Special {
 }
 interface NavItem {
   label: string;
+  tKey: string;
   href: string;
   columns?: MegaColumn[];
   specials?: Special[];
@@ -61,6 +65,7 @@ const SPECIALS: Special[] = [
 const NAV: NavItem[] = [
   {
     label: 'Men',
+    tKey: 'nav.men',
     href: '/men',
     columns: [
       {
@@ -84,6 +89,7 @@ const NAV: NavItem[] = [
   },
   {
     label: 'Women',
+    tKey: 'nav.women',
     href: '/women',
     columns: [
       {
@@ -107,6 +113,7 @@ const NAV: NavItem[] = [
   },
   {
     label: 'Accessories',
+    tKey: 'nav.accessories',
     href: '/accessories',
     columns: [
       {
@@ -119,9 +126,9 @@ const NAV: NavItem[] = [
       },
     ],
   },
-  { label: 'Footwear', href: '/footwear' },
-  { label: 'New Arrivals', href: '/collections/new-arrivals' },
-  { label: 'Best Sellers', href: '/collections/best-sellers' },
+  { label: 'Footwear', tKey: 'nav.footwear', href: '/footwear' },
+  { label: 'New Arrivals', tKey: 'nav.newArrivals', href: '/collections/new-arrivals' },
+  { label: 'Best Sellers', tKey: 'nav.bestSellers', href: '/collections/best-sellers' },
 ];
 
 export default function Header() {
@@ -129,6 +136,7 @@ export default function Header() {
   const { summary, setOpen } = useCart();
   const { ids } = useWishlist();
   const { user, logout } = useAuth();
+  const t = useT();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -146,9 +154,7 @@ export default function Header() {
       {/* Announcement bar */}
       <div className="bg-ink text-white">
         <div className="container-nova flex h-9 items-center justify-center overflow-hidden text-xs font-medium">
-          <span className="truncate">
-            ✨ Free shipping over ₹999 · Use code <strong>NOVA10</strong> for 10% off
-          </span>
+          <span className="truncate">✨ {t('announcement')}</span>
         </div>
       </div>
 
@@ -180,7 +186,7 @@ export default function Header() {
                   href={item.href}
                   className="flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold text-ink/80 transition hover:bg-ink/5 hover:text-ink"
                 >
-                  {item.label}
+                  {t(item.tKey)}
                   {item.columns && <ChevronDown className="h-3.5 w-3.5" />}
                 </Link>
                 {item.columns && (
@@ -246,9 +252,14 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <button onClick={() => setSearchOpen(true)} aria-label="Search" className="icon-btn p-2">
+            <button onClick={() => setSearchOpen(true)} aria-label={t('common.searchLabel')} className="icon-btn p-2">
               <Search className="h-5 w-5" />
             </button>
+
+            <div className="hidden sm:block">
+              <LanguageSwitcher />
+            </div>
+            <ThemeToggle className="hidden sm:grid" />
 
             <Link href="/account/wishlist" className="relative p-2" aria-label="Wishlist">
               <Heart className="h-5 w-5" />
@@ -286,12 +297,12 @@ export default function Header() {
                           <p className="truncate text-xs text-ink/50">{user.email}</p>
                         </div>
                         <hr className="my-1 border-ink/10" />
-                        <MenuLink href="/account">My Profile</MenuLink>
-                        <MenuLink href="/account/orders">My Orders</MenuLink>
-                        <MenuLink href="/account/wishlist">Wishlist</MenuLink>
-                        <MenuLink href="/account/addresses">Addresses</MenuLink>
+                        <MenuLink href="/account">{t('common.myProfile')}</MenuLink>
+                        <MenuLink href="/account/orders">{t('common.myOrders')}</MenuLink>
+                        <MenuLink href="/account/wishlist">{t('common.wishlist')}</MenuLink>
+                        <MenuLink href="/account/addresses">{t('common.addresses')}</MenuLink>
                         {user.role === 'admin' && (
-                          <MenuLink href="http://localhost:3001">Admin Panel</MenuLink>
+                          <MenuLink href="http://localhost:3001">{t('common.adminPanel')}</MenuLink>
                         )}
                         <button
                           onClick={() => {
@@ -300,13 +311,13 @@ export default function Header() {
                           }}
                           className="w-full rounded-lg px-3 py-2 text-left text-sm text-accent hover:bg-ink/5"
                         >
-                          Logout
+                          {t('common.logout')}
                         </button>
                       </>
                     ) : (
                       <>
-                        <MenuLink href="/login">Login</MenuLink>
-                        <MenuLink href="/register">Create Account</MenuLink>
+                        <MenuLink href="/login">{t('common.login')}</MenuLink>
+                        <MenuLink href="/register">{t('common.register')}</MenuLink>
                       </>
                     )}
                   </div>
@@ -338,21 +349,29 @@ export default function Header() {
                   onClick={() => setMobileOpen(false)}
                   className="block rounded-xl px-3 py-3 text-base font-semibold hover:bg-ink/5"
                 >
-                  {item.label}
+                  {t(item.tKey)}
                 </Link>
               ))}
             </nav>
             <hr className="my-4 border-ink/10" />
+
+            {/* Theme + language controls for mobile */}
+            <div className="mb-2 flex items-center justify-between rounded-xl px-3 py-2">
+              <LanguageSwitcher />
+              <ThemeToggle />
+            </div>
+            <hr className="my-4 border-ink/10" />
+
             <div className="space-y-1">
               {user ? (
                 <>
-                  <Link href="/account" onClick={() => setMobileOpen(false)} className="block rounded-xl px-3 py-3 font-medium hover:bg-ink/5">My Account</Link>
-                  <button onClick={() => { logout(); setMobileOpen(false); }} className="block w-full rounded-xl px-3 py-3 text-left font-medium text-accent hover:bg-ink/5">Logout</button>
+                  <Link href="/account" onClick={() => setMobileOpen(false)} className="block rounded-xl px-3 py-3 font-medium hover:bg-ink/5">{t('common.myProfile')}</Link>
+                  <button onClick={() => { logout(); setMobileOpen(false); }} className="block w-full rounded-xl px-3 py-3 text-left font-medium text-accent hover:bg-ink/5">{t('common.logout')}</button>
                 </>
               ) : (
                 <>
-                  <Link href="/login" onClick={() => setMobileOpen(false)} className="block rounded-xl px-3 py-3 font-medium hover:bg-ink/5">Login</Link>
-                  <Link href="/register" onClick={() => setMobileOpen(false)} className="block rounded-xl px-3 py-3 font-medium hover:bg-ink/5">Create Account</Link>
+                  <Link href="/login" onClick={() => setMobileOpen(false)} className="block rounded-xl px-3 py-3 font-medium hover:bg-ink/5">{t('common.login')}</Link>
+                  <Link href="/register" onClick={() => setMobileOpen(false)} className="block rounded-xl px-3 py-3 font-medium hover:bg-ink/5">{t('common.register')}</Link>
                 </>
               )}
             </div>

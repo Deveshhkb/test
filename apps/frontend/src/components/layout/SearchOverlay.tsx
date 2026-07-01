@@ -7,12 +7,14 @@ import { useRouter } from 'next/navigation';
 import { Search, X, Clock } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
+import { useT } from '@/context/LocaleContext';
 import type { Product } from '@/lib/types';
 
 const TRENDING = ['Hoodie', 'Oversized Tee', 'Sneakers', 'Jeans', 'Watch'];
 
 export default function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
@@ -79,7 +81,7 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for products, brands and more..."
+              placeholder={t('common.search')}
               className="flex-1 bg-transparent text-lg outline-none"
             />
             <button type="button" onClick={onClose} aria-label="Close search">
@@ -113,7 +115,7 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
               <div className="grid gap-6 sm:grid-cols-2">
                 {history.length > 0 && (
                   <div>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">Recent</p>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('search.recent')}</p>
                     <div className="flex flex-wrap gap-2">
                       {history.map((h) => (
                         <button key={h} onClick={() => submit(h)} className="chip gap-1">
@@ -124,7 +126,7 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
                   </div>
                 )}
                 <div>
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">Trending</p>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink/40">{t('search.trending')}</p>
                   <div className="flex flex-wrap gap-2">
                     {TRENDING.map((t) => (
                       <button key={t} onClick={() => submit(t)} className="chip">

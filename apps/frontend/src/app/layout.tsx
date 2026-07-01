@@ -40,8 +40,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     description: 'Original fashion label for men and women.',
   };
 
+  // Set the theme class before first paint to prevent a flash of the wrong
+  // theme (reads saved choice, falls back to the OS preference).
+  const themeScript = `(function(){try{var t=localStorage.getItem('nova-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`;
+
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       {/* suppressHydrationWarning: some browser extensions (Grammarly, password
           managers, etc.) inject attributes into <body> before React hydrates. */}
       <body suppressHydrationWarning>

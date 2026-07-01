@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "men": "Herren",
+    "women": "Damen",
+    "accessories": "Accessoires",
+    "footwear": "Schuhe",
+    "newArrivals": "Neuheiten",
+    "bestSellers": "Bestseller"
+  },
+  "announcement": "Kostenloser Versand ab ₹999 · Code NOVA10 für 10% Rabatt verwenden",
+  "common": {
+    "search": "Nach Produkten, Marken und mehr suchen...",
+    "searchLabel": "Suchen",
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "register": "Konto erstellen",
+    "myProfile": "Mein Profil",
+    "myOrders": "Meine Bestellungen",
+    "wishlist": "Wunschliste",
+    "addresses": "Adressen",
+    "cart": "Warenkorb",
+    "checkout": "Kasse",
+    "shopNow": "Jetzt shoppen",
+    "viewAll": "Alle ansehen",
+    "addToBag": "In den Warenkorb",
+    "buyNow": "Jetzt kaufen",
+    "adminPanel": "Admin-Bereich",
+    "loading": "Wird geladen...",
+    "language": "Sprache",
+    "lightMode": "Heller Modus",
+    "darkMode": "Dunkler Modus"
+  },
+  "footer": {
+    "tagline": "Originelle, trendige Mode aus eigenem Design. Für Komfort gemacht, um aufzufallen.",
+    "shop": "Shop",
+    "help": "Hilfe",
+    "company": "Unternehmen",
+    "newsletterTitle": "Erhalte 10% Rabatt auf deine erste Bestellung",
+    "emailPlaceholder": "E-Mail eingeben",
+    "subscribed": "Du bist angemeldet. Willkommen bei NovaStyle!",
+    "rights": "Alle Rechte vorbehalten.",
+    "securePayments": "Sichere Zahlungen über Razorpay · UPI · Karten · Online-Banking",
+    "trackOrder": "Bestellung verfolgen",
+    "shippingReturns": "Versand & Rückgabe",
+    "faqs": "FAQ",
+    "contact": "Kontakt",
+    "about": "Über uns",
+    "privacy": "Datenschutz",
+    "terms": "Nutzungsbedingungen"
+  },
+  "search": {
+    "recent": "Kürzlich",
+    "trending": "Angesagt"
+  },
+  "empty": {
+    "cartTitle": "Dein Warenkorb ist leer",
+    "cartNote": "Es sieht so aus, als hättest du noch nichts hinzugefügt.",
+    "wishlist": "Deine Wunschliste ist leer.",
+    "orders": "Du hast noch keine Bestellungen aufgegeben.",
+    "products": "Keine Produkte gefunden",
+    "adjustFilters": "Versuche, deine Filter anzupassen.",
+    "startShopping": "Mit dem Einkaufen beginnen",
+    "loginRequired": "Bitte anmelden",
+    "loginNote": "Melde dich an, um deinen Warenkorb zu sehen."
+  }
+}

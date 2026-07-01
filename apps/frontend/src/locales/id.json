@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "men": "Pria",
+    "women": "Wanita",
+    "accessories": "Aksesori",
+    "footwear": "Alas Kaki",
+    "newArrivals": "Baru Datang",
+    "bestSellers": "Terlaris"
+  },
+  "announcement": "Gratis ongkir di atas ₹999 · Gunakan kode NOVA10 untuk diskon 10%",
+  "common": {
+    "search": "Cari produk, merek, dan lainnya...",
+    "searchLabel": "Cari",
+    "login": "Masuk",
+    "logout": "Keluar",
+    "register": "Buat Akun",
+    "myProfile": "Profil Saya",
+    "myOrders": "Pesanan Saya",
+    "wishlist": "Wishlist",
+    "addresses": "Alamat",
+    "cart": "Keranjang",
+    "checkout": "Checkout",
+    "shopNow": "Belanja Sekarang",
+    "viewAll": "Lihat semua",
+    "addToBag": "Tambah ke Tas",
+    "buyNow": "Beli Sekarang",
+    "adminPanel": "Panel Admin",
+    "loading": "Memuat...",
+    "language": "Bahasa",
+    "lightMode": "Mode terang",
+    "darkMode": "Mode gelap"
+  },
+  "footer": {
+    "tagline": "Mode orisinal dan kekinian yang dirancang sendiri. Dibuat untuk kenyamanan, tampil menonjol.",
+    "shop": "Belanja",
+    "help": "Bantuan",
+    "company": "Perusahaan",
+    "newsletterTitle": "Dapatkan diskon 10% untuk pesanan pertama Anda",
+    "emailPlaceholder": "Masukkan email Anda",
+    "subscribed": "Anda telah berlangganan. Selamat datang di NovaStyle!",
+    "rights": "Hak cipta dilindungi.",
+    "securePayments": "Pembayaran aman via Razorpay · UPI · Kartu · Net Banking",
+    "trackOrder": "Lacak Pesanan",
+    "shippingReturns": "Pengiriman & Pengembalian",
+    "faqs": "FAQ",
+    "contact": "Hubungi Kami",
+    "about": "Tentang Kami",
+    "privacy": "Kebijakan Privasi",
+    "terms": "Ketentuan Layanan"
+  },
+  "search": {
+    "recent": "Terbaru",
+    "trending": "Tren"
+  },
+  "empty": {
+    "cartTitle": "Tas Anda kosong",
+    "cartNote": "Sepertinya Anda belum menambahkan apa pun.",
+    "wishlist": "Wishlist Anda kosong.",
+    "orders": "Anda belum melakukan pemesanan.",
+    "products": "Produk tidak ditemukan",
+    "adjustFilters": "Coba sesuaikan filter Anda.",
+    "startShopping": "Mulai Belanja",
+    "loginRequired": "Silakan masuk",
+    "loginNote": "Masuk untuk melihat tas belanja Anda."
+  }
+}

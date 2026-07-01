@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "men": "Hombre",
+    "women": "Mujer",
+    "accessories": "Accesorios",
+    "footwear": "Calzado",
+    "newArrivals": "Novedades",
+    "bestSellers": "Más vendidos"
+  },
+  "announcement": "Envío gratis en pedidos superiores a ₹999 · Usa el código NOVA10 para un 10% de descuento",
+  "common": {
+    "search": "Busca productos, marcas y más...",
+    "searchLabel": "Buscar",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "register": "Crear cuenta",
+    "myProfile": "Mi perfil",
+    "myOrders": "Mis pedidos",
+    "wishlist": "Lista de deseos",
+    "addresses": "Direcciones",
+    "cart": "Carrito",
+    "checkout": "Pagar",
+    "shopNow": "Comprar ahora",
+    "viewAll": "Ver todo",
+    "addToBag": "Añadir a la bolsa",
+    "buyNow": "Comprar ya",
+    "adminPanel": "Panel de administración",
+    "loading": "Cargando...",
+    "language": "Idioma",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo oscuro"
+  },
+  "footer": {
+    "tagline": "Moda original y a la última diseñada internamente. Hecha para la comodidad, pensada para destacar.",
+    "shop": "Tienda",
+    "help": "Ayuda",
+    "company": "Empresa",
+    "newsletterTitle": "Obtén un 10% de descuento en tu primer pedido",
+    "emailPlaceholder": "Introduce tu correo",
+    "subscribed": "¡Te has suscrito. Bienvenido a NovaStyle!",
+    "rights": "Todos los derechos reservados.",
+    "securePayments": "Pagos seguros con Razorpay · UPI · Tarjetas · Banca en línea",
+    "trackOrder": "Rastrear pedido",
+    "shippingReturns": "Envíos y devoluciones",
+    "faqs": "Preguntas frecuentes",
+    "contact": "Contáctanos",
+    "about": "Sobre nosotros",
+    "privacy": "Política de privacidad",
+    "terms": "Términos del servicio"
+  },
+  "search": {
+    "recent": "Recientes",
+    "trending": "Tendencias"
+  },
+  "empty": {
+    "cartTitle": "Tu bolsa está vacía",
+    "cartNote": "Parece que aún no has añadido nada.",
+    "wishlist": "Tu lista de deseos está vacía.",
+    "orders": "Todavía no has realizado ningún pedido.",
+    "products": "No se encontraron productos",
+    "adjustFilters": "Intenta ajustar los filtros.",
+    "startShopping": "Empezar a comprar",
+    "loginRequired": "Inicia sesión",
+    "loginNote": "Inicia sesión para ver tu bolsa de compras."
+  }
+}

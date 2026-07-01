@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "men": "Men",
+    "women": "Women",
+    "accessories": "Accessories",
+    "footwear": "Footwear",
+    "newArrivals": "New Arrivals",
+    "bestSellers": "Best Sellers"
+  },
+  "announcement": "Free shipping over ₹999 · Use code NOVA10 for 10% off",
+  "common": {
+    "search": "Search for products, brands and more...",
+    "searchLabel": "Search",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Create Account",
+    "myProfile": "My Profile",
+    "myOrders": "My Orders",
+    "wishlist": "Wishlist",
+    "addresses": "Addresses",
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "shopNow": "Shop Now",
+    "viewAll": "View all",
+    "addToBag": "Add to Bag",
+    "buyNow": "Buy Now",
+    "adminPanel": "Admin Panel",
+    "loading": "Loading...",
+    "language": "Language",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode"
+  },
+  "footer": {
+    "tagline": "Original, trend-forward fashion designed in-house. Built for comfort, made to stand out.",
+    "shop": "Shop",
+    "help": "Help",
+    "company": "Company",
+    "newsletterTitle": "Get 10% off your first order",
+    "emailPlaceholder": "Enter your email",
+    "subscribed": "You're subscribed. Welcome to NovaStyle!",
+    "rights": "All rights reserved.",
+    "securePayments": "Secure payments via Razorpay · UPI · Cards · Net Banking",
+    "trackOrder": "Track Order",
+    "shippingReturns": "Shipping & Returns",
+    "faqs": "FAQs",
+    "contact": "Contact Us",
+    "about": "About Us",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "search": {
+    "recent": "Recent",
+    "trending": "Trending"
+  },
+  "empty": {
+    "cartTitle": "Your bag is empty",
+    "cartNote": "Looks like you haven't added anything yet.",
+    "wishlist": "Your wishlist is empty.",
+    "orders": "You haven't placed any orders yet.",
+    "products": "No products found",
+    "adjustFilters": "Try adjusting your filters.",
+    "startShopping": "Start Shopping",
+    "loginRequired": "Please log in",
+    "loginNote": "Log in to view your shopping bag."
+  }
+}

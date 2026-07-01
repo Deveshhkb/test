@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "men": "Homme",
+    "women": "Femme",
+    "accessories": "Accessoires",
+    "footwear": "Chaussures",
+    "newArrivals": "Nouveautés",
+    "bestSellers": "Meilleures ventes"
+  },
+  "announcement": "Livraison gratuite dès ₹999 · Utilisez le code NOVA10 pour 10% de réduction",
+  "common": {
+    "search": "Rechercher des produits, des marques et plus...",
+    "searchLabel": "Rechercher",
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "register": "Créer un compte",
+    "myProfile": "Mon profil",
+    "myOrders": "Mes commandes",
+    "wishlist": "Liste de souhaits",
+    "addresses": "Adresses",
+    "cart": "Panier",
+    "checkout": "Paiement",
+    "shopNow": "Acheter",
+    "viewAll": "Tout voir",
+    "addToBag": "Ajouter au panier",
+    "buyNow": "Acheter maintenant",
+    "adminPanel": "Panneau d'administration",
+    "loading": "Chargement...",
+    "language": "Langue",
+    "lightMode": "Mode clair",
+    "darkMode": "Mode sombre"
+  },
+  "footer": {
+    "tagline": "Mode originale et tendance conçue en interne. Pensée pour le confort, faite pour se démarquer.",
+    "shop": "Boutique",
+    "help": "Aide",
+    "company": "Entreprise",
+    "newsletterTitle": "Obtenez 10% de réduction sur votre première commande",
+    "emailPlaceholder": "Entrez votre e-mail",
+    "subscribed": "Vous êtes abonné. Bienvenue chez NovaStyle !",
+    "rights": "Tous droits réservés.",
+    "securePayments": "Paiements sécurisés via Razorpay · UPI · Cartes · Virement",
+    "trackOrder": "Suivre la commande",
+    "shippingReturns": "Livraison et retours",
+    "faqs": "FAQ",
+    "contact": "Contactez-nous",
+    "about": "À propos",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation"
+  },
+  "search": {
+    "recent": "Récents",
+    "trending": "Tendances"
+  },
+  "empty": {
+    "cartTitle": "Votre panier est vide",
+    "cartNote": "Il semble que vous n'ayez rien ajouté pour le moment.",
+    "wishlist": "Votre liste de souhaits est vide.",
+    "orders": "Vous n'avez pas encore passé de commande.",
+    "products": "Aucun produit trouvé",
+    "adjustFilters": "Essayez d'ajuster vos filtres.",
+    "startShopping": "Commencer vos achats",
+    "loginRequired": "Veuillez vous connecter",
+    "loginNote": "Connectez-vous pour voir votre panier."
+  }
+}

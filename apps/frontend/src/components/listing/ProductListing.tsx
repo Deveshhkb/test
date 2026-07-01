@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import type { Product, Brand } from '@/lib/types';
 import ProductCard from '@/components/product/ProductCard';
 import { cn } from '@/lib/utils';
+import { useT } from '@/context/LocaleContext';
 
 interface Props {
   title: string;
@@ -30,6 +31,7 @@ const PRICE_BUCKETS = [
 ];
 
 export default function ProductListing({ title, baseQuery }: Props) {
+  const t = useT();
   const [products, setProducts] = useState<Product[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [page, setPage] = useState(1);
@@ -247,8 +249,8 @@ export default function ProductListing({ title, baseQuery }: Props) {
             </div>
           ) : products.length === 0 ? (
             <div className="grid place-items-center py-24 text-center">
-              <p className="text-lg font-semibold">No products found</p>
-              <p className="text-sm text-ink/50">Try adjusting your filters.</p>
+              <p className="text-lg font-semibold">{t('empty.products')}</p>
+              <p className="text-sm text-ink/50">{t('empty.adjustFilters')}</p>
             </div>
           ) : (
             <>

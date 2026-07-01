@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "men": "Masculino",
+    "women": "Feminino",
+    "accessories": "Acessórios",
+    "footwear": "Calçados",
+    "newArrivals": "Novidades",
+    "bestSellers": "Mais vendidos"
+  },
+  "announcement": "Frete grátis acima de ₹999 · Use o código NOVA10 para 10% de desconto",
+  "common": {
+    "search": "Pesquise produtos, marcas e mais...",
+    "searchLabel": "Pesquisar",
+    "login": "Entrar",
+    "logout": "Sair",
+    "register": "Criar conta",
+    "myProfile": "Meu perfil",
+    "myOrders": "Meus pedidos",
+    "wishlist": "Lista de desejos",
+    "addresses": "Endereços",
+    "cart": "Carrinho",
+    "checkout": "Finalizar compra",
+    "shopNow": "Comprar agora",
+    "viewAll": "Ver tudo",
+    "addToBag": "Adicionar à sacola",
+    "buyNow": "Comprar já",
+    "adminPanel": "Painel de administração",
+    "loading": "Carregando...",
+    "language": "Idioma",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo escuro"
+  },
+  "footer": {
+    "tagline": "Moda original e moderna criada internamente. Feita para o conforto, pensada para se destacar.",
+    "shop": "Loja",
+    "help": "Ajuda",
+    "company": "Empresa",
+    "newsletterTitle": "Ganhe 10% de desconto no seu primeiro pedido",
+    "emailPlaceholder": "Digite seu e-mail",
+    "subscribed": "Você está inscrito. Bem-vindo à NovaStyle!",
+    "rights": "Todos os direitos reservados.",
+    "securePayments": "Pagamentos seguros via Razorpay · UPI · Cartões · Internet Banking",
+    "trackOrder": "Rastrear pedido",
+    "shippingReturns": "Envio e devoluções",
+    "faqs": "Perguntas frequentes",
+    "contact": "Fale conosco",
+    "about": "Sobre nós",
+    "privacy": "Política de privacidade",
+    "terms": "Termos de serviço"
+  },
+  "search": {
+    "recent": "Recentes",
+    "trending": "Em alta"
+  },
+  "empty": {
+    "cartTitle": "Sua sacola está vazia",
+    "cartNote": "Parece que você ainda não adicionou nada.",
+    "wishlist": "Sua lista de desejos está vazia.",
+    "orders": "Você ainda não fez nenhum pedido.",
+    "products": "Nenhum produto encontrado",
+    "adjustFilters": "Tente ajustar seus filtros.",
+    "startShopping": "Começar a comprar",
+    "loginRequired": "Faça login",
+    "loginNote": "Faça login para ver sua sacola de compras."
+  }
+}

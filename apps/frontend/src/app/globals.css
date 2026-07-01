@@ -5,6 +5,24 @@
 :root {
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-display: 'Inter', system-ui, sans-serif;
+
+  /* ---- Theme tokens (light). Values are space-separated RGB channels
+     so Tailwind's `rgb(var(--x) / <alpha-value>)` opacity modifiers work. ---- */
+  --ink: 16 16 20; /* foreground / text */
+  --surface: 255 255 255; /* page & card background (bg-white maps here in dark) */
+  --surface-2: 244 243 255; /* subtle section background (nova-50) */
+  --carbon: 16 16 20; /* solid dark elements: primary buttons, footer, announcement */
+  --glow: 236 233 255; /* top decorative glow */
+}
+
+/* ---- Dark theme (GitHub/Vercel-like). Applied via <html class="dark"> ---- */
+.dark {
+  --ink: 233 234 240; /* near-white text */
+  --surface: 20 22 27; /* #14161b */
+  --surface-2: 30 33 41; /* #1e2129 */
+  --carbon: 32 35 44; /* slightly lighter than surface so buttons/footer read */
+  --glow: 40 32 70;
+  color-scheme: dark;
 }
 
 * {
@@ -17,11 +35,31 @@ html {
 
 body {
   @apply text-ink antialiased;
-  /* Soft branded glow that fills the side gutters on wide screens
-     and fades to white, so the page feels designed rather than empty. */
-  background-color: #ffffff;
-  background-image: radial-gradient(1100px 520px at 50% -240px, #ece9ff 0%, rgba(255, 255, 255, 0) 60%);
+  /* Soft branded glow that fills the side gutters and fades out. */
+  background-color: rgb(var(--surface));
+  background-image: radial-gradient(1100px 520px at 50% -240px, rgb(var(--glow)) 0%, rgba(0, 0, 0, 0) 60%);
   background-repeat: no-repeat;
+}
+
+/* Smooth theme transition on surfaces, borders and text (curated selector
+   list — avoids animating every element, and won't fight hover transitions). */
+body,
+header,
+footer,
+aside,
+input,
+textarea,
+select,
+button,
+a,
+.card-hover,
+[class*='bg-white'],
+[class*='bg-nova'],
+[class*='bg-ink'],
+[class*='border-ink'] {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
 }
 
 @layer components {
@@ -33,17 +71,17 @@ body {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-primary {
-    @apply btn bg-ink text-white hover:bg-nova-700;
+    @apply btn bg-carbon text-white hover:bg-nova-700;
   }
   .btn-accent {
     @apply btn bg-nova-600 text-white hover:bg-nova-700;
   }
   .btn-outline {
-    @apply btn border border-ink/15 bg-white text-ink hover:border-ink hover:bg-ink hover:text-white;
+    @apply btn border border-ink/15 bg-surface text-ink hover:border-carbon hover:bg-carbon hover:text-white;
   }
 
   .input {
-    @apply w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-sm outline-none transition focus:border-nova-500 focus:ring-2 focus:ring-nova-200;
+    @apply w-full rounded-xl border border-ink/15 bg-surface px-4 py-3 text-sm outline-none transition focus:border-nova-500 focus:ring-2 focus:ring-nova-200;
   }
 
   .chip {
@@ -66,11 +104,35 @@ body {
   height: 0;
 }
 
+/* ---- Dark-mode compatibility overrides for literal utilities used across
+   the app. These remap a small, fixed set of classes so existing components
+   work in dark mode without being rewritten (no style duplication). ---- */
+.dark .bg-white {
+  background-color: rgb(var(--surface));
+}
+.dark .bg-white\/90 {
+  background-color: rgb(var(--surface) / 0.9);
+}
+.dark .bg-nova-50 {
+  background-color: rgb(var(--surface-2));
+}
+.dark .bg-nova-100 {
+  background-color: rgb(var(--surface-2));
+}
+/* Solid dark elements (buttons, footer, announcement, selected chips). */
+.dark .bg-ink {
+  background-color: rgb(var(--carbon));
+}
+/* Modal / drawer backdrops must stay dark (ink flips to light in dark mode). */
+.dark .bg-ink\/40 {
+  background-color: rgb(0 0 0 / 0.6);
+}
+
 /* Swiper overrides */
 .swiper-pagination-bullet-active {
   background: #6d3eec !important;
 }
 .swiper-button-next,
 .swiper-button-prev {
-  color: #101014 !important;
+  color: rgb(var(--ink)) !important;
 }

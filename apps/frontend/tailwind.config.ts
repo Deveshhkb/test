@@ -2,10 +2,18 @@ import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  // Dark mode is toggled by adding the `dark` class to <html>.
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        ink: '#101014',
+        // `ink` (foreground) and the surface tokens are backed by CSS variables
+        // so they flip automatically in dark mode — every existing
+        // text-ink/xx, border-ink/xx, bg-ink/xx utility adapts with no rewrites.
+        ink: 'rgb(var(--ink) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        'surface-2': 'rgb(var(--surface-2) / <alpha-value>)',
+        carbon: 'rgb(var(--carbon) / <alpha-value>)',
         nova: {
           50: '#f4f3ff',
           100: '#ebe9fe',
