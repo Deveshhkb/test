@@ -56,9 +56,14 @@ function LoginForm() {
         <div className="my-5 flex items-center gap-3 text-xs text-ink/40">
           <span className="h-px flex-1 bg-ink/10" /> OR <span className="h-px flex-1 bg-ink/10" />
         </div>
-        <button className="btn-outline w-full" type="button">
-          Continue with Google
-        </button>
+        <div className="space-y-2">
+          <Link href="/verify-otp" className="btn-outline w-full">
+            Login with OTP
+          </Link>
+          <button className="btn-outline w-full" type="button" title="Social login requires OAuth provider setup">
+            Continue with Google
+          </button>
+        </div>
 
         <p className="mt-6 text-center text-sm text-ink/60">
           New to NovaStyle?{' '}

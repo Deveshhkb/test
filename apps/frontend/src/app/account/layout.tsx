@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { User, Package, Heart, MapPin, LogOut, Bell } from 'lucide-react';
+import { User, Package, Heart, MapPin, LogOut, Bell, CreditCard } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/account/orders', label: 'My Orders', icon: Package },
   { href: '/account/wishlist', label: 'Wishlist', icon: Heart },
   { href: '/account/addresses', label: 'Addresses', icon: MapPin },
+  { href: '/account/cards', label: 'Saved Cards', icon: CreditCard },
   { href: '/account/notifications', label: 'Notifications', icon: Bell },
 ];
 

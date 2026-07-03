@@ -14,6 +14,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState('');
   const [title, setTitle] = useState('');
+  const [photos, setPhotos] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -32,13 +33,18 @@ export default function ReviewsSection({ productId }: { productId: string }) {
     if (!rating) return setError('Please select a rating.');
     setSubmitting(true);
     try {
+      const photoUrls = photos
+        .split(/[\n,]/)
+        .map((p) => p.trim())
+        .filter((p) => /^https?:\/\//.test(p));
       await api('/reviews', {
         method: 'POST',
-        body: JSON.stringify({ productId, rating, title, comment }),
+        body: JSON.stringify({ productId, rating, title, comment, photos: photoUrls }),
       });
       setRating(0);
       setComment('');
       setTitle('');
+      setPhotos('');
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not submit review.');
@@ -94,6 +100,13 @@ export default function ReviewsSection({ productId }: { productId: string }) {
                 rows={3}
                 className="input"
               />
+              <textarea
+                value={photos}
+                onChange={(e) => setPhotos(e.target.value)}
+                placeholder="Photo URLs (optional, comma-separated)"
+                rows={2}
+                className="input text-xs"
+              />
               {error && <p className="text-xs text-accent">{error}</p>}
               <button disabled={submitting} className="btn-primary w-full !py-2.5">
                 {submitting ? 'Submitting...' : 'Submit Review'}
@@ -118,6 +131,14 @@ export default function ReviewsSection({ productId }: { productId: string }) {
                   )}
                 </div>
                 {r.comment && <p className="mt-2 text-sm text-ink/70">{r.comment}</p>}
+                {r.photos && r.photos.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {r.photos.map((src, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={i} src={src} alt="Customer photo" className="h-16 w-16 rounded-lg object-cover" />
+                    ))}
+                  </div>
+                )}
                 <p className="mt-2 text-xs text-ink/40">
                   {r.user?.name || r.name} · {new Date(r.createdAt).toLocaleDateString()}
                 </p>
