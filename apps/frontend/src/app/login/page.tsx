@@ -66,13 +66,13 @@ function LoginForm() {
         </div>
 
         <p className="mt-6 text-center text-sm text-ink/60">
-          New to NovaStyle?{' '}
+          New to Clothinary?{' '}
           <Link href="/register" className="font-semibold text-nova-600">
             Create an account
           </Link>
         </p>
         <p className="mt-3 rounded-lg bg-nova-50 p-3 text-center text-xs text-ink/50">
-          Demo: customer@novastyle.test / customer123
+          Demo: customer@clothinary.test / customer123
         </p>
       </div>
     </div>

@@ -52,7 +52,7 @@ export default async function ProductPage({
     name: product.title,
     description: product.description,
     image: product.images,
-    brand: { '@type': 'Brand', name: product.brand?.name || 'NovaStyle' },
+    brand: { '@type': 'Brand', name: product.brand?.name || 'Clothinary' },
     aggregateRating:
       product.ratingCount > 0
         ? {

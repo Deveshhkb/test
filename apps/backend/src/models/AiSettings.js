@@ -10,7 +10,7 @@ const aiSettingsSchema = new mongoose.Schema(
     enabled: { type: Boolean, default: true },
     welcomeMessage: {
       type: String,
-      default: "Hi! 👋 I'm NovaStyle AI, your personal fashion assistant. How can I help you today?",
+      default: "Hi! 👋 I'm Clothinary AI, your personal fashion assistant. How can I help you today?",
     },
     suggestedQuestions: {
       type: [String],

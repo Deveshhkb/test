@@ -59,7 +59,7 @@ const SPECIALS: Special[] = [
   { label: 'Buy 3 @ ₹1199', href: '/collections/trending', icon: Shirt },
   { label: 'Buy 2 @ ₹1199', href: '/collections/trending', icon: Sparkles },
   { label: 'Sneaker Drop', href: '/footwear', icon: Footprints },
-  { label: 'NovaAir Light', href: '/collections/new-arrivals', icon: Wind },
+  { label: 'Clothinary Air', href: '/collections/new-arrivals', icon: Wind },
 ];
 
 const NAV: NavItem[] = [
@@ -174,7 +174,7 @@ export default function Header() {
               <Menu className="h-6 w-6" />
             </button>
             <Link href="/" className="text-2xl font-black tracking-tight">
-              Nova<span className="text-nova-600">Style</span>
+              Cloth<span className="text-nova-600">inary</span>
             </Link>
           </div>
 
@@ -335,7 +335,7 @@ export default function Header() {
           <div className="absolute left-0 top-0 h-full w-80 max-w-[85%] overflow-y-auto bg-white p-5">
             <div className="mb-6 flex items-center justify-between">
               <span className="text-xl font-black">
-                Nova<span className="text-nova-600">Style</span>
+                Cloth<span className="text-nova-600">inary</span>
               </span>
               <button onClick={() => setMobileOpen(false)} aria-label="Close menu">
                 <X className="h-6 w-6" />

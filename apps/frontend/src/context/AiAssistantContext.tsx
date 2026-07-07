@@ -60,7 +60,7 @@ export function AiAssistantProvider({ children }: { children: ReactNode }) {
     if (!open || config) return;
     api<{ config: AiConfig }>('/ai/config')
       .then((d) => setConfig(d.config))
-      .catch(() => setConfig({ enabled: true, welcomeMessage: "Hi! I'm NovaStyle AI 👋", suggestedQuestions: [], llmEnabled: false }));
+      .catch(() => setConfig({ enabled: true, welcomeMessage: "Hi! I'm Clothinary AI 👋", suggestedQuestions: [], llmEnabled: false }));
   }, [open, config]);
 
   const send = useCallback(

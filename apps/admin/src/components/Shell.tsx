@@ -53,7 +53,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const Sidebar = (
     <div className="flex h-full flex-col">
       <div className="px-6 py-5 text-xl font-black">
-        Nova<span className="text-brand-600">Style</span>
+        Cloth<span className="text-brand-600">inary</span>
         <span className="ml-1 text-xs font-normal text-slate-400">admin</span>
       </div>
       <nav className="flex-1 space-y-1 px-3">

@@ -16,18 +16,18 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'NovaStyle — Original Fashion, Reimagined',
-    template: '%s | NovaStyle',
+    default: 'Clothinary — Original Fashion, Reimagined',
+    template: '%s | Clothinary',
   },
   description:
-    'NovaStyle is an original fashion label offering trend-forward apparel, footwear and accessories for men and women. Free shipping over ₹999.',
-  keywords: ['fashion', 'clothing', 'apparel', 'streetwear', 'NovaStyle'],
+    'Clothinary is an original fashion label offering trend-forward apparel, footwear and accessories for men and women. Free shipping over ₹999.',
+  keywords: ['fashion', 'clothing', 'apparel', 'streetwear', 'Clothinary'],
   openGraph: {
     type: 'website',
-    title: 'NovaStyle — Original Fashion, Reimagined',
+    title: 'Clothinary — Original Fashion, Reimagined',
     description: 'Trend-forward apparel, footwear and accessories.',
     url: siteUrl,
-    siteName: 'NovaStyle',
+    siteName: 'Clothinary',
   },
   twitter: { card: 'summary_large_image' },
   robots: { index: true, follow: true },
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const orgJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'NovaStyle',
+    name: 'Clothinary',
     url: siteUrl,
     description: 'Original fashion label for men and women.',
   };

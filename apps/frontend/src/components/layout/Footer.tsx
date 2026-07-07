@@ -43,7 +43,7 @@ export default function Footer() {
       <div className="container-nova grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <span className="text-2xl font-black">
-            Nova<span className="text-nova-400">Style</span>
+            Cloth<span className="text-nova-400">inary</span>
           </span>
           <p className="mt-3 max-w-sm text-sm text-white/60">{t('footer.tagline')}</p>
           <Newsletter />
@@ -69,7 +69,7 @@ export default function Footer() {
 
       <div className="border-t border-white/10">
         <div className="container-nova flex flex-col items-center justify-between gap-3 py-5 text-xs text-white/50 sm:flex-row">
-          <p>© {new Date().getFullYear()} NovaStyle. {t('footer.rights')}</p>
+          <p>© {new Date().getFullYear()} Clothinary. {t('footer.rights')}</p>
           <p>{t('footer.securePayments')}</p>
         </div>
       </div>

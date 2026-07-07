@@ -11,7 +11,7 @@ export const uploadImages = asyncHandler(async (req, res) => {
   }
 
   const results = await Promise.all(
-    files.map((f) => uploadBuffer(f.buffer, req.body.folder || 'novastyle/products'))
+    files.map((f) => uploadBuffer(f.buffer, req.body.folder || 'clothinary/products'))
   );
 
   res.status(201).json({

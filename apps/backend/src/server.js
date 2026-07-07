@@ -8,10 +8,10 @@ const start = async () => {
   try {
     await connectDB();
     app.listen(PORT, () => {
-      console.log(`🚀 NovaStyle API running on http://localhost:${PORT}`);
+      console.log(`🚀 Clothinary API running on http://localhost:${PORT}`);
     });
   } catch (err) {
-    console.error('\n❌ Failed to start the NovaStyle API.');
+    console.error('\n❌ Failed to start the Clothinary API.');
     console.error('   Reason:', err.message, '\n');
     console.error('   Most likely the database is not reachable. Checklist:');
     console.error('   1. Is MongoDB running?  (local service, Docker, or MongoDB Atlas)');

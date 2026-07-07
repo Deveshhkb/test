@@ -109,7 +109,7 @@ export default function CheckoutPage() {
         key,
         amount: res.razorpayOrder.amount,
         currency: res.razorpayOrder.currency,
-        name: 'NovaStyle',
+        name: 'Clothinary',
         description: `Order ${res.order.orderNumber}`,
         order_id: res.razorpayOrder.id,
         prefill: { name: user?.name, email: user?.email, contact: address.phone },

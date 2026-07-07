@@ -21,7 +21,7 @@ const CATEGORIES = [
 ];
 
 const BRANDS = [
-  { name: 'NovaBasics', slug: 'novabasics' },
+  { name: 'Clothinary Basics', slug: 'novabasics' },
   { name: 'Urban Aura', slug: 'urban-aura' },
   { name: 'Trailhead', slug: 'trailhead' },
   { name: 'Lumen Co', slug: 'lumen-co' },
@@ -83,15 +83,15 @@ const run = async () => {
 
   // Users
   await User.create({
-    name: 'Nova Admin',
-    email: 'admin@novastyle.test',
+    name: 'Clothinary Admin',
+    email: 'admin@clothinary.test',
     password: 'admin123',
     role: 'admin',
     emailVerified: true,
   });
   await User.create({
     name: 'Demo Customer',
-    email: 'customer@novastyle.test',
+    email: 'customer@clothinary.test',
     password: 'customer123',
     emailVerified: true,
   });
@@ -105,7 +105,7 @@ const run = async () => {
     return {
       title: p.title,
       slug: slugify(p.title, { lower: true, strict: true }),
-      description: `${p.title} crafted from premium, breathable fabric for all-day comfort. Designed in-house by the NovaStyle studio with a modern, versatile silhouette.`,
+      description: `${p.title} crafted from premium, breathable fabric for all-day comfort. Designed in-house by the Clothinary studio with a modern, versatile silhouette.`,
       specifications: { Fabric: 'Premium cotton blend', Fit: 'Regular', Care: 'Machine wash cold', Origin: 'Made in India' },
       category: catBySlug[p.cat]._id,
       brand: brands[idx % brands.length]._id,
@@ -122,8 +122,8 @@ const run = async () => {
       ratingAverage: 4 + ((idx % 10) / 10),
       ratingCount: 12 + idx * 3,
       soldCount: 50 + idx * 11,
-      metaTitle: `${p.title} | NovaStyle`,
-      metaDescription: `Shop the ${p.title} at NovaStyle. Free shipping over ₹999.`,
+      metaTitle: `${p.title} | Clothinary`,
+      metaDescription: `Shop the ${p.title} at Clothinary. Free shipping over ₹999.`,
     };
   });
   await Product.insertMany(products);
@@ -142,15 +142,15 @@ const run = async () => {
   ]);
 
   await CmsPage.insertMany([
-    { title: 'About NovaStyle', slug: 'about', content: '<p>NovaStyle is an original fashion label building comfortable, expressive everyday wear.</p>' },
+    { title: 'About Clothinary', slug: 'about', content: '<p>Clothinary is an original fashion label building comfortable, expressive everyday wear.</p>' },
     { title: 'Shipping & Returns', slug: 'shipping-returns', content: '<p>Free shipping over ₹999. Easy 7-day returns.</p>' },
     { title: 'Privacy Policy', slug: 'privacy', content: '<p>We respect your privacy. This is placeholder policy content.</p>' },
     { title: 'Terms of Service', slug: 'terms', content: '<p>Placeholder terms of service.</p>' },
   ]);
 
   console.log('✅ Seed complete.');
-  console.log('   Admin:    admin@novastyle.test / admin123');
-  console.log('   Customer: customer@novastyle.test / customer123');
+  console.log('   Admin:    admin@clothinary.test / admin123');
+  console.log('   Customer: customer@clothinary.test / customer123');
   await mongoose.disconnect();
   process.exit(0);
 };

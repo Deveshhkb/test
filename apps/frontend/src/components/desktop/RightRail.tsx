@@ -132,7 +132,7 @@ export default function RightRail() {
       {/* Social proof */}
       <div className="rounded-2xl border border-ink/10 bg-surface p-4">
         <p className="mb-3 flex items-center gap-1.5 text-sm font-bold">
-          <Sparkles className="h-4 w-4 text-nova-600" /> Why NovaStyle
+          <Sparkles className="h-4 w-4 text-nova-600" /> Why Clothinary
         </p>
         <SocialProof />
       </div>

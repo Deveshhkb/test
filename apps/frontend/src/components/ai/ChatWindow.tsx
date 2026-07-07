@@ -106,7 +106,7 @@ export default function ChatWindow() {
             <Sparkles className="h-5 w-5" />
           </span>
           <div>
-            <p className="flex items-center gap-1 font-bold leading-none">🤖 NovaStyle AI</p>
+            <p className="flex items-center gap-1 font-bold leading-none">🤖 Clothinary AI</p>
             <p className="mt-0.5 text-[11px] text-white/70">Your Personal Fashion Assistant</p>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function ChatWindow() {
         {showWelcome && (
           <>
             <Bubble role="assistant" at={Date.now()}>
-              {renderText(config?.welcomeMessage || "Hi! I'm NovaStyle AI 👋 How can I help you today?")}
+              {renderText(config?.welcomeMessage || "Hi! I'm Clothinary AI 👋 How can I help you today?")}
             </Bubble>
             {config?.suggestedQuestions && config.suggestedQuestions.length > 0 && (
               <div className="flex flex-wrap gap-2">

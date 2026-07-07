@@ -6,8 +6,8 @@ import { AuthProvider } from '@/context/AuthContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'NovaStyle Admin',
-  description: 'NovaStyle store administration',
+  title: 'Clothinary Admin',
+  description: 'Clothinary store administration',
   robots: { index: false, follow: false },
 };
 

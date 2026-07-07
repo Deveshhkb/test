@@ -11,7 +11,7 @@ cloudinary.config({
  * @param {Buffer} buffer - raw image buffer (from multer memoryStorage)
  * @param {string} folder - destination folder
  */
-export const uploadBuffer = (buffer, folder = 'novastyle') =>
+export const uploadBuffer = (buffer, folder = 'clothinary') =>
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder, resource_type: 'image' },

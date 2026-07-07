@@ -40,7 +40,7 @@ app.use(
   })
 );
 
-app.get('/', (req, res) => res.json({ name: 'NovaStyle API', version: '1.0.0' }));
+app.get('/', (req, res) => res.json({ name: 'Clothinary API', version: '1.0.0' }));
 app.use('/api', routes);
 
 app.use(notFound);

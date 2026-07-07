@@ -2,7 +2,7 @@ import { Leaf, Truck, RefreshCw, BadgeCheck } from 'lucide-react';
 import Reveal from '@/components/animation/Reveal';
 
 const PILLARS = [
-  { icon: BadgeCheck, title: 'Original Designs', body: 'Every piece is designed in-house — no copies, just NovaStyle.' },
+  { icon: BadgeCheck, title: 'Original Designs', body: 'Every piece is designed in-house — no copies, just Clothinary.' },
   { icon: Leaf, title: 'Responsibly Made', body: 'Premium, breathable fabrics sourced with care for everyday wear.' },
   { icon: Truck, title: 'Fast & Free', body: 'Free shipping over ₹999, dispatched within 24 hours.' },
   { icon: RefreshCw, title: 'Easy Returns', body: 'Changed your mind? 7-day hassle-free returns, no questions asked.' },

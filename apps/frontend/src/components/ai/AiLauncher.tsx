@@ -19,7 +19,7 @@ export default function AiLauncher() {
       {!open && !disabled && (
         <button
           onClick={() => setOpen(true)}
-          aria-label="Open NovaStyle AI assistant"
+          aria-label="Open Clothinary AI assistant"
           className="press fixed bottom-5 right-5 z-[90] grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-nova-600 to-nova-800 text-white shadow-xl"
         >
           {/* Pulse ring */}

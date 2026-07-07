@@ -16,7 +16,7 @@ export default function Testimonials() {
       <div className="container-nova">
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-black sm:text-3xl">Loved by 50,000+ customers</h2>
-          <p className="mt-1 text-sm text-ink/50">Real reviews from the NovaStyle community</p>
+          <p className="mt-1 text-sm text-ink/50">Real reviews from the Clothinary community</p>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {REVIEWS.map((r, i) => (

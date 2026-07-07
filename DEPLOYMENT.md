@@ -1,4 +1,4 @@
-# Deployment Guide — NovaStyle
+# Deployment Guide — Clothinary
 
 Three deployable units: **backend** (Express API), **frontend** (Next.js storefront), and
 **admin** (Next.js panel). A typical setup:
@@ -58,8 +58,8 @@ EXPOSE 5000
 CMD ["node", "src/server.js"]
 ```
 ```bash
-docker build -f apps/backend/Dockerfile -t novastyle-api .
-docker run -p 5000:5000 --env-file apps/backend/.env novastyle-api
+docker build -f apps/backend/Dockerfile -t clothinary-api .
+docker run -p 5000:5000 --env-file apps/backend/.env clothinary-api
 ```
 
 > **CORS & cookies**: auth uses an httpOnly cookie with `SameSite=None; Secure` in production,

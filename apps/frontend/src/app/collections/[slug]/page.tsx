@@ -16,7 +16,7 @@ export async function generateMetadata({
   const title = LABELS[slug] || slug;
   return {
     title,
-    description: `Explore the ${title} collection at NovaStyle.`,
+    description: `Explore the ${title} collection at Clothinary.`,
     alternates: { canonical: `/collections/${slug}` },
   };
 }

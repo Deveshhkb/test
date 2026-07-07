@@ -1,10 +1,10 @@
-# NovaStyle — Fashion E-Commerce Platform
+# Clothinary — Fashion E-Commerce Platform
 
 A production-ready, full-stack fashion e-commerce platform — original branding, modern UI,
 and a complete shopping experience inspired by leading apparel storefronts. Built as a
 monorepo with a **storefront**, a **REST API**, and an **admin panel**.
 
-> All branding ("NovaStyle"), copy, and UI are original. Product imagery uses royalty-free
+> All branding ("Clothinary"), copy, and UI are original. Product imagery uses royalty-free
 > Unsplash photos via URL and contains no third-party logos or copyrighted assets.
 
 ---
@@ -62,7 +62,7 @@ monorepo with a **storefront**, a **REST API**, and an **admin panel**.
 ## 📂 Structure
 
 ```
-novastyle-commerce/
+clothinary-commerce/
 ├── apps/
 │   ├── backend/        # Express + MongoDB REST API
 │   │   ├── src/
@@ -120,8 +120,8 @@ image upload are gracefully disabled until configured).
 npm run seed
 ```
 Creates a demo catalog, banners, coupons (`NOVA10`, `FIRST500`, `FREESHIP`) and accounts:
-- **Admin** — `admin@novastyle.test` / `admin123`
-- **Customer** — `customer@novastyle.test` / `customer123`
+- **Admin** — `admin@clothinary.test` / `admin123`
+- **Customer** — `customer@clothinary.test` / `customer123`
 
 ### 4. Run (three terminals)
 ```bash

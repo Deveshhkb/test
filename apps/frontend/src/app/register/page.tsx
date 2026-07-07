@@ -31,7 +31,7 @@ export default function RegisterPage() {
     <div className="container-nova grid min-h-[70vh] place-items-center py-12">
       <div className="w-full max-w-md rounded-3xl border border-ink/10 p-8 shadow-sm">
         <h1 className="text-2xl font-black">Create your account</h1>
-        <p className="mt-1 text-sm text-ink/50">Join NovaStyle and get 10% off your first order.</p>
+        <p className="mt-1 text-sm text-ink/50">Join Clothinary and get 10% off your first order.</p>
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>

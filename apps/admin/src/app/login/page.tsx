@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 export default function AdminLogin() {
   const router = useRouter();
   const { login, user } = useAuth();
-  const [email, setEmail] = useState('admin@novastyle.test');
+  const [email, setEmail] = useState('admin@clothinary.test');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ export default function AdminLogin() {
       <div className="card w-full max-w-sm p-8">
         <div className="mb-6 text-center">
           <p className="text-2xl font-black">
-            Nova<span className="text-brand-600">Style</span>
+            Cloth<span className="text-brand-600">inary</span>
           </p>
           <p className="text-sm text-slate-400">Admin Dashboard</p>
         </div>
@@ -54,7 +54,7 @@ export default function AdminLogin() {
           </button>
         </form>
         <p className="mt-4 rounded-lg bg-slate-50 p-3 text-center text-xs text-slate-400">
-          Demo admin: admin@novastyle.test / admin123
+          Demo admin: admin@clothinary.test / admin123
         </p>
       </div>
     </div>

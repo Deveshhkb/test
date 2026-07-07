@@ -18,7 +18,7 @@ export async function generateMetadata({
   const title = known?.title || `${category[0]?.toUpperCase()}${category.slice(1)}`;
   return {
     title,
-    description: `Shop ${title} at NovaStyle — original designs, free shipping over ₹999.`,
+    description: `Shop ${title} at Clothinary — original designs, free shipping over ₹999.`,
     alternates: { canonical: `/${category}` },
   };
 }
