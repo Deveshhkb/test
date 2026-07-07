@@ -80,15 +80,15 @@ export default function DashboardPage() {
               <AreaChart data={data.salesTrend}>
                 <defs>
                   <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6d3eec" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#6d3eec" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#f0475b" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#f0475b" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
                 <XAxis dataKey="_id" tick={{ fontSize: 12 }} stroke="#94a3b8" />
                 <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
                 <Tooltip formatter={(v: number) => formatPrice(v)} />
-                <Area type="monotone" dataKey="revenue" stroke="#6d3eec" strokeWidth={2} fill="url(#rev)" />
+                <Area type="monotone" dataKey="revenue" stroke="#f0475b" strokeWidth={2} fill="url(#rev)" />
               </AreaChart>
             </ResponsiveContainer>
           )}

@@ -113,7 +113,7 @@ export default function CheckoutPage() {
         description: `Order ${res.order.orderNumber}`,
         order_id: res.razorpayOrder.id,
         prefill: { name: user?.name, email: user?.email, contact: address.phone },
-        theme: { color: '#6d3eec' },
+        theme: { color: '#f0475b' },
         handler: async (response: any) => {
           try {
             await api('/orders/verify', {

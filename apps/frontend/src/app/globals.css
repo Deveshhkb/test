@@ -12,7 +12,7 @@
   --surface: 255 255 255; /* page & card background (bg-white maps here in dark) */
   --surface-2: 244 243 255; /* subtle section background (nova-50) */
   --carbon: 16 16 20; /* solid dark elements: primary buttons, footer, announcement */
-  --glow: 236 233 255; /* top decorative glow */
+  --glow: 255 224 214; /* top decorative glow (soft peach) */
 }
 
 /* ---- Dark theme (GitHub/Vercel-like). Applied via <html class="dark"> ---- */
@@ -21,7 +21,7 @@
   --surface: 20 22 27; /* #14161b */
   --surface-2: 30 33 41; /* #1e2129 */
   --carbon: 32 35 44; /* slightly lighter than surface so buttons/footer read */
-  --glow: 40 32 70;
+  --glow: 70 34 30; /* warm dark peach */
   color-scheme: dark;
 }
 
@@ -190,7 +190,7 @@ a,
 
 /* Swiper overrides */
 .swiper-pagination-bullet-active {
-  background: #6d3eec !important;
+  background: #f0475b !important;
 }
 .swiper-button-next,
 .swiper-button-prev {

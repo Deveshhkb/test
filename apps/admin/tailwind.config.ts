@@ -7,11 +7,11 @@ const config: Config = {
       colors: {
         ink: '#0f172a',
         brand: {
-          50: '#f4f3ff',
-          100: '#ebe9fe',
-          500: '#7c5cf6',
-          600: '#6d3eec',
-          700: '#5d2dd8',
+          50: '#fff1f2',
+          100: '#ffe1e4',
+          500: '#f5566a',
+          600: '#f0475b',
+          700: '#d9314a',
         },
       },
     },
