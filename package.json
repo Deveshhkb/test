@@ -1,8 +1,8 @@
 {
-  "name": "novastyle-commerce",
+  "name": "clothinary-commerce",
   "version": "1.0.0",
   "private": true,
-  "description": "NovaStyle — a production-ready fashion e-commerce platform (storefront, API, and admin).",
+  "description": "Clothinary — a production-ready fashion e-commerce platform (storefront, API, and admin).",
   "workspaces": [
     "apps/*"
   ],
@@ -10,11 +10,12 @@
     "dev:backend": "npm --workspace apps/backend run dev",
     "dev:frontend": "npm --workspace apps/frontend run dev",
     "dev:admin": "npm --workspace apps/admin run dev",
-    "dev": "bash scripts/dev.sh",
-    "stop": "bash scripts/stop.sh",
-    "restart": "npm run stop && npm run dev",
+    "dev": "concurrently -k -n backend,frontend,admin -c green,cyan,magenta \"npm:dev:backend\" \"npm:dev:frontend\" \"npm:dev:admin\"",
     "seed": "npm --workspace apps/backend run seed",
     "build": "npm --workspace apps/frontend run build && npm --workspace apps/admin run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   },
   "dependencies": {
     "gsap": "^3.13.0"
