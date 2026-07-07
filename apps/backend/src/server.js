@@ -11,7 +11,13 @@ const start = async () => {
       console.log(`🚀 NovaStyle API running on http://localhost:${PORT}`);
     });
   } catch (err) {
-    console.error('❌ Failed to start server:', err.message);
+    console.error('\n❌ Failed to start the NovaStyle API.');
+    console.error('   Reason:', err.message, '\n');
+    console.error('   Most likely the database is not reachable. Checklist:');
+    console.error('   1. Is MongoDB running?  (local service, Docker, or MongoDB Atlas)');
+    console.error('   2. apps/backend/.env exists and MONGODB_URI is set correctly');
+    console.error(`   3. Current MONGODB_URI: ${process.env.MONGODB_URI || '(not set)'}`);
+    console.error('   Quick Docker option:  docker run -d -p 27017:27017 --name mongo mongo:7\n');
     process.exit(1);
   }
 };
