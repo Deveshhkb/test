@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky Ball — Live Draw Studio</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #050b14;
+    overflow: hidden;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    user-select: none;
+  }
+  #stage {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  canvas { display: block; }
+  #ui {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    z-index: 10;
+  }
+  #history {
+    display: flex;
+    gap: 8px;
+    min-height: 34px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 240px;
+  }
+  .chip {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 14px;
+    border: 2px solid rgba(255,255,255,.75);
+    box-shadow: 0 2px 8px rgba(0,0,0,.6), inset -3px -4px 6px rgba(0,0,0,.35);
+    animation: pop .35s cubic-bezier(.2,1.6,.4,1);
+  }
+  @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+  .chip.red   { background: radial-gradient(circle at 35% 30%, #ff6b5e, #b71c1c 70%); }
+  .chip.black { background: radial-gradient(circle at 35% 30%, #5a6470, #14181d 70%); }
+  #drawBtn {
+    padding: 13px 58px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: #fff;
+    background: linear-gradient(180deg, #29b6f6, #0277bd);
+    border: 1px solid #7fdcff;
+    border-radius: 40px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 0 22px rgba(41,182,246,.55), inset 0 1px 0 rgba(255,255,255,.4);
+    transition: transform .12s, box-shadow .2s, opacity .2s;
+  }
+  #drawBtn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 0 34px rgba(41,182,246,.85); }
+  #drawBtn:disabled { opacity: .45; cursor: default; }
+  #drawBtn small { display: block; font-size: 10px; letter-spacing: 5px; font-weight: 400; opacity: .8; }
+  #soundBtn {
+    position: absolute;
+    right: 16px; top: 14px;
+    z-index: 10;
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgba(127,220,255,.5);
+    background: rgba(5,20,35,.7);
+    color: #7fdcff;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  #title {
+    position: absolute;
+    left: 20px; top: 14px;
+    z-index: 10;
+    color: #7fdcff;
+    font-weight: 800;
+    letter-spacing: 4px;
+    font-size: 15px;
+    text-shadow: 0 0 12px rgba(41,182,246,.9);
+  }
+  #title span { color: #ff5252; text-shadow: 0 0 12px rgba(255,60,60,.9); }
+</style>
+</head>
+<body>
+  <div id="title">LUCKY<span>BALL</span> · LIVE DRAW</div>
+  <button id="soundBtn" title="Sound on/off">&#128266;</button>
+  <div id="stage"><canvas id="cv"></canvas></div>
+  <div id="ui">
+    <div id="history"></div>
+    <button id="drawBtn">Putar<small>DRAW</small></button>
+  </div>
+
+<script>
+"use strict";
+/* ============================================================
+   LUCKY BALL — live lottery draw studio
+   Pure Canvas 2D. Virtual scene = 960x540, scaled to window.
+   ============================================================ */
+const VW = 960, VH = 540;
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+let scale = 1;
+
+function resize() {
+  const s = Math.min(innerWidth / VW, innerHeight / VH);
+  scale = s * (devicePixelRatio || 1);
+  cv.width  = Math.round(VW * scale);
+  cv.height = Math.round(VH * scale);
+  cv.style.width  = Math.round(VW * s) + "px";
+  cv.style.height = Math.round(VH * s) + "px";
+}
+addEventListener("resize", resize);
+resize();
+
+/* ---------------- scene constants ---------------- */
+const DRUM = { x: 480, y: 258, r: 148 };   // acrylic drum
+const BALL_R = 13;
+const NUM_BALLS = 28;
+const GRAVITY = 1150;
+
+/* roulette-red numbers, for ball colouring */
+const RED_SET = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+
+/* ---------------- state ---------------- */
+const S = { IDLE: 0, SPIN: 1, DROP: 2, RESULT: 3 };
+let state = S.IDLE;
+let stateT = 0;          // seconds in current state
+let drumAngle = 0;       // spoke rotation
+let drumSpeed = 0;       // rad/s
+let flickerNum = 19;     // number shown while spinning
+let flickerT = 0;
+let result = 19;         // last confirmed result
+let winner = null;       // winning Ball during DROP
+let resultPop = 1;       // scale anim of big number
+let history = [];
+let soundOn = true;
+
+/* ---------------- balls ---------------- */
+class Ball {
+  constructor(n) {
+    this.n = n;
+    this.red = RED_SET.has(n);
+    const a = Math.random() * Math.PI * 2;
+    const d = Math.random() * (DRUM.r - BALL_R - 26);
+    this.x = DRUM.x + Math.cos(a) * d;
+    this.y = DRUM.y + Math.sin(a) * d;
+    this.vx = 0; this.vy = 0;
+    this.rot = Math.random() * Math.PI * 2;
+    this.inDrum = true;
+  }
+}
+const balls = [];
+for (let i = 1; i <= NUM_BALLS; i++) balls.push(new Ball(i));
+const tray = [];   // last 3 drawn ball numbers, shown in slots
+
+/* ---------------- audio ---------------- */
+let AC = null;
+function beep(freq, dur, gain = .08, type = "square") {
+  if (!soundOn) return;
+  AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(gain, AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + dur);
+  o.connect(g).connect(AC.destination);
+  o.start(); o.stop(AC.currentTime + dur);
+}
+
+/* ---------------- physics ---------------- */
+function physics(dt) {
+  const spinning = state === S.SPIN;
+  for (const b of balls) {
+    if (!b.inDrum) continue;
+    b.vy += GRAVITY * dt;
+
+    if (spinning) {
+      /* drum wall drags balls tangentially + random paddle kicks */
+      const dx = b.x - DRUM.x, dy = b.y - DRUM.y;
+      const d = Math.hypot(dx, dy);
+      if (d > DRUM.r - BALL_R - 30) {
+        const t = drumSpeed * (DRUM.r - BALL_R);
+        b.vx += (-dy / d) * t * dt * 3.2;
+        b.vy += ( dx / d) * t * dt * 3.2;
+      }
+      if (Math.random() < dt * 22) {
+        b.vx += (Math.random() - .5) * 640;
+        b.vy -= Math.random() * 760;
+      }
+    }
+
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.rot += b.vx * dt * .05;
+
+    /* keep inside drum */
+    const dx = b.x - DRUM.x, dy = b.y - DRUM.y;
+    const d = Math.hypot(dx, dy), max = DRUM.r - BALL_R - 6;
+    if (d > max) {
+      const nx = dx / d, ny = dy / d;
+      b.x = DRUM.x + nx * max;
+      b.y = DRUM.y + ny * max;
+      const vn = b.vx * nx + b.vy * ny;
+      if (vn > 0) {
+        b.vx -= 1.55 * vn * nx;
+        b.vy -= 1.55 * vn * ny;
+        if (vn > 130 && Math.random() < .3) beep(2400 + Math.random() * 900, .03, .025);
+      }
+      b.vx *= .985; b.vy *= .985;
+    }
+  }
+
+  /* ball-ball collisions */
+  for (let i = 0; i < balls.length; i++) {
+    const a = balls[i];
+    if (!a.inDrum) continue;
+    for (let j = i + 1; j < balls.length; j++) {
+      const b = balls[j];
+      if (!b.inDrum) continue;
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const d2 = dx * dx + dy * dy, min = BALL_R * 2;
+      if (d2 < min * min && d2 > 0.0001) {
+        const d = Math.sqrt(d2), nx = dx / d, ny = dy / d;
+        const ov = (min - d) / 2;
+        a.x -= nx * ov; a.y -= ny * ov;
+        b.x += nx * ov; b.y += ny * ov;
+        const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
+        const vn = rvx * nx + rvy * ny;
+        if (vn < 0) {
+          const imp = -.82 * vn / 2;
+          a.vx -= imp * nx; a.vy -= imp * ny;
+          b.vx += imp * nx; b.vy += imp * ny;
+        }
+      }
+    }
+  }
+}
+
+/* ---------------- draw sequence ---------------- */
+const btn = document.getElementById("drawBtn");
+btn.addEventListener("click", startDraw);
+document.getElementById("soundBtn").addEventListener("click", function () {
+  soundOn = !soundOn;
+  this.innerHTML = soundOn ? "&#128266;" : "&#128263;";
+});
+
+function startDraw() {
+  if (state !== S.IDLE) return;
+  /* recall any ball still out in the tray animation */
+  for (const b of balls) b.inDrum = true;
+  if (winner) { winner = null; }
+  state = S.SPIN; stateT = 0;
+  btn.disabled = true;
+  beep(600, .12, .1, "sine");
+}
+
+function pickWinner() {
+  const n = 1 + Math.floor(Math.random() * NUM_BALLS);
+  return balls.find(b => b.n === n);
+}
+
+function update(dt) {
+  stateT += dt;
+
+  if (state === S.SPIN) {
+    drumSpeed = Math.min(drumSpeed + dt * 9, 10);
+    flickerT += dt;
+    if (flickerT > .07) {
+      flickerT = 0;
+      flickerNum = 1 + Math.floor(Math.random() * NUM_BALLS);
+      beep(1400 + Math.random() * 600, .02, .02);
+    }
+    if (stateT > 3.6) {
+      winner = pickWinner();
+      result = winner.n;
+      state = S.DROP; stateT = 0;
+    }
+
+  } else if (state === S.DROP) {
+    drumSpeed *= Math.pow(.25, dt);           // drum slows down
+    if (winner) {
+      /* steer winning ball to the bottom gate */
+      const gx = DRUM.x, gy = DRUM.y + DRUM.r - BALL_R - 8;
+      winner.vx += (gx - winner.x) * 14 * dt * 8;
+      winner.vy += (gy - winner.y) * 14 * dt * 8;
+      winner.vx *= Math.pow(.02, dt);
+      winner.vy *= Math.pow(.02, dt);
+      if (stateT > 1.1) {
+        winner.inDrum = false;               // exits through the gate
+        winner.ex = DRUM.x; winner.ey = gy;  // exit anim start
+        winner.et = 0;
+        tray.unshift(winner.n);
+        if (tray.length > 3) tray.pop();
+        state = S.RESULT; stateT = 0;
+        resultPop = 0;
+        beep(880, .3, .12, "sine");
+        setTimeout(() => beep(1318, .4, .12, "sine"), 140);
+        addHistoryChip(result);
+      }
+    }
+
+  } else if (state === S.RESULT) {
+    drumSpeed *= Math.pow(.2, dt);
+    resultPop = Math.min(1, resultPop + dt * 3.2);
+    if (winner) winner.et = Math.min(1, (winner.et || 0) + dt * 1.4);
+    if (stateT > 2.2) {
+      state = S.IDLE; stateT = 0;
+      btn.disabled = false;
+    }
+  } else {
+    drumSpeed *= Math.pow(.2, dt);
+  }
+
+  drumAngle += drumSpeed * dt;
+  physics(dt);
+}
+
+function addHistoryChip(n) {
+  history.unshift(n);
+  if (history.length > 10) history.pop();
+  const h = document.getElementById("history");
+  const c = document.createElement("div");
+  c.className = "chip " + (RED_SET.has(n) ? "red" : "black");
+  c.textContent = n;
+  h.prepend(c);
+  while (h.children.length > 10) h.removeChild(h.lastChild);
+}
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function draw() {
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  drawBackground();
+  drawScreens();
+  drawStand();
+  drawDrum();
+  drawBigNumber();
+  drawHasilBar();
+  drawTray();
+}
+
+/* ----- studio background: gradient, neon trusses, LED wall ----- */
+function drawBackground() {
+  const g = ctx.createLinearGradient(0, 0, 0, VH);
+  g.addColorStop(0, "#0b1826");
+  g.addColorStop(.55, "#0e2438");
+  g.addColorStop(1, "#071220");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VW, VH);
+
+  /* floor sheen */
+  const f = ctx.createLinearGradient(0, 400, 0, VH);
+  f.addColorStop(0, "rgba(40,120,190,.12)");
+  f.addColorStop(1, "rgba(10,30,55,0)");
+  ctx.fillStyle = f;
+  ctx.fillRect(0, 400, VW, VH - 400);
+
+  /* neon X trusses left & right */
+  ctx.save();
+  ctx.lineWidth = 3.5;
+  ctx.shadowColor = "#37c4ff";
+  ctx.shadowBlur = 14;
+  ctx.strokeStyle = "rgba(90,210,255,.85)";
+  for (const sx of [30, 850]) {
+    for (let k = 0; k < 3; k++) {
+      const y0 = 60 + k * 150;
+      ctx.beginPath();
+      ctx.moveTo(sx, y0);       ctx.lineTo(sx + 80, y0 + 140);
+      ctx.moveTo(sx + 80, y0);  ctx.lineTo(sx, y0 + 140);
+      ctx.stroke();
+    }
+  }
+  /* ceiling neon frame */
+  ctx.strokeStyle = "rgba(90,210,255,.6)";
+  ctx.beginPath();
+  ctx.moveTo(240, 8); ctx.lineTo(300, 26); ctx.lineTo(660, 26); ctx.lineTo(720, 8);
+  ctx.stroke();
+  ctx.restore();
+
+  /* LED dot panel behind the drum */
+  ctx.save();
+  ctx.fillStyle = "rgba(20,60,110,.55)";
+  roundRect(300, 230, 360, 210, 12);
+  ctx.fill();
+  ctx.fillStyle = "rgba(90,190,255,.28)";
+  for (let y = 244; y < 432; y += 13)
+    for (let x = 312; x < 652; x += 13) {
+      ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fill();
+    }
+  ctx.restore();
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/* ----- wall-mounted screens with animated roulette wheels ----- */
+function drawScreens() {
+  screenFrame(58, 42, 296, 168, drawTrendScreen);
+  screenFrame(606, 42, 296, 168, drawRouletteScreen);
+}
+
+function screenFrame(x, y, w, h, content) {
+  ctx.save();
+  ctx.fillStyle = "#05080c";
+  roundRect(x - 6, y - 6, w + 12, h + 12, 8);
+  ctx.fill();
+  ctx.strokeStyle = "#1c2833";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  roundRect(x, y, w, h, 4);
+  ctx.clip();
+  content(x, y, w, h);
+  /* glass reflection */
+  const g = ctx.createLinearGradient(x, y, x + w, y + h);
+  g.addColorStop(0, "rgba(255,255,255,.08)");
+  g.addColorStop(.25, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+function drawRouletteWheel(cx, cy, r, ang) {
+  const POCKETS = 24;
+  for (let i = 0; i < POCKETS; i++) {
+    const a0 = ang + (i / POCKETS) * Math.PI * 2;
+    const a1 = ang + ((i + 1) / POCKETS) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, a0, a1);
+    ctx.closePath();
+    ctx.fillStyle = i % 12 === 0 ? "#1e8449" : (i % 2 ? "#151515" : "#c0392b");
+    ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7);
+  ctx.strokeStyle = "#8d6e2f"; ctx.lineWidth = 3; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, r * .45, 0, 7);
+  ctx.fillStyle = "#5d4322"; ctx.fill();
+  ctx.strokeStyle = "#c9a24b"; ctx.lineWidth = 2; ctx.stroke();
+  /* gold cross */
+  ctx.save();
+  ctx.translate(cx, cy); ctx.rotate(ang * 1.4);
+  ctx.strokeStyle = "#e2c063"; ctx.lineWidth = 3;
+  for (let k = 0; k < 4; k++) {
+    ctx.rotate(Math.PI / 2);
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r * .42, 0); ctx.stroke();
+    ctx.beginPath(); ctx.arc(r * .42, 0, 3.5, 0, 7);
+    ctx.fillStyle = "#f5d76e"; ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawTrendScreen(x, y, w, h) {
+  ctx.fillStyle = "#0a0d12";
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "#e8eef4";
+  ctx.font = "700 15px Arial";
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("Trend Ribber", x + 12, y + 9);
+  ctx.fillStyle = "#5d6d7e";
+  ctx.font = "600 8px Arial";
+  ctx.fillText("LIVE STATISTICS", x + 12, y + 26);
+  drawRouletteWheel(x + w * .52, y + h * .58, 52, drumAngle * .35);
+  /* stat rows */
+  ctx.font = "700 11px Arial";
+  const rows = history.slice(0, 4);
+  for (let i = 0; i < 4; i++) {
+    const yy = y + 44 + i * 26;
+    ctx.fillStyle = "#141a22";
+    ctx.fillRect(x + 10, yy, 62, 20);
+    if (rows[i] != null) {
+      ctx.fillStyle = RED_SET.has(rows[i]) ? "#ff5252" : "#aeb6bf";
+      ctx.textAlign = "center";
+      ctx.fillText(rows[i], x + 41, yy + 5);
+      ctx.textAlign = "left";
+    }
+  }
+  /* colour mosaic (like the video's palette box) */
+  const cols = ["#e74c3c","#f1c40f","#2ecc71","#3498db","#9b59b6","#e67e22","#1abc9c","#ec7063","#5dade2"];
+  for (let i = 0; i < 9; i++) {
+    ctx.fillStyle = cols[i];
+    ctx.fillRect(x + w - 66 + (i % 3) * 18, y + 10 + Math.floor(i / 3) * 12, 16, 10);
+  }
+}
+
+function drawRouletteScreen(x, y, w, h) {
+  const g = ctx.createLinearGradient(x, y, x, y + h);
+  g.addColorStop(0, "#123"); g.addColorStop(1, "#0a141c");
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, w, h);
+  drawRouletteWheel(x + w / 2, y + h * .52, 74, -drumAngle * .3);
+  ctx.fillStyle = "rgba(0,0,0,.55)";
+  ctx.fillRect(x, y + h - 22, w, 22);
+  ctx.fillStyle = "#d5dbdf";
+  ctx.font = "600 9px Arial";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("PUTARAN BERIKUTNYA DALAM " + Math.max(0, 30 - Math.floor(performance.now() / 1000) % 31) + " DETIK", x + w / 2, y + h - 11);
+}
+
+/* ----- machine stand + drum ----- */
+function drawStand() {
+  const { x, y, r } = DRUM;
+  ctx.save();
+  /* pedestal column */
+  const g = ctx.createLinearGradient(x - 60, 0, x + 60, 0);
+  g.addColorStop(0, "#131a2e"); g.addColorStop(.5, "#2a3660"); g.addColorStop(1, "#10162a");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(x - 46, y + r - 20);
+  ctx.lineTo(x + 46, y + r - 20);
+  ctx.lineTo(x + 74, VH);
+  ctx.lineTo(x - 74, VH);
+  ctx.closePath();
+  ctx.fill();
+  /* side arms holding the drum */
+  ctx.strokeStyle = "#39456f";
+  ctx.lineWidth = 9;
+  ctx.beginPath();
+  ctx.moveTo(x - r + 26, y + 44); ctx.lineTo(x - 42, y + r + 26);
+  ctx.moveTo(x + r - 26, y + 44); ctx.lineTo(x + 42, y + r + 26);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawDrum() {
+  const { x, y, r } = DRUM;
+  ctx.save();
+
+  /* acrylic body */
+  const g = ctx.createRadialGradient(x - r * .4, y - r * .5, r * .1, x, y, r);
+  g.addColorStop(0, "rgba(190,225,255,.16)");
+  g.addColorStop(.75, "rgba(120,170,220,.10)");
+  g.addColorStop(1, "rgba(200,235,255,.20)");
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 7);
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  /* balls (clipped inside) */
+  ctx.save();
+  ctx.clip();
+  for (const b of balls) if (b.inDrum) drawBall(b.x, b.y, BALL_R, b.n, b.red, b.rot);
+  ctx.restore();
+
+  /* rotating spokes + golden hub (in front of balls, like the video) */
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(drumAngle);
+  ctx.strokeStyle = "rgba(225,235,245,.85)";
+  ctx.lineWidth = 4;
+  for (let i = 0; i < 6; i++) {
+    ctx.rotate(Math.PI / 3);
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(r - 5, 0); ctx.stroke();
+    /* paddle tip */
+    ctx.fillStyle = "rgba(200,210,225,.9)";
+    ctx.fillRect(r - 26, -3, 20, 6);
+  }
+  ctx.restore();
+  /* hub */
+  const hub = ctx.createRadialGradient(x - 4, y - 5, 2, x, y, 20);
+  hub.addColorStop(0, "#ffe9a8"); hub.addColorStop(.6, "#d4a017"); hub.addColorStop(1, "#8a5a00");
+  ctx.beginPath(); ctx.arc(x, y, 17, 0, 7);
+  ctx.fillStyle = hub; ctx.fill();
+  ctx.strokeStyle = "#6e4a00"; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, y, 7, 0, 7);
+  ctx.fillStyle = "#fff3c4"; ctx.fill();
+
+  /* glass rim */
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 7);
+  ctx.strokeStyle = "rgba(230,245,255,.9)";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, y, r - 7, 0, 7);
+  ctx.strokeStyle = "rgba(160,200,235,.35)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  /* glass highlight arc */
+  ctx.beginPath();
+  ctx.arc(x, y, r - 16, -2.5, -1.3);
+  ctx.strokeStyle = "rgba(255,255,255,.5)";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+  ctx.stroke();
+
+  /* bottom gate */
+  ctx.fillStyle = "#222c48";
+  roundRect(x - 20, y + r - 10, 40, 22, 5);
+  ctx.fill();
+  ctx.strokeStyle = "#4a5a8a"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+
+  /* winning ball exit animation (below drum, outside clip) */
+  if (winner && !winner.inDrum && (winner.et || 0) < 1) {
+    const t = winner.et || 0;                     // 0 → 1
+    const sy = y + r + 4, ey2 = 468;
+    const by = sy + (ey2 - sy) * (t * t);         // accelerating fall
+    drawBall(x, Math.min(by, ey2), BALL_R + 1, winner.n, winner.red, t * 9);
+  }
+}
+
+function drawBall(x, y, r, n, red, rot) {
+  ctx.save();
+  ctx.translate(x, y);
+  /* body */
+  const g = ctx.createRadialGradient(-r * .38, -r * .42, r * .12, 0, 0, r * 1.15);
+  if (red) {
+    g.addColorStop(0, "#ff8a80"); g.addColorStop(.45, "#d32f2f"); g.addColorStop(1, "#7f1010");
+  } else {
+    g.addColorStop(0, "#6b7684"); g.addColorStop(.45, "#22272e"); g.addColorStop(1, "#050608");
+  }
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7);
+  ctx.fillStyle = g;
+  ctx.fill();
+  /* number disc */
+  ctx.rotate(Math.sin(rot) * .5);
+  ctx.beginPath(); ctx.arc(0, 0, r * .58, 0, 7);
+  ctx.fillStyle = "#f5f5f0";
+  ctx.fill();
+  ctx.fillStyle = "#111";
+  ctx.font = "800 " + Math.round(r * .82) + "px Arial";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(n, 0, r * .06);
+  ctx.rotate(-Math.sin(rot) * .5);
+  /* specular dot */
+  ctx.beginPath(); ctx.arc(-r * .35, -r * .42, r * .16, 0, 7);
+  ctx.fillStyle = "rgba(255,255,255,.85)";
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ----- big red number over the drum ----- */
+function drawBigNumber() {
+  const show = state === S.SPIN ? flickerNum : result;
+  const pop = state === S.RESULT ? (1 + (1 - resultPop) * .45) : 1;
+  ctx.save();
+  ctx.translate(DRUM.x, DRUM.y - 6);
+  ctx.scale(pop, pop);
+  ctx.font = "900 150px 'Arial Black', Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(255,40,40,.85)";
+  ctx.shadowBlur = state === S.RESULT ? 46 : 24;
+  ctx.fillStyle = state === S.SPIN ? "rgba(255,60,60,.8)" : "#ff2e2e";
+  ctx.fillText(show, 0, 0);
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "rgba(255,160,160,.6)";
+  ctx.lineWidth = 2;
+  ctx.strokeText(show, 0, 0);
+  ctx.restore();
+}
+
+/* ----- "Hasil ● N" pill bar ----- */
+function drawHasilBar() {
+  const w = 320, h = 34, x = DRUM.x - w / 2, y = DRUM.y + 34;
+  ctx.save();
+  ctx.fillStyle = "rgba(8,10,14,.88)";
+  roundRect(x, y, w, h, h / 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,.18)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.fillStyle = "#f2f4f6";
+  ctx.font = "700 19px Arial";
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("Hasil", x + w / 2 - 16, y + h / 2 + 1);
+
+  /* green dot (pulses on result) */
+  const pulse = state === S.RESULT ? 1 + Math.sin(stateT * 12) * .25 : 1;
+  const dg = ctx.createRadialGradient(x + w / 2 + 6 - 2, y + h / 2 - 2, 1, x + w / 2 + 6, y + h / 2, 8 * pulse);
+  dg.addColorStop(0, "#7dff9e"); dg.addColorStop(1, "#0f9d3a");
+  ctx.beginPath(); ctx.arc(x + w / 2 + 6, y + h / 2, 7 * pulse, 0, 7);
+  ctx.fillStyle = dg; ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "left";
+  ctx.fillText(state === S.SPIN ? "…" : result, x + w / 2 + 24, y + h / 2 + 1);
+  ctx.restore();
+}
+
+/* ----- bottom tray with last three drawn balls ----- */
+function drawTray() {
+  const y = 482, cx = DRUM.x;
+  ctx.save();
+  ctx.fillStyle = "#0d1322";
+  roundRect(cx - 105, y - 8, 210, 52, 8);
+  ctx.fill();
+  ctx.strokeStyle = "#2c3a66"; ctx.lineWidth = 2; ctx.stroke();
+  for (let i = 0; i < 3; i++) {
+    const sx = cx - 62 + i * 62;
+    ctx.beginPath(); ctx.arc(sx, y + 18, 20, 0, 7);
+    ctx.fillStyle = "#050810"; ctx.fill();
+    ctx.strokeStyle = "#f0b429"; ctx.lineWidth = 2.5; ctx.stroke();
+    const n = tray[i];
+    if (n != null && !(i === 0 && winner && (winner.et || 0) < 1))
+      drawBall(sx, y + 18, 15, n, RED_SET.has(n), 0);
+  }
+  ctx.restore();
+}
+
+/* ---------------- main loop ---------------- */
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min((now - last) / 1000, .033);
+  last = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
