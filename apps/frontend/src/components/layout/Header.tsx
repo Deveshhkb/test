@@ -181,7 +181,7 @@ export default function Header() {
           scrolled ? 'border-ink/10 shadow-sm' : 'border-transparent'
         )}
       >
-        <div className="container-nova flex h-16 items-center justify-between gap-4">
+        <div className="container-nova relative flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               className="lg:hidden"
@@ -198,7 +198,7 @@ export default function Header() {
           {/* Desktop nav with mega menu */}
           <nav className="hidden items-center gap-1 lg:flex">
             {NAV.map((item) => (
-              <div key={item.label} className="group relative">
+              <div key={item.label} className="group">
                 <Link
                   href={item.href}
                   className="flex items-center gap-1 rounded-full px-3 py-2 text-sm font-semibold text-ink/80 transition hover:bg-ink/5 hover:text-ink"
@@ -209,8 +209,13 @@ export default function Header() {
                 {item.columns && (
                   <div
                     className={cn(
-                      'invisible absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100',
-                      item.specials ? 'w-[940px]' : 'w-[560px]'
+                      // Anchored to the header container's left edge (not centered on
+                      // the trigger) and width-capped to the viewport, so the panel
+                      // never runs off-screen for left-side items like Men/Women.
+                      'invisible absolute left-0 top-full z-50 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100',
+                      item.specials
+                        ? 'w-[min(940px,calc(100vw-2rem))]'
+                        : 'w-[min(560px,calc(100vw-2rem))]'
                     )}
                   >
                     <div className="flex gap-6 rounded-2xl border border-ink/10 bg-white p-6 shadow-xl">
