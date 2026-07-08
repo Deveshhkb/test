@@ -97,6 +97,7 @@ export interface Review {
   comment?: string;
   photos?: string[];
   verifiedPurchase?: boolean;
+  helpfulCount?: number;
   createdAt: string;
   user?: { name: string; avatar?: string };
 }

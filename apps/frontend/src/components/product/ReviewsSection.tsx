@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Star } from 'lucide-react';
+import { Star, ThumbsUp } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -17,11 +17,42 @@ export default function ReviewsSection({ productId }: { productId: string }) {
   const [photos, setPhotos] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Reviews the current user has voted "helpful" this session, and live counts.
+  const [voted, setVoted] = useState<Record<string, boolean>>({});
+  const [helpfulCounts, setHelpfulCounts] = useState<Record<string, number>>({});
 
   const load = () =>
     api<{ reviews: Review[] }>(`/reviews/product/${productId}`)
-      .then((d) => setReviews(d.reviews))
+      .then((d) => {
+        setReviews(d.reviews);
+        setHelpfulCounts(
+          Object.fromEntries(d.reviews.map((r) => [r._id, r.helpfulCount || 0]))
+        );
+      })
       .catch(() => {});
+
+  const voteHelpful = async (reviewId: string) => {
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+    // Optimistic toggle; reconcile with the server response.
+    const wasVoted = voted[reviewId];
+    setVoted((v) => ({ ...v, [reviewId]: !wasVoted }));
+    setHelpfulCounts((c) => ({ ...c, [reviewId]: (c[reviewId] || 0) + (wasVoted ? -1 : 1) }));
+    try {
+      const d = await api<{ helpful: boolean; helpfulCount: number }>(
+        `/reviews/${reviewId}/helpful`,
+        { method: 'POST' }
+      );
+      setVoted((v) => ({ ...v, [reviewId]: d.helpful }));
+      setHelpfulCounts((c) => ({ ...c, [reviewId]: d.helpfulCount }));
+    } catch {
+      // Roll back on failure.
+      setVoted((v) => ({ ...v, [reviewId]: wasVoted }));
+      setHelpfulCounts((c) => ({ ...c, [reviewId]: (c[reviewId] || 0) + (wasVoted ? 1 : -1) }));
+    }
+  };
 
   useEffect(() => {
     load();
@@ -57,6 +88,11 @@ export default function ReviewsSection({ productId }: { productId: string }) {
     ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
     : 0;
 
+  // Count reviews per star rating (index 0 = 5★ … index 4 = 1★) for the bars.
+  const breakdown = [5, 4, 3, 2, 1].map(
+    (star) => reviews.filter((r) => r.rating === star).length
+  );
+
   return (
     <section className="mt-14 border-t border-ink/10 pt-10">
       <h2 className="text-2xl font-black">Ratings & Reviews</h2>
@@ -70,6 +106,27 @@ export default function ReviewsSection({ productId }: { productId: string }) {
             ))}
           </div>
           <p className="mt-1 text-sm text-ink/50">{reviews.length} reviews</p>
+
+          {/* Rating distribution bars */}
+          {reviews.length > 0 && (
+            <div className="mt-5 space-y-1.5 text-left">
+              {breakdown.map((count, i) => {
+                const star = 5 - i;
+                const pct = reviews.length ? (count / reviews.length) * 100 : 0;
+                return (
+                  <div key={star} className="flex items-center gap-2 text-xs">
+                    <span className="flex w-6 shrink-0 items-center gap-0.5 text-ink/60">
+                      {star} <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    </span>
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink/10">
+                      <div className="h-full rounded-full bg-amber-400" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="w-6 shrink-0 text-right text-ink/40">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {user && (
             <form onSubmit={submit} className="mt-6 space-y-3 text-left">
@@ -139,9 +196,23 @@ export default function ReviewsSection({ productId }: { productId: string }) {
                     ))}
                   </div>
                 )}
-                <p className="mt-2 text-xs text-ink/40">
-                  {r.user?.name || r.name} · {new Date(r.createdAt).toLocaleDateString()}
-                </p>
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-xs text-ink/40">
+                    {r.user?.name || r.name} · {new Date(r.createdAt).toLocaleDateString()}
+                  </p>
+                  <button
+                    onClick={() => voteHelpful(r._id)}
+                    className={cn(
+                      'flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition',
+                      voted[r._id]
+                        ? 'border-nova-600 bg-nova-50 text-nova-600'
+                        : 'border-ink/15 text-ink/60 hover:border-ink/40'
+                    )}
+                  >
+                    <ThumbsUp className={cn('h-3.5 w-3.5', voted[r._id] && 'fill-nova-600')} />
+                    Helpful{helpfulCounts[r._id] ? ` (${helpfulCounts[r._id]})` : ''}
+                  </button>
+                </div>
               </div>
             ))
           )}

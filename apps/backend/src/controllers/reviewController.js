@@ -50,6 +50,24 @@ export const createReview = asyncHandler(async (req, res) => {
   }
 });
 
+// POST /api/reviews/:id/helpful  -> toggle the current user's "helpful" vote
+export const toggleHelpful = asyncHandler(async (req, res) => {
+  const review = await Review.findById(req.params.id);
+  if (!review) throw new ApiError(404, 'Review not found.');
+
+  const uid = req.user._id.toString();
+  const already = review.helpfulBy.some((u) => u.toString() === uid);
+  if (already) {
+    review.helpfulBy = review.helpfulBy.filter((u) => u.toString() !== uid);
+  } else {
+    review.helpfulBy.push(req.user._id);
+  }
+  review.helpfulCount = review.helpfulBy.length;
+  await review.save();
+
+  res.json({ success: true, helpful: !already, helpfulCount: review.helpfulCount });
+});
+
 // DELETE /api/reviews/:id
 export const deleteReview = asyncHandler(async (req, res) => {
   const review = await Review.findById(req.params.id);

@@ -11,6 +11,9 @@ const reviewSchema = new mongoose.Schema(
     photos: [{ type: String }],
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
     verifiedPurchase: { type: Boolean, default: false },
+    // Users who marked this review helpful (unique set); count is derived.
+    helpfulBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    helpfulCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
