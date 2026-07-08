@@ -14,6 +14,7 @@ import adminRoutes from './adminRoutes.js';
 import cmsRoutes from './cmsRoutes.js';
 import aiRoutes from './aiRoutes.js';
 import cardRoutes from './cardRoutes.js';
+import settingsRoutes from './settingsRoutes.js';
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use('/admin', adminRoutes);
 router.use('/cms', cmsRoutes);
 router.use('/ai', aiRoutes);
 router.use('/cards', cardRoutes);
+router.use('/settings', settingsRoutes);
 
 export default router;

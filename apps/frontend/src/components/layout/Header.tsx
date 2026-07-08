@@ -22,6 +22,7 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
+import { api } from '@/lib/api';
 import SearchOverlay from './SearchOverlay';
 import ThemeToggle from './ThemeToggle';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -141,6 +142,8 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  // Admin-editable announcement bar (overrides the translated default).
+  const [announcement, setAnnouncement] = useState<{ enabled: boolean; text: string; link: string } | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -149,14 +152,28 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  useEffect(() => {
+    api<{ settings: { announcement: { enabled: boolean; text: string; link: string } } }>('/settings')
+      .then((d) => setAnnouncement(d.settings.announcement))
+      .catch(() => {});
+  }, []);
+
   return (
     <>
-      {/* Announcement bar */}
-      <div className="bg-ink text-white">
-        <div className="container-nova flex h-9 items-center justify-center overflow-hidden text-xs font-medium">
-          <span className="truncate">✨ {t('announcement')}</span>
+      {/* Announcement bar — admin-editable, falls back to the translated text */}
+      {announcement?.enabled !== false && (
+        <div className="bg-ink text-white">
+          <div className="container-nova flex h-9 items-center justify-center overflow-hidden text-xs font-medium">
+            {announcement?.link ? (
+              <Link href={announcement.link} className="truncate hover:underline">
+                ✨ {announcement.text || t('announcement')}
+              </Link>
+            ) : (
+              <span className="truncate">✨ {announcement?.text || t('announcement')}</span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <header
         className={cn(
