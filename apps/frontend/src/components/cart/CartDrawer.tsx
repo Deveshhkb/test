@@ -38,15 +38,7 @@ export default function CartDrawer() {
               </button>
             </div>
 
-            {!user ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-                <ShoppingBag className="h-12 w-12 text-ink/20" />
-                <p className="text-ink/60">Please log in to view your bag.</p>
-                <Link href="/login" onClick={() => setOpen(false)} className="btn-primary">
-                  Login
-                </Link>
-              </div>
-            ) : items.length === 0 ? (
+            {items.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
                 <ShoppingBag className="h-12 w-12 text-ink/20" />
                 <p className="text-ink/60">Your bag is empty.</p>
@@ -114,9 +106,18 @@ export default function CartDrawer() {
                       <span>{formatPrice(summary.grandTotal)}</span>
                     </div>
                   </div>
-                  <Link href="/checkout" onClick={() => setOpen(false)} className="btn-primary w-full">
+                  <Link
+                    href={user ? '/checkout' : '/login?redirect=/checkout'}
+                    onClick={() => setOpen(false)}
+                    className="btn-primary w-full"
+                  >
                     Checkout
                   </Link>
+                  {!user && (
+                    <p className="mt-2 text-center text-xs text-ink/40">
+                      You&apos;ll sign in at checkout — your bag stays with you.
+                    </p>
+                  )}
                 </div>
               </>
             )}

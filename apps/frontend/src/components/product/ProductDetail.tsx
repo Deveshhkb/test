@@ -39,21 +39,19 @@ export default function ProductDetail({ product }: { product: Product }) {
   const resolveVariant = () =>
     product.variants?.find((v) => v.size === size && v.color === color);
 
-  const requireAuth = () => {
-    if (!user) {
-      router.push(`/login?redirect=/product/${product.slug}`);
-      return false;
-    }
-    return true;
-  };
+  const snapshot = () => ({
+    title: product.title,
+    slug: product.slug,
+    image: product.images?.[0],
+    price: product.price,
+  });
 
   const handleAdd = async () => {
-    if (!requireAuth()) return;
     if (product.sizes?.length && !size) return alert('Please select a size.');
     setAdding(true);
     try {
       const variant = resolveVariant();
-      await addItem({ productId: product._id, variantId: variant?._id, size, color, quantity: 1 });
+      await addItem({ productId: product._id, variantId: variant?._id, size, color, quantity: 1, product: snapshot() });
       setAdded(true);
       setTimeout(() => setAdded(false), 1500);
     } finally {
@@ -62,12 +60,12 @@ export default function ProductDetail({ product }: { product: Product }) {
   };
 
   const handleBuyNow = async () => {
-    if (!requireAuth()) return;
     if (product.sizes?.length && !size) return alert('Please select a size.');
     const variant = resolveVariant();
-    await addItem({ productId: product._id, variantId: variant?._id, size, color, quantity: 1 });
+    await addItem({ productId: product._id, variantId: variant?._id, size, color, quantity: 1, product: snapshot() });
     setOpen(false);
-    router.push('/checkout');
+    // Guests are asked to sign in at checkout; their bag merges in on login.
+    router.push(user ? '/checkout' : '/login?redirect=/checkout');
   };
 
   return (

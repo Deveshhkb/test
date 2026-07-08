@@ -28,15 +28,17 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
 
   const onQuickAdd = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!user) {
-      window.location.href = '/login';
-      return;
-    }
     await addItem({
       productId: product._id,
       size: product.sizes?.[0] || '',
       color: product.colors?.[0]?.name || '',
       quantity: 1,
+      product: {
+        title: product.title,
+        slug: product.slug,
+        image: product.images?.[0],
+        price: product.price,
+      },
     });
   };
 

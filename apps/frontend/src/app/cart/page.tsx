@@ -7,6 +7,7 @@ import { Minus, Plus, Trash2, Tag, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
+import CartRecommendations from '@/components/cart/CartRecommendations';
 
 export default function CartPage() {
   const { cart, summary, updateItem, removeItem, applyCoupon, removeCoupon } = useCart();
@@ -15,13 +16,13 @@ export default function CartPage() {
   const [msg, setMsg] = useState('');
   const items = cart?.items || [];
 
-  if (!user) {
-    return (
-      <Empty title="Please log in" cta="Login" href="/login" note="Log in to view your shopping bag." />
-    );
-  }
   if (items.length === 0) {
-    return <Empty title="Your bag is empty" cta="Start Shopping" href="/collections/new-arrivals" note="Looks like you haven't added anything yet." />;
+    return (
+      <>
+        <Empty title="Your bag is empty" cta="Start Shopping" href="/collections/new-arrivals" note="Looks like you haven't added anything yet." />
+        <CartRecommendations />
+      </>
+    );
   }
 
   const handleCoupon = async () => {
@@ -36,7 +37,8 @@ export default function CartPage() {
   };
 
   return (
-    <div className="container-nova py-8">
+    <>
+      <div className="container-nova py-8">
       <h1 className="mb-6 text-3xl font-black">Shopping Bag</h1>
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="space-y-4">
@@ -78,7 +80,14 @@ export default function CartPage() {
         <aside className="h-fit rounded-2xl border border-ink/10 p-6 lg:sticky lg:top-24">
           <h2 className="mb-4 text-lg font-bold">Order Summary</h2>
 
-          {cart?.coupon?.code ? (
+          {!user ? (
+            <div className="mb-4 rounded-xl bg-nova-50 px-3 py-2.5 text-sm text-ink/70">
+              <Link href="/login?redirect=/cart" className="font-semibold text-nova-600 hover:underline">
+                Log in
+              </Link>{' '}
+              to apply coupons — your bag carries over.
+            </div>
+          ) : cart?.coupon?.code ? (
             <div className="mb-4 flex items-center justify-between rounded-xl bg-green-50 px-3 py-2 text-sm">
               <span className="flex items-center gap-1.5 font-medium text-green-700">
                 <Tag className="h-4 w-4" /> {cart.coupon.code} applied
@@ -115,12 +124,14 @@ export default function CartPage() {
             </div>
           </div>
 
-          <Link href="/checkout" className="btn-primary mt-5 w-full">
+          <Link href={user ? '/checkout' : '/login?redirect=/checkout'} className="btn-primary mt-5 w-full">
             Proceed to Checkout
           </Link>
         </aside>
       </div>
-    </div>
+      </div>
+      <CartRecommendations excludeIds={items.map((i) => i.product?._id).filter(Boolean) as string[]} />
+    </>
   );
 }
 
