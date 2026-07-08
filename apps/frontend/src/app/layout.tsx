@@ -8,6 +8,7 @@ import CartDrawer from '@/components/cart/CartDrawer';
 import DesktopShell from '@/components/desktop/DesktopShell';
 import QuickActions from '@/components/desktop/QuickActions';
 import AiLauncher from '@/components/ai/AiLauncher';
+import ApiStatusBanner from '@/components/layout/ApiStatusBanner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
         <Providers>
+          <ApiStatusBanner />
           <Header />
           <main className="min-h-[60vh]">
             <DesktopShell>{children}</DesktopShell>

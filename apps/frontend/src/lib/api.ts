@@ -14,18 +14,35 @@ type FetchOptions = RequestInit & { auth?: boolean };
  * Thin fetch wrapper. Sends cookies (credentials) for auth and unwraps
  * the API's { success, ... } envelope, throwing on failure.
  */
+/** Broadcast API reachability so a UI banner can surface connection problems. */
+function signal(status: 'online' | 'offline') {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('nova-api-status', { detail: status }));
+  }
+}
+
 export async function api<T = any>(path: string, options: FetchOptions = {}): Promise<T> {
   const { auth, headers, ...rest } = options;
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-    cache: rest.cache ?? 'no-store',
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...rest,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+      cache: rest.cache ?? 'no-store',
+    });
+  } catch {
+    // Network-level failure (server down / connection refused / CORS).
+    signal('offline');
+    throw new Error(
+      `Can't reach the server at ${API_URL}. Make sure the backend is running (npm run dev:backend) and MongoDB is up.`
+    );
+  }
+  signal('online');
 
   let data: any = null;
   try {
