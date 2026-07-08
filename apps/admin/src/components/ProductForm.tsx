@@ -21,6 +21,10 @@ interface Variant {
 const ALL_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 const COLLECTIONS = ['trending', 'new-arrivals', 'best-sellers'];
 
+/** Lowercase, hyphenated slug used to auto-name variant SKUs. */
+const slugFromTitle = (t: string) =>
+  t.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
 export default function ProductForm({ productId }: { productId?: string }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -101,13 +105,32 @@ export default function ProductForm({ productId }: { productId?: string }) {
   const updateVariant = (i: number, patch: Partial<Variant>) =>
     set({ variants: form.variants.map((v, idx) => (idx === i ? { ...v, ...patch } : v)) });
 
+  /** Drop blank variant rows and auto-fill a SKU for any the user left empty. */
+  const cleanVariants = (): Variant[] =>
+    form.variants
+      // Ignore rows that are completely empty (no SKU, no colour, no stock).
+      .filter((v) => v.sku.trim() || v.color.trim() || v.stock > 0)
+      .map((v, i) => ({
+        ...v,
+        sku:
+          v.sku.trim() ||
+          `${slugFromTitle(form.title) || 'sku'}-${(v.color || 'std').toLowerCase()}-${(v.size || 'os').toLowerCase()}-${i + 1}`,
+      }));
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!form.category) {
+      setError('Please select a category. Create one under Categories first if the list is empty.');
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
         ...form,
+        variants: cleanVariants(),
         price: Number(form.price),
         compareAtPrice: Number(form.compareAtPrice) || undefined,
         brand: form.brand || undefined,
@@ -241,6 +264,11 @@ export default function ProductForm({ productId }: { productId?: string }) {
                   </option>
                 ))}
               </select>
+              {categories.length === 0 && (
+                <p className="mt-1 text-xs text-amber-600">
+                  No categories yet — create one under <strong>Categories</strong> (or run the seed) before adding a product.
+                </p>
+              )}
             </div>
             <div>
               <label className="label">Brand</label>

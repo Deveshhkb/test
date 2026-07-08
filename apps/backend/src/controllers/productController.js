@@ -103,11 +103,27 @@ export const getProduct = asyncHandler(async (req, res) => {
   res.json({ success: true, product, related });
 });
 
+/** Return a slug that isn't already taken, appending -2, -3, … on collision. */
+const uniqueSlug = async (base) => {
+  const root = base || 'product';
+  let slug = root;
+  let n = 2;
+  // eslint-disable-next-line no-await-in-loop
+  while (await Product.exists({ slug })) {
+    slug = `${root}-${n}`;
+    n += 1;
+  }
+  return slug;
+};
+
 // POST /api/products  (admin)
 export const createProduct = asyncHandler(async (req, res) => {
   const body = { ...req.body };
   if (!body.slug && body.title) {
     body.slug = slugify(body.title, { lower: true, strict: true });
+  }
+  if (body.slug) {
+    body.slug = await uniqueSlug(body.slug);
   }
   const product = await Product.create(body);
   res.status(201).json({ success: true, product });
