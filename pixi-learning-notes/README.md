@@ -14,6 +14,7 @@ These notes use **Pixi.js v8** syntax (same version as `pixi-project/` in this r
 | 5 | [03-realtime-problems.md](./03-realtime-problems.md) | Real production problems + how to fix them (resize, memory, performance, z-order...) |
 | 6 | [04-interview-questions.md](./04-interview-questions.md) | Interview Q&A — from basic to senior level |
 | 7 | [05-cheatsheet.md](./05-cheatsheet.md) | One-page quick reference. Revise before interview. |
+| 8+ | [06-interview-question-bank.md](./06-interview-question-bank.md) | 50+ more Q&A: beginner → senior, big **mobile-device** section, coding questions, rapid-fire round |
 
 ## 💡 The #1 rule for learning fast
 
