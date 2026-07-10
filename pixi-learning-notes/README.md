@@ -15,6 +15,7 @@ These notes use **Pixi.js v8** syntax (same version as `pixi-project/` in this r
 | 6 | [04-interview-questions.md](./04-interview-questions.md) | Interview Q&A — from basic to senior level |
 | 7 | [05-cheatsheet.md](./05-cheatsheet.md) | One-page quick reference. Revise before interview. |
 | 8+ | [06-interview-question-bank.md](./06-interview-question-bank.md) | 50+ more Q&A: beginner → senior, big **mobile-device** section, coding questions, rapid-fire round |
+| 8+ | [07-crash-game-project.md](./07-crash-game-project.md) | Build an Aviator-style **crash game**: multiplier math, curve rendering, server sync, provably fair, crash-specific interview Q&A |
 
 ## 💡 The #1 rule for learning fast
 
