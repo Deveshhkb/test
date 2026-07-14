@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnp/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+ios/
+android/
+
+# Build outputs
+build/
+*.apk
+*.aab
+*.ipa
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+google-services.json
+GoogleService-Info.plist
+firebase-service-account*.json
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# TypeScript
+*.tsbuildinfo

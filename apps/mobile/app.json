@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "Savora",
+    "slug": "savora",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "savora",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#14110D"
+    },
+    "ios": {
+      "bundleIdentifier": "com.savora.app",
+      "supportsTablet": false,
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Savora uses your location to find restaurants near you and track deliveries.",
+        "UIBackgroundModes": ["remote-notification"]
+      },
+      "config": { "googleMapsApiKey": "REPLACE_WITH_IOS_MAPS_KEY" }
+    },
+    "android": {
+      "package": "com.savora.app",
+      "googleServicesFile": "./google-services.json",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#14110D"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ],
+      "config": {
+        "googleMaps": { "apiKey": "REPLACE_WITH_ANDROID_MAPS_KEY" }
+      }
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "expo-localization",
+      [
+        "expo-location",
+        { "locationWhenInUsePermission": "Savora uses your location to find restaurants near you." }
+      ],
+      [
+        "expo-notifications",
+        { "color": "#E4572E" }
+      ],
+      [
+        "expo-splash-screen",
+        { "backgroundColor": "#14110D", "image": "./assets/splash.png" }
+      ]
+    ],
+    "extra": {
+      "apiUrl": "https://api.savora.app",
+      "eas": { "projectId": "REPLACE_WITH_EAS_PROJECT_ID" }
+    }
+  }
+}

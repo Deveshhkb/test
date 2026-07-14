@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Savora Rider",
+    "slug": "savora-rider",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "savora-rider",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": { "backgroundColor": "#14110D", "resizeMode": "contain" },
+    "ios": {
+      "bundleIdentifier": "com.savora.rider",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Savora Rider shares your live location with customers during a delivery.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Savora Rider tracks deliveries in the background so customers can follow their order.",
+        "UIBackgroundModes": ["location"]
+      }
+    },
+    "android": {
+      "package": "com.savora.rider",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ],
+      "config": { "googleMaps": { "apiKey": "REPLACE_WITH_ANDROID_MAPS_KEY" } }
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Savora Rider tracks deliveries so customers can follow their order.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
+    ],
+    "extra": { "apiUrl": "https://api.savora.app" }
+  }
+}
