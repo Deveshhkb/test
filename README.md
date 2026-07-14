@@ -55,6 +55,23 @@ cd apps/driver && npm install && npx expo start
 cd apps/admin && npm install && npm run dev
 ```
 
+## Verifying the build
+
+Every package typechecks and builds; the backend also ships an end-to-end smoke suite:
+
+```bash
+# Backend: boots the real API + Socket.io against MongoDB and exercises
+# discovery, auth, orders, coupons, payments math, driver dispatch,
+# live tracking, reviews, recommendations, and admin analytics (~35 checks).
+cd backend && npm run smoke                       # downloads an in-memory MongoDB, or:
+MONGODB_URI=mongodb://127.0.0.1:27017/savora-test npm run smoke   # use your own Mongo
+
+cd backend && npm run typecheck && npm run build  # → dist/
+cd apps/admin && npm run typecheck && npm run build
+cd apps/mobile && npm run typecheck && npx expo export --platform android
+cd apps/driver && npm run typecheck && npx expo export --platform android
+```
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
