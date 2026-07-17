@@ -1,5 +1,30 @@
 {
+  "name": "royal-fortune-slots",
+  "description": "Production-ready 5x3 HTML5 slot machine game — React 19 + PixiJS 8 + GSAP + Zustand",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
-    "gsap": "^3.13.0"
+    "axios": "^1.7.9",
+    "gsap": "^3.12.7",
+    "pixi.js": "^8.6.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
   }
 }
