@@ -1,19 +1,21 @@
 # 🎰 Royal Fortune — HTML5 Slot Machine
 
 A production-grade 5×3, 20-payline video slot in the style of Pragmatic Play / NetEnt /
-Hacksaw Gaming titles. Built with **React 19 + PixiJS 8 + GSAP + Zustand + TypeScript**,
-fully responsive, and runs entirely client-side out of the box (mock RGS included) —
-ready to be pointed at a real backend later.
+Hacksaw Gaming titles. Built with **React 19 + PixiJS 8 + GSAP + Zustand + TypeScript**
+on the front, and a **Node/Express RGS backend** (`server/`) that owns balance, RNG and
+win evaluation — with a transparent in-browser fallback so the frontend also runs alone.
 
 ```bash
 npm install
-npm run dev      # → http://localhost:3000
+npm run dev      # backend :8080 + client :3000 (proxied) → http://localhost:3000
 ```
 
 ```bash
-npm test         # unit tests (payline engine, RNG, mock server, utils)
-npm run build    # type-check + production bundle
-npm run preview  # serve the production build
+npm test           # unit + API tests (payline engine, RNG, engine, backend routes)
+npm run build      # type-check + production bundle
+npm start          # production: one process serves the built game + API on :8080
+npm run dev:client # frontend only (falls back to the in-browser mock RGS)
+npm run dev:server # backend only
 ```
 
 No binary assets are required — all textures are generated procedurally at boot and all
@@ -39,13 +41,17 @@ for `Assets.load(...)` / decoded audio buffers behind the same cache APIs.
 | Responsive | Fixed 1280×720 design space letterbox-scaled by `ResizeObserver`; CSS handles desktop / tablet / landscape / portrait breakpoints + safe-area insets |
 | Audio | Web Audio API graph (master → music/sfx buses) — spin loop, reel stops, wins, scatter, bonus, free spins, big-win fanfare, buttons, coins |
 | States | Loading → Idle → Spin → Stopping → Evaluating → Win → Bonus / FreeSpin / AutoSpin → GameOver |
-| API | Axios service (`login/spin/bonus/collect/history/settings`) with timeout, typed errors, response validation, and transparent fallback to the in-memory mock RGS on network failure |
+| Backend | Express RGS (`server/`): session-per-player (`x-session-id` issued at login, 30-min TTL), CSPRNG (`crypto.randomInt`), typed error responses, health endpoint, static serving of `dist/` in production |
+| API | Axios service (`login/spin/bonus/collect/history/settings`) with timeout, typed errors, response validation, session header injection, and transparent fallback to the in-browser mock RGS on network failure |
 | Math | Weighted virtual reel strips per reel, configurable volatility (low/med/high), ~96.5% simulated RTP (tuned via 20k-spin simulation), win evaluation lives server-side (mock) |
 | Errors | Lost internet / API failure / timeout / invalid response / asset failure surfaced via toast; optimistic bet refunds on failure |
 
 ## Project structure
 
 ```
+server/
+  app.ts         Express RGS: routes, sessions, error handling  (+ API tests)
+  index.ts       entry point: CSPRNG wiring, static dist/ serving
 src/
   animations/    AnimationManager — tracked GSAP tweens + reusable presets
   api/           axios client, gameApi facade, mock RGS (mockServer)
@@ -65,12 +71,14 @@ src/
 
 ## Architecture notes
 
-- **Server-authoritative math.** The client never decides outcomes. `mockServer.ts`
-  plays the role of a real RGS: it owns balance, RNG, feature state and win
-  evaluation, and returns the exact `SpinResult` contract a backend would
+- **Server-authoritative math, one engine.** The client never decides outcomes.
+  `src/services/SlotEngine.ts` owns balance, RNG, feature state and win evaluation and
+  returns the `SpinResult` contract
   (`{ balance, bet, totalWin, reels, paylines, scatter, freeSpins, multiplier, ... }`).
-  Point `VITE_API_URL` at a real backend and set `VITE_USE_MOCK=false` — nothing else
-  changes.
+  The Node backend runs one engine per session (backed by `crypto.randomInt`); the
+  in-browser mock runs the same engine as an offline fallback, so behaviour is
+  identical either way. `VITE_API_URL` targets a remote RGS; `VITE_USE_MOCK=true`
+  forces mock-only.
 - **Store as the bridge.** React reads Zustand via hooks; the Pixi world reads it via
   `getState()/subscribe`. `GameController` is the single orchestrator that talks to
   both the API and the scene.
@@ -88,15 +96,20 @@ paytable, per-reel symbol weights, volatility shifts, feature odds, cascade
 multipliers, free-spin rules and win-tier thresholds. RTP was tuned by simulation;
 if you change weights, re-check with a quick 20k-spin run against `mockServer.spin`.
 
-## Backend integration
+## API contract
 
-Implement these endpoints and the game works unchanged:
+Implemented by `server/app.ts` (and mirrored by the in-browser mock). All routes
+except `/login` and `/health` require the `x-session-id` header issued at login.
 
 | Endpoint | Body | Returns |
 | --- | --- | --- |
-| `POST /login` | — | `{ playerId, balance, currency }` |
-| `POST /spin` | `{ bet }` | `SpinResult` (see `src/types/index.ts`) |
-| `POST /bonus` | `{ pickedIndex }` | `{ balance, prize, options, pickedIndex }` |
-| `POST /collect` | — | `{ balance }` |
-| `GET /history` | — | `HistoryEntry[]` |
-| `POST /settings` | `GameSettings` | `GameSettings` |
+| `POST /api/login` | — | `{ playerId, balance, currency, sessionId }` |
+| `POST /api/spin` | `{ bet }` | `SpinResult` (see `src/types/index.ts`); `400 {error}` on bad/unaffordable bets |
+| `POST /api/bonus` | `{ pickedIndex }` | `{ balance, prize, options, pickedIndex }` |
+| `POST /api/collect` | — | `{ balance }` |
+| `GET /api/history` | — | `HistoryEntry[]` |
+| `POST /api/settings` | `GameSettings` | `GameSettings` |
+| `GET /api/health` | — | `{ ok, sessions }` |
+
+To swap in your own RGS, reimplement these routes (or reuse `SlotEngine` — it is
+plain TypeScript with an injectable RNG) and point `VITE_API_URL` at it.

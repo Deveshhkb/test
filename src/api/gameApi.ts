@@ -6,17 +6,18 @@ import type {
   LoginResult,
   SpinResult,
 } from '@/types';
-import { apiClient, ApiError, toApiError } from './client';
+import { apiClient, ApiError, setSessionId, toApiError } from './client';
 import { mockServer } from './mockServer';
 import { REEL_COUNT, ROW_COUNT } from '@/constants';
 
 /**
- * Game API service. Tries the real backend first; on network failure it
- * falls back to the mock RGS so the game always runs. Set VITE_API_URL to
- * point at a real backend later — the response contract is identical.
+ * Game API service. Talks to the Node backend (server/) by default; on
+ * network failure it transparently falls back to the in-browser mock RGS
+ * so the game always runs, even frontend-only. Set VITE_USE_MOCK=true to
+ * skip the backend entirely, or VITE_API_URL to target a remote RGS.
  */
 
-const USE_MOCK_ONLY = import.meta.env.VITE_USE_MOCK !== 'false';
+const USE_MOCK_ONLY = import.meta.env.VITE_USE_MOCK === 'true';
 let backendHealthy = !USE_MOCK_ONLY;
 
 function validateSpinResult(data: unknown): SpinResult {
@@ -55,7 +56,11 @@ async function withFallback<T>(
 export const gameApi = {
   async login(): Promise<LoginResult> {
     return withFallback(
-      async () => (await apiClient.post<LoginResult>('/login')).data,
+      async () => {
+        const login = (await apiClient.post<LoginResult>('/login')).data;
+        setSessionId(login.sessionId ?? null);
+        return login;
+      },
       () => mockServer.login(),
     );
   },

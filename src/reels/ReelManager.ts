@@ -30,9 +30,12 @@ import {
  */
 export class ReelManager {
   readonly container = new Container();
+  /** Unmasked effects layer; the scene positions it over the reel window. */
+  readonly overlayContainer = new Container();
   private reels: Reel[] = [];
   private ticker: Ticker | null = null;
   private spinStartedAt = 0;
+  private anticipationGlow: Graphics | null = null;
 
   init(ticker: Ticker): void {
     this.ticker = ticker;
@@ -49,6 +52,18 @@ export class ReelManager {
       .fill({ color: 0xffffff });
     this.container.addChild(mask);
     this.container.mask = mask;
+
+    // Pulsing golden frame over the last reel during scatter anticipation.
+    // Lives in the (unmasked) overlay container so it can spill outside the
+    // reel window without exposing the overflow symbol rows.
+    const lastReelX = (REEL_COUNT - 1) * REEL_WIDTH;
+    this.anticipationGlow = new Graphics()
+      .roundRect(lastReelX - 6, -6, SYMBOL_SIZE + 12, REEL_AREA_HEIGHT + 12, 14)
+      .stroke({ color: 0xffc93c, width: 6, alpha: 0.9 })
+      .roundRect(lastReelX - 12, -12, SYMBOL_SIZE + 24, REEL_AREA_HEIGHT + 24, 18)
+      .stroke({ color: 0xff6ec7, width: 3, alpha: 0.5 });
+    this.anticipationGlow.visible = false;
+    this.overlayContainer.addChild(this.anticipationGlow);
 
     ticker.add(this.update, this);
   }
@@ -91,6 +106,16 @@ export class ReelManager {
     const stagger =
       mode === SpinMode.Normal ? REEL_STAGGER_STOP : REEL_STAGGER_STOP_QUICK;
 
+    // Light up the last-reel tease once the other reels have landed.
+    if (anticipation && this.anticipationGlow) {
+      const glow = this.anticipationGlow;
+      gsap.delayedCall((REEL_COUNT - 1) * stagger, () => {
+        glow.visible = true;
+        glow.alpha = 0;
+        gsap.to(glow, { alpha: 1, duration: 0.3, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+      });
+    }
+
     const stops: Promise<void>[] = [];
     for (let i = 0; i < REEL_COUNT; i++) {
       const isLast = i === REEL_COUNT - 1;
@@ -102,6 +127,7 @@ export class ReelManager {
           gsap.delayedCall(delay, () => {
             void this.reels[i].stopAt(grid[i], duration).then(() => {
               soundManager.play('reelStop');
+              this.squash(this.reels[i]);
               resolve();
             });
           });
@@ -109,7 +135,23 @@ export class ReelManager {
       );
     }
     await Promise.all(stops);
+    if (this.anticipationGlow) {
+      gsap.killTweensOf(this.anticipationGlow);
+      this.anticipationGlow.visible = false;
+    }
     soundManager.stopSpinLoop();
+  }
+
+  /** Squash & stretch impact on the visible symbols when a reel lands. */
+  private squash(reel: Reel): void {
+    for (let row = 0; row < ROW_COUNT; row++) {
+      const symbol = reel.symbolAt(row);
+      gsap.fromTo(
+        symbol.scale,
+        { x: 1.07, y: 0.86 },
+        { x: 1, y: 1, duration: 0.3, ease: 'back.out(2.5)' },
+      );
+    }
   }
 
   /**
@@ -180,8 +222,10 @@ export class ReelManager {
 
   destroy(): void {
     this.ticker?.remove(this.update, this);
+    if (this.anticipationGlow) gsap.killTweensOf(this.anticipationGlow);
     for (const reel of this.reels) reel.destroy();
     this.reels = [];
     this.container.destroy({ children: true });
+    this.overlayContainer.destroy({ children: true });
   }
 }

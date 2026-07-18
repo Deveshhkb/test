@@ -132,6 +132,8 @@ export interface LoginResult {
   playerId: string;
   balance: number;
   currency: string;
+  /** Present when a real backend issued the session. */
+  sessionId?: string;
 }
 
 export interface GameSettings {

@@ -56,21 +56,11 @@ export class WinPresentation {
     if (wins.length === 0) return;
     soundManager.play('win');
 
-    // Payline traces.
+    // Payline traces — all lines at once for the batch celebration.
     this.lines.clear();
     this.lines.alpha = 1;
-    for (const win of wins) {
-      if (win.lineIndex < 0) continue; // scatter has no line
-      const color = LINE_COLORS[win.lineIndex % LINE_COLORS.length];
-      const rows = PAYLINES[win.lineIndex];
-      const start = this.cellCenter(0, rows[0]);
-      this.lines.moveTo(start.x - SYMBOL_SIZE * 0.45, start.y);
-      for (let reel = 0; reel < rows.length; reel++) {
-        const { x, y } = this.cellCenter(reel, rows[reel]);
-        this.lines.lineTo(x, y);
-      }
-      this.lines.stroke({ color, width: 6, alpha: 0.85, cap: 'round', join: 'round' });
-    }
+    const lineWins = wins.filter((w) => w.lineIndex >= 0);
+    for (const win of lineWins) this.traceLine(win.lineIndex);
 
     // Symbol pulses, glow and per-cell sparkles.
     const seen = new Set<string>();
@@ -107,6 +97,19 @@ export class WinPresentation {
 
     await animations.delay(fast ? 0.7 : 1.5);
 
+    // Cycle through individual paylines (classic slot behaviour) so the
+    // player can read each win, capped to keep the pace up.
+    if (!fast && lineWins.length > 1) {
+      for (const win of lineWins.slice(0, 4)) {
+        this.lines.clear();
+        this.traceLine(win.lineIndex);
+        for (const [reel, row] of win.positions) {
+          animations.winPulse(reelManager.reelAt(reel).symbolAt(row), 1.12);
+        }
+        await animations.delay(0.6);
+      }
+    }
+
     // Teardown.
     gsap.to(this.lines, { alpha: 0, duration: 0.25 });
     for (const win of wins) {
@@ -117,6 +120,19 @@ export class WinPresentation {
     float.kill(); // may still be mid-flight on fast spins
     amount.removeFromParent();
     amount.destroy();
+  }
+
+  /** Draw one payline's trace in its signature colour. */
+  private traceLine(lineIndex: number): void {
+    const color = LINE_COLORS[lineIndex % LINE_COLORS.length];
+    const rows = PAYLINES[lineIndex];
+    const start = this.cellCenter(0, rows[0]);
+    this.lines.moveTo(start.x - SYMBOL_SIZE * 0.45, start.y);
+    for (let reel = 0; reel < rows.length; reel++) {
+      const { x, y } = this.cellCenter(reel, rows[reel]);
+      this.lines.lineTo(x, y);
+    }
+    this.lines.stroke({ color, width: 6, alpha: 0.85, cap: 'round', join: 'round' });
   }
 
   clear(): void {

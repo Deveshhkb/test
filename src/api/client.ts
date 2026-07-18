@@ -14,6 +14,18 @@ export const apiClient: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+/** Session issued by POST /login; sent with every subsequent request. */
+let sessionId: string | null = null;
+
+export function setSessionId(id: string | null): void {
+  sessionId = id;
+}
+
+apiClient.interceptors.request.use((config) => {
+  if (sessionId) config.headers.set('x-session-id', sessionId);
+  return config;
+});
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -35,6 +47,10 @@ export function toApiError(error: unknown): ApiError {
   if (error instanceof AxiosError) {
     if (error.code === 'ECONNABORTED') return new ApiError('Request timed out', 'TIMEOUT');
     if (!error.response) return new ApiError('Network unreachable', 'NETWORK');
+    const serverCode = (error.response.data as { error?: string } | undefined)?.error;
+    if (serverCode === 'INSUFFICIENT_FUNDS') {
+      return new ApiError('Insufficient funds', 'INSUFFICIENT_FUNDS');
+    }
     return new ApiError(`Server error (${error.response.status})`, 'SERVER');
   }
   if (error instanceof Error) {

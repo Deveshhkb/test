@@ -42,6 +42,7 @@ export class GameScene {
   private freeSpinsWinText!: Text;
   private background = new Container();
   private offShake: (() => void) | null = null;
+  private ambientTimer: number | null = null;
 
   init(ticker: Ticker): void {
     this.buildBackground();
@@ -75,6 +76,8 @@ export class GameScene {
     this.reelManager.init(ticker);
     this.reelManager.container.position.set(REEL_X, REEL_Y);
     this.camera.addChild(this.reelManager.container);
+    this.reelManager.overlayContainer.position.set(REEL_X, REEL_Y);
+    this.camera.addChild(this.reelManager.overlayContainer);
 
     this.winPresentation.container.position.set(REEL_X, REEL_Y);
     this.camera.addChild(this.winPresentation.container);
@@ -90,6 +93,27 @@ export class GameScene {
     this.offShake = eventBus.on('shake', (intensity) => {
       animations.shake(this.camera, intensity, 0.7);
     });
+
+    // Ambient atmosphere: soft sparkles drifting up around the machine.
+    this.ambientTimer = window.setInterval(() => {
+      this.particles.emit({
+        texture: 'star',
+        count: 2,
+        x: Math.random() * DESIGN_WIDTH,
+        y: DESIGN_HEIGHT * (0.55 + Math.random() * 0.45),
+        angle: -Math.PI / 2,
+        spread: Math.PI * 0.4,
+        speedMin: 12,
+        speedMax: 45,
+        lifeMin: 2.5,
+        lifeMax: 4.5,
+        scaleMin: 0.12,
+        scaleMax: 0.3,
+        scaleEnd: 0,
+        alphaEnd: 0,
+        rotation: true,
+      });
+    }, 900);
   }
 
   private buildBackground(): void {
@@ -120,6 +144,16 @@ export class GameScene {
     title.anchor.set(0.5, 0);
     title.position.set(DESIGN_WIDTH / 2, 26);
     this.background.addChild(title);
+
+    // Gentle breathing glow on the logo.
+    animations.to(title.scale, {
+      x: 1.03,
+      y: 1.03,
+      duration: 2.2,
+      yoyo: true,
+      repeat: -1,
+      ease: 'sine.inOut',
+    });
   }
 
   private buildFreeSpinsBanner(): void {
@@ -367,6 +401,7 @@ export class GameScene {
   }
 
   destroy(): void {
+    if (this.ambientTimer !== null) clearInterval(this.ambientTimer);
     this.offShake?.();
     this.winPresentation.destroy();
     this.bigWin.destroy();
