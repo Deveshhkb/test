@@ -1,17 +1,21 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/style.css">
-    <title>First Project</title>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dragon Tiger</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; }
+    #pixi-container { width: 100vw; height: 100vh; }
+  </style>
 </head>
-
 <body>
-    <div id="app">
-        <div id="pixi-container"></div>
-    </div>
-    <script type="module" src="/src/main.ts"></script>
+  <div id="app">
+    <div id="pixi-container" style="width:100vw;height:100vh;overflow:hidden"></div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

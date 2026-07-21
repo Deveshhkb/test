@@ -1,6 +1,6 @@
 import js from "@eslint/js";
-import prettier from "eslint-plugin-prettier/recommended";
 import tseslint from "typescript-eslint";
+import prettier from "eslint-config-prettier";
 
 export default tseslint.config(
   { ignores: ["dist"] },
@@ -8,13 +8,13 @@ export default tseslint.config(
     extends: [
       js.configs.recommended,
       ...tseslint.configs.recommended,
-      prettier,
+      prettier
     ],
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: "latest",
-      sourceType: "module",
+      sourceType: "module"
     },
-    rules: {},
-  },
+    rules: {}
+  }
 );

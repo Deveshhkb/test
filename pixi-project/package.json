@@ -4,12 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "npm run dev",
-    "build": "npm run lint && tsc && vite build",
-    "lint": "eslint .",
-    "dev": "vite"
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --ext .ts,.js",
+    "preview": "vite preview",
+     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "gsap": "^3.12.5",
     "pixi.js": "^8.8.1"
   },
   "devDependencies": {
@@ -17,6 +19,7 @@
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
+    "gh-pages": "^6.3.0",
     "prettier": "^3.5.3",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.25.0",
