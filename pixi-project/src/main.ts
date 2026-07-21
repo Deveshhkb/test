@@ -79,8 +79,21 @@ class DragonTigerGame {
     "/assets/100k_b.png"
   ];
   
-  private readonly LOGICAL_WIDTH = 1920;
-  private readonly LOGICAL_HEIGHT = 1080;
+  private readonly LANDSCAPE = { width: 1920, height: 1080 };
+  private readonly PORTRAIT = { width: 1080, height: 1920 };
+  private logicalWidth = 1920;
+  private logicalHeight = 1080;
+  private bgSprite!: Sprite;
+  private dragonSprite!: Sprite;
+  private tigerSprite!: Sprite;
+  private tieSprite!: Sprite;
+  private coinRestY = 900;
+  private coinRaisedY = 870;
+  private placedCoinSpots = new Map<Container, { area: Graphics; x: number; y: number }>();
+
+  private get isPortrait(): boolean {
+    return this.logicalHeight > this.logicalWidth;
+  }
 
   constructor() {
     this.scoreLabels = {
@@ -122,8 +135,8 @@ class DragonTigerGame {
     this.app = new Application();
     await this.app.init({
       background: "#fff",
-      width: this.LOGICAL_WIDTH,
-      height: this.LOGICAL_HEIGHT,
+      width: this.logicalWidth,
+      height: this.logicalHeight,
       roundPixels: true,
       resolution: window.devicePixelRatio || 1
     });
@@ -181,12 +194,23 @@ class DragonTigerGame {
   }
 
   private createBackground(assets: GameAssets): void {
-    const bgSprite = new Sprite(assets.background);
-    bgSprite.anchor.set(0.5);
-    bgSprite.position.set(this.LOGICAL_WIDTH / 2, this.LOGICAL_HEIGHT / 2);
-    bgSprite.width = this.LOGICAL_WIDTH;
-    bgSprite.height = this.LOGICAL_HEIGHT;
-    this.gameContainer.addChildAt(bgSprite, 0);
+    this.bgSprite = new Sprite(assets.background);
+    this.bgSprite.anchor.set(0.5);
+    this.layoutBackground();
+    this.gameContainer.addChildAt(this.bgSprite, 0);
+  }
+
+  private layoutBackground(): void {
+    this.bgSprite.position.set(this.logicalWidth / 2, this.logicalHeight / 2);
+    if (this.isPortrait) {
+      // cover-fit: fill the screen without distorting the wide background
+      const tex = this.bgSprite.texture;
+      const scale = Math.max(this.logicalWidth / tex.width, this.logicalHeight / tex.height);
+      this.bgSprite.scale.set(scale);
+    } else {
+      this.bgSprite.width = this.logicalWidth;
+      this.bgSprite.height = this.logicalHeight;
+    }
   }
 
   private createBettingPanel(assets: GameAssets): void {
@@ -233,12 +257,15 @@ class DragonTigerGame {
   }
 
   private createScoreDisplay(): void {
+    // Labels are children of the betting panel so they follow it in every
+    // layout; sizes/positions are compensated for the panel's 0.8 base scale.
+    const PANEL_REF_SCALE = 0.8;
     const textStyle = {
       fontFamily: "Arial",
-      fontSize: 25,
+      fontSize: 31,
       fill: 0xffffff,
       fontWeight: "bold" as const,
-      stroke: { color: 0x000000, width: 5 },
+      stroke: { color: 0x000000, width: 6 },
     };
 
     const positions = [
@@ -246,42 +273,42 @@ class DragonTigerGame {
       { key: "tie" as const, x: 775, y: 313 },
       { key: "tiger" as const, x: 1250, y: 313 }
     ];
-    
+
     positions.forEach(({ key, x, y }) => {
-      const actualX = this.bettingPanel.x + x;
-      const actualY = this.bettingPanel.y + y;
+      const localX = x / PANEL_REF_SCALE;
+      const localY = y / PANEL_REF_SCALE;
 
       const leftNum = new Text({text :"0", style: textStyle});
       leftNum.anchor.set(1, 0.5);
-      leftNum.position.set(actualX - 30, actualY);
+      leftNum.position.set(localX - 38, localY);
       leftNum.eventMode = "static";
       leftNum.cursor = "pointer";
 
       const rightNum = new Text({ text :"0", style : textStyle});
       rightNum.anchor.set(0, 0.5);
-      rightNum.position.set(actualX + 30, actualY);
+      rightNum.position.set(localX + 38, localY);
       rightNum.eventMode = "static";
       rightNum.cursor = "pointer";
 
       const slash = new Text({text : "/", style: textStyle});
       slash.anchor.set(0.5);
-      slash.position.set(actualX, actualY);
+      slash.position.set(localX, localY);
 
       const tooltip = new Text({text:"", style: { ...textStyle, fill: 0xffd700 }});
       tooltip.anchor.set(0.5);
-      tooltip.position.set(actualX, actualY - 25);
+      tooltip.position.set(localX, localY - 31);
       tooltip.visible = false;
-      this.gameContainer.addChild(tooltip);
+      this.bettingPanel.addChild(tooltip);
 
-      const multiplierLable = new Text({text:"0",style: { 
+      const multiplierLable = new Text({text:"0",style: {
         fontFamily: "Arial",
-        fontSize: 25,
+        fontSize: 31,
         fill: 0x000000,
         fontWeight: "bold" as const,
       }});
       multiplierLable.anchor.set(0.5);
-      multiplierLable.position.set(actualX,actualY * 1.86);
-      this.gameContainer.addChild(multiplierLable)
+      multiplierLable.position.set(localX, ((this.bettingPanel.y + y) * 1.86 - this.bettingPanel.y) / PANEL_REF_SCALE);
+      this.bettingPanel.addChild(multiplierLable)
 
       const showTotal = () => {
         tooltip.text = this.formatNumber(this.betTotals[key]);
@@ -294,7 +321,7 @@ class DragonTigerGame {
       rightNum.on("pointerover", showTotal);
       rightNum.on("pointerout", hideTotal);
 
-      this.gameContainer.addChild(leftNum, slash, rightNum);
+      this.bettingPanel.addChild(leftNum, slash, rightNum);
       this.scoreLabels[key] = { left: leftNum, right: rightNum, tooltip };
       this.multiplierLabels[key] = multiplierLable;
     });
@@ -309,27 +336,27 @@ class DragonTigerGame {
   }
 
   private createGameSprites(assets: GameAssets): void {
-    const dragonSprite = new Sprite(assets.dragon);
-    dragonSprite.label = "dragonSprite";
-    dragonSprite.anchor.set(0.5);
-    dragonSprite.position.set(570, 150);
-    dragonSprite.scale.set(0.2);
-    this.gameContainer.addChildAt(dragonSprite, 2);
+    this.dragonSprite = new Sprite(assets.dragon);
+    this.dragonSprite.label = "dragonSprite";
+    this.dragonSprite.anchor.set(0.5);
+    this.dragonSprite.position.set(570, 150);
+    this.dragonSprite.scale.set(0.2);
+    this.gameContainer.addChildAt(this.dragonSprite, 2);
 
-    const tigerSprite = new Sprite(assets.tiger);
-    tigerSprite.label = "tigerSprite";
-    tigerSprite.position.set(1320, 180);
-    tigerSprite.anchor.set(0.5);
-    tigerSprite.scale.set(0.2);
-    this.gameContainer.addChildAt(tigerSprite, 3);
+    this.tigerSprite = new Sprite(assets.tiger);
+    this.tigerSprite.label = "tigerSprite";
+    this.tigerSprite.position.set(1320, 180);
+    this.tigerSprite.anchor.set(0.5);
+    this.tigerSprite.scale.set(0.2);
+    this.gameContainer.addChildAt(this.tigerSprite, 3);
 
-    const tieSprite = new Sprite(assets.tie);
-    tieSprite.label = "tieSprite";
-    tieSprite.position.set(this.LOGICAL_WIDTH / 2 - 50, 165);
-    tieSprite.anchor.set(0.5);
-    tieSprite.scale.set(0.2);
-    tieSprite.visible = false;
-    this.gameContainer.addChildAt(tieSprite, 4);
+    this.tieSprite = new Sprite(assets.tie);
+    this.tieSprite.label = "tieSprite";
+    this.tieSprite.position.set(this.logicalWidth / 2 - 50, 165);
+    this.tieSprite.anchor.set(0.5);
+    this.tieSprite.scale.set(0.2);
+    this.tieSprite.visible = false;
+    this.gameContainer.addChildAt(this.tieSprite, 4);
   }
 
   public updateMultiplier(key: "dragon" | "tie" | "tiger", value: number): void { 
@@ -343,13 +370,15 @@ class DragonTigerGame {
       area.eventMode = "static";
       area.cursor = "pointer";
     });
+    this.updateButtonStates();
  }
-  
+
   private disableBettingAreas(): void {
     [this.dragonArea, this.tieArea, this.tigerArea].forEach(area => {
       area.eventMode = "none";
       area.cursor = "default";
     });
+    this.updateButtonStates();
   }
 
 
@@ -358,10 +387,9 @@ class DragonTigerGame {
   private createCoins(assets: GameAssets): void {
     // place coins using LOGICAL coordinates so scaling behaves predictably
     const startX = 520;
-    const startY = this.LOGICAL_HEIGHT - 180; // was 900
 
     assets.coinTextures.forEach((texture, i) => {
-      const coinContainer = this.createCoinContainer(texture, this.COIN_LABELS[i], startX + i * 140, startY);
+      const coinContainer = this.createCoinContainer(texture, this.COIN_LABELS[i], startX + i * 140, this.coinRestY);
       this.coins.push(coinContainer);
       this.gameContainer.addChild(coinContainer);
     });
@@ -400,57 +428,83 @@ class DragonTigerGame {
   private createCleanBet(assets: GameAssets): void {
     this.cleanbtn = new Sprite(assets.cleanBg);
     this.cleanbtn.anchor.set(0.5);
-    this.cleanbtn.position.set(1300, this.LOGICAL_HEIGHT - 180);
+    this.cleanbtn.position.set(1300, this.logicalHeight - 180);
     this.cleanbtn.scale.set(0.8);
     this.cleanbtn.eventMode = "static";
     this.cleanbtn.cursor = "pointer";
     const radius = Math.max(this.cleanbtn.width,this.cleanbtn.height) * 0.35;
     this.cleanbtn.hitArea = new Circle(0,0,radius);
     this.cleanbtn.on("pointertap", () => this.resetBets());
+    this.addPressEffect(this.cleanbtn, 0.8);
     this.gameContainer.addChild(this.cleanbtn);
   }
 
   private createRebetBet(assets: GameAssets): void {
     this.rebetbtn = new Sprite(assets.rebetBg);
     this.rebetbtn.anchor.set(0.5);
-    this.rebetbtn.position.set(1400, this.LOGICAL_HEIGHT - 180);
+    this.rebetbtn.position.set(1400, this.logicalHeight - 180);
     this.rebetbtn.scale.set(0.55);
     this.rebetbtn.eventMode = "static";
     this.rebetbtn.cursor = "pointer";
     const radius = Math.max(this.rebetbtn.width,this.rebetbtn.height) * 0.35;
     this.rebetbtn.hitArea = new Circle(0,0,radius);
     this.rebetbtn.on("pointertap", () => this.rebet());
+    this.addPressEffect(this.rebetbtn, 0.55);
     this.gameContainer.addChild(this.rebetbtn);
   }
 
   private createDoubleBet(assets: GameAssets): void {
     this.doublebtn = new Sprite(assets.doubleBg);
     this.doublebtn.anchor.set(0.5);
-    this.doublebtn.position.set(1500, this.LOGICAL_HEIGHT - 180);
+    this.doublebtn.position.set(1500, this.logicalHeight - 180);
     this.doublebtn.scale.set(0.8);
     this.doublebtn.eventMode = "static";
     this.doublebtn.cursor = "pointer";
     const radius = Math.max(this.doublebtn.width,this.doublebtn.height) * 0.35;
     this.doublebtn.hitArea = new Circle(0,0,radius);
     this.doublebtn.on("pointertap", () => this.doubleBets());
+    this.addPressEffect(this.doublebtn, 0.8);
     this.gameContainer.addChild(this.doublebtn);
+  }
+
+  private addPressEffect(btn: Container, baseScale: number): void {
+    btn.on("pointerdown", () => {
+      gsap.to(btn.scale, { x: baseScale * 0.85, y: baseScale * 0.85, duration: 0.08 });
+    });
+    const restore = () => {
+      gsap.to(btn.scale, { x: baseScale, y: baseScale, duration: 0.15, ease: "back.out(2)" });
+    };
+    btn.on("pointerup", restore);
+    btn.on("pointerupoutside", restore);
+  }
+
+  private setButtonEnabled(btn: Sprite, enabled: boolean): void {
+    btn.eventMode = enabled ? "static" : "none";
+    btn.cursor = enabled ? "pointer" : "default";
+    btn.alpha = enabled ? 1 : 0.45;
+  }
+
+  private updateButtonStates(): void {
+    if (!this.cleanbtn || !this.rebetbtn || !this.doublebtn) return;
+    const bettingOpen = this.timerRunning;
+    const hasBets = this.currentBets.length > 0;
+    this.setButtonEnabled(this.cleanbtn, bettingOpen && hasBets);
+    this.setButtonEnabled(this.doublebtn, bettingOpen && hasBets);
+    this.setButtonEnabled(this.rebetbtn, bettingOpen && !hasBets && this.lastBets.length > 0);
   }
 
   private setActiveCoin(coin: Container): void {
     if (this.activeCoin && this.activeCoin !== coin) {
       // animate back to resting Y using logical coords
-      const restingY = this.LOGICAL_HEIGHT - 180;
       gsap.to(this.activeCoin.position, {
-        y: restingY,
+        y: this.coinRestY,
         duration: 0.2,
         ease: "power1.out",
       });
     }
 
-    const raisedY = this.LOGICAL_HEIGHT - 210; // slightly higher when active
-
     gsap.to(coin.position, {
-      y: raisedY,
+      y: this.coinRaisedY,
       duration: 0.2,
       ease: "power1.out",
     });
@@ -536,6 +590,7 @@ class DragonTigerGame {
     this.scoreLabels[area].left.text = this.formatNumber(this.betTotals[area]);
     this.currentBets.push({ area, amount, coinIndex });
     this.placeCoinFrom(this.coins[coinIndex], this.getBettingArea(area));
+    this.updateButtonStates();
     return true;
   }
 
@@ -572,6 +627,8 @@ class DragonTigerGame {
     this.placedCoins.push(coinClone);
 
     const targetPoint = this.getRandomPointInArea(targetArea);
+    // remember the area-local spot so the coin can be re-projected on layout changes
+    this.placedCoinSpots.set(coinClone, { area: targetArea, x: targetPoint.localX, y: targetPoint.localY });
     // animate coinClone.position which is in gameContainer local coords
     gsap.to(coinClone.position, {
       x: targetPoint.x,
@@ -614,7 +671,7 @@ class DragonTigerGame {
     return clone;
   }
 
-  private getRandomPointInArea(area: Graphics, margin: number = 20): { x: number; y: number } {
+  private getRandomPointInArea(area: Graphics, margin: number = 20): { x: number; y: number; localX: number; localY: number } {
     // use local bounds of the area
     const bounds = area.getLocalBounds();
     const minX = bounds.x + margin;
@@ -635,7 +692,7 @@ class DragonTigerGame {
     const globalPoint = area.toGlobal(new Point(localX, localY));
     const pointInGame = this.gameContainer.toLocal(globalPoint);
 
-    return { x: pointInGame.x, y: pointInGame.y };
+    return { x: pointInGame.x, y: pointInGame.y, localX, localY };
   }
 
   private updateScore(area: keyof BetTotals, left: number, right: number): void {
@@ -647,17 +704,86 @@ class DragonTigerGame {
     // Any additional event listeners can be added here
   }
 
+  // Repositions everything for the current logical size (landscape or portrait)
+  private applyLayout(): void {
+    const p = this.isPortrait;
+
+    this.layoutBackground();
+
+    // betting panel — its children (areas, labels, history) follow automatically
+    if (p) {
+      const bounds = this.bettingPanel.getLocalBounds();
+      const scale = (this.logicalWidth - 40) / bounds.width;
+      this.bettingPanel.scale.set(scale);
+      this.bettingPanel.position.set(20 - bounds.x * scale, 560 - bounds.y * scale);
+    } else {
+      this.bettingPanel.scale.set(0.8);
+      this.bettingPanel.position.set(130, 60);
+    }
+
+    // top cluster: clock and cards stay on top; in portrait the mascots
+    // move into the free band between the cards and the betting panel
+    this.dragonSprite.position.set(p ? 150 : 570, p ? 400 : 150);
+    this.tigerSprite.position.set(p ? 930 : 1320, p ? 400 : 180);
+    this.tieSprite.position.set(this.logicalWidth / 2 - 50, p ? 400 : 165);
+    this.clockContainer.position.set(this.logicalWidth / 2 - 50, 165);
+    if (this.dragonCard) this.dragonCard.placeAt(this.logicalWidth / 2 - 200, 180);
+    if (this.tigerCard) this.tigerCard.placeAt(this.logicalWidth / 2 + 100, 180);
+
+    // coin tray
+    this.coinRestY = p ? this.logicalHeight - 350 : this.logicalHeight - 180;
+    this.coinRaisedY = this.coinRestY - 30;
+    const spacing = 140;
+    const startX = p ? (this.logicalWidth - spacing * (this.coins.length - 1)) / 2 : 520;
+    this.coins.forEach((coin, i) => {
+      gsap.killTweensOf(coin.position);
+      coin.position.set(startX + i * spacing, coin === this.activeCoin ? this.coinRaisedY : this.coinRestY);
+    });
+
+    // action buttons
+    if (p) {
+      const cx = this.logicalWidth / 2;
+      const by = this.logicalHeight - 200;
+      this.cleanbtn.position.set(cx - 130, by);
+      this.rebetbtn.position.set(cx, by);
+      this.doublebtn.position.set(cx + 130, by);
+    } else {
+      this.cleanbtn.position.set(1300, this.logicalHeight - 180);
+      this.rebetbtn.position.set(1400, this.logicalHeight - 180);
+      this.doublebtn.position.set(1500, this.logicalHeight - 180);
+    }
+
+    // re-project coins already placed on the betting areas
+    this.placedCoins.forEach(coin => {
+      const spot = this.placedCoinSpots.get(coin);
+      if (!spot) return;
+      gsap.killTweensOf(coin.position);
+      const global = spot.area.toGlobal(new Point(spot.x, spot.y));
+      const local = this.gameContainer.toLocal(global);
+      coin.position.set(local.x, local.y);
+    });
+  }
+
   // Improved resize handler based on the reference example
   private setupResize(): void {
     const resizeHandler = () => {
       try {
+        // pick the logical orientation that matches the window
+        const wantPortrait = window.innerHeight > window.innerWidth;
+        const dims = wantPortrait ? this.PORTRAIT : this.LANDSCAPE;
+        if (dims.width !== this.logicalWidth) {
+          this.logicalWidth = dims.width;
+          this.logicalHeight = dims.height;
+          this.applyLayout();
+        }
+
         const scaleFactor = Math.min(
-          window.innerWidth / this.LOGICAL_WIDTH,
-          window.innerHeight / this.LOGICAL_HEIGHT
+          window.innerWidth / this.logicalWidth,
+          window.innerHeight / this.logicalHeight
         );
         
-        const newWidth = Math.ceil(this.LOGICAL_WIDTH * scaleFactor);
-        const newHeight = Math.ceil(this.LOGICAL_HEIGHT * scaleFactor);
+        const newWidth = Math.ceil(this.logicalWidth * scaleFactor);
+        const newHeight = Math.ceil(this.logicalHeight * scaleFactor);
         
         // Update canvas style dimensions
         this.app.canvas.style.width = `${newWidth}px`;
@@ -706,10 +832,13 @@ class DragonTigerGame {
       this.scoreLabels[key as keyof BetTotals].left.text = "0";
     });
     this.placedCoins.forEach(coin => {
+      gsap.killTweensOf(coin.position);
       this.gameContainer.removeChild(coin);
     });
     this.placedCoins = [];
+    this.placedCoinSpots.clear();
     this.currentBets = [];
+    this.updateButtonStates();
   }
 
   // Clean button: cancel current bets and refund the money
@@ -738,7 +867,7 @@ class DragonTigerGame {
 
   private createTimer(clockTexture: Texture): void {
     this.clockContainer = new Container();
-    this.clockContainer.position.set(this.LOGICAL_WIDTH / 2 - 50, 165);
+    this.clockContainer.position.set(this.logicalWidth / 2 - 50, 165);
     this.gameContainer.addChild(this.clockContainer);
     this.timerCircle = new Graphics();
     this.timerCircle.position.set(0,8);
@@ -835,11 +964,11 @@ class DragonTigerGame {
     const tigerTexture = await Assets.load(`/assets/cards/${tigerCardName}`);
 
     this.dragonCard = new Card(backTexture, dragonTexture);
-    this.dragonCard.placeAt(this.LOGICAL_WIDTH / 2 - 200, 180);
+    this.dragonCard.placeAt(this.logicalWidth / 2 - 200, 180);
     this.gameContainer.addChild(this.dragonCard);
 
     this.tigerCard = new Card(backTexture, tigerTexture);
-    this.tigerCard.placeAt(this.LOGICAL_WIDTH / 2 + 100, 180);
+    this.tigerCard.placeAt(this.logicalWidth / 2 + 100, 180);
     this.gameContainer.addChild(this.tigerCard);
   }
 
@@ -885,12 +1014,13 @@ class DragonTigerGame {
 
 
   private animateWinnerSprite(winner: "dragon" | "tiger" | "tie"): void {
-    const spriteName = `${winner}Sprite`;
-    const winnerSprite = (this.gameContainer.getChildByLabel(spriteName) ||
-                          this.stage.getChildByLabel(spriteName)) as Sprite | undefined;
+    const winnerSprite =
+      winner === "dragon" ? this.dragonSprite :
+      winner === "tiger" ? this.tigerSprite :
+      this.tieSprite;
 
     if (!winnerSprite) {
-      console.warn(`animateWinnerSprite: ${spriteName} not found`);
+      console.warn(`animateWinnerSprite: ${winner} sprite not found`);
       return;
     }
 
@@ -979,16 +1109,17 @@ class DragonTigerGame {
 
 
   private async animateStartGame(): Promise<void> {
-    const dragonSprite = this.gameContainer.getChildByLabel("dragonSprite") as Sprite;
-    const tigerSprite = this.gameContainer.getChildByLabel("tigerSprite") as Sprite;
+    const dragonSprite = this.dragonSprite;
+    const tigerSprite = this.tigerSprite;
     if (!dragonSprite || !tigerSprite) return;
 
+    const midY = this.isPortrait ? 500 : this.logicalHeight / 2;
     const texture = await Assets.load("/assets/vs.png");
     const middleSprite = new Sprite(texture);
     middleSprite.label = "middleSprite";
     middleSprite.anchor.set(0.5);
-    middleSprite.x = this.LOGICAL_WIDTH / 2 - 50;
-    middleSprite.y = this.LOGICAL_HEIGHT / 2;
+    middleSprite.x = this.logicalWidth / 2 - 50;
+    middleSprite.y = midY;
     middleSprite.scale.set(0.25);
     middleSprite.alpha = 0;
     middleSprite.visible = false;
@@ -1001,7 +1132,7 @@ class DragonTigerGame {
     const tigerOriginalY = tigerSprite.y;
     const dragonOriginalScale = { x: dragonSprite.scale.x, y: dragonSprite.scale.y };
     const tigerOriginalScale = { x: tigerSprite.scale.x, y: tigerSprite.scale.y };
-    const middleOriginalY = this.LOGICAL_HEIGHT / 2;
+    const middleOriginalY = midY;
 
     const tl = gsap.timeline();
     tl.to(dragonSprite, { y: "+=350", duration: 1, ease: "power2.out" });
