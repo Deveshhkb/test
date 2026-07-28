@@ -1,36 +1,39 @@
 // Bet placer — mounted at /VirtualCasinoBetPlacer/vc/
-//   POST place-bet, POST liability, POST casino-game-list
+// Works for every registered game; the game is resolved from the bet's
+// matchId (or from the round id when matchId is absent).
 
 const express = require("express");
-const config = require("../config");
-const engine = require("../game/engine");
+const manager = require("../game/manager");
 const { requireAuth } = require("../auth");
 
 const router = express.Router();
 router.use(requireAuth);
 
 router.post("/place-bet", (req, res) => {
-  const { selectionId, stake, marketId } = req.body || {};
+  const { selectionId, stake, marketId, matchId } = req.body || {};
+  const engine =
+    (matchId != null && manager.byMatchId(matchId)) || manager.byMid(marketId);
+  if (!engine)
+    return res.status(400).json({ status: false, message: "Unknown game" });
   const result = engine.placeBet(req.username, { selectionId, stake, marketId });
   res.status(result.status ? 200 : 400).json(result);
 });
 
 router.post("/liability", (req, res) => {
   const { roundId } = req.body || {};
+  const engine = manager.byMid(roundId) || manager.all()[0];
   res.json({ status: true, data: engine.liabilityFor(req.username, roundId) });
 });
 
 router.post("/casino-game-list", (req, res) => {
   res.json({
     status: true,
-    data: [
-      {
-        id: config.MATCH_ID,
-        name: config.GAME_NAME,
-        gameType: "virtual",
-        gtype: "dt20",
-      },
-    ],
+    data: manager.all().map((e) => ({
+      id: e.game.matchId,
+      name: e.game.name,
+      gameType: "virtual",
+      gtype: e.game.gtype,
+    })),
   });
 });
 

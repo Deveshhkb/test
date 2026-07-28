@@ -1,0 +1,57 @@
+{
+  "_comment": "Per-game settings. Any field here overrides the game module's default: enabled, matchId, name, betSeconds, roundGap, minStake, maxStake, rates {...}. Remove a field to use the default.",
+
+  "dt20": {
+    "enabled": true,
+    "matchId": 14,
+    "betSeconds": 45,
+    "minStake": 100,
+    "maxStake": 100000,
+    "rates": {
+      "main": 1.98,
+      "tie": 8,
+      "pair": 6,
+      "even": 2.12,
+      "odd": 1.83,
+      "color": 1.95,
+      "card": 12
+    }
+  },
+
+  "lucky7": {
+    "enabled": true,
+    "matchId": 27,
+    "betSeconds": 30,
+    "minStake": 100,
+    "maxStake": 100000,
+    "rates": {
+      "lowHigh": 2,
+      "even": 2.1,
+      "odd": 1.79,
+      "color": 1.95,
+      "card": 12
+    }
+  },
+
+  "teen20": {
+    "enabled": true,
+    "matchId": 21,
+    "betSeconds": 30,
+    "minStake": 100,
+    "maxStake": 100000,
+    "rates": {
+      "main": 1.98
+    }
+  },
+
+  "ab20": {
+    "enabled": true,
+    "matchId": 26,
+    "betSeconds": 30,
+    "minStake": 100,
+    "maxStake": 100000,
+    "rates": {
+      "main": 1.97
+    }
+  }
+}

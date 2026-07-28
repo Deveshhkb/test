@@ -3,14 +3,14 @@ const cors = require("cors");
 const fs = require("fs");
 const config = require("./config");
 const db = require("./db");
-const engine = require("./game/engine");
+const manager = require("./game/manager");
 const { cardsRoute } = require("./cards");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- API routes (paths match what the frontend calls) ---
+// --- API routes (paths match what the game frontends call) ---
 app.use("/CasinoAdmin", require("./routes/casino"));
 app.use("/VirtualCasinoBetPlacer/vc", require("./routes/bet"));
 app.use("/admin-new-apis/enduser", require("./routes/enduser"));
@@ -25,7 +25,15 @@ app.get("/betfair_api/my-ip", (req, res) => {
 });
 
 app.get("/health", (req, res) =>
-  res.json({ ok: true, mid: engine.state.mid, uptime: process.uptime() })
+  res.json({
+    ok: true,
+    uptime: process.uptime(),
+    games: manager.all().map((e) => ({
+      gtype: e.game.gtype,
+      mid: e.state.mid,
+      autotime: e.autotime(),
+    })),
+  })
 );
 
 // --- static frontend ---
@@ -36,11 +44,18 @@ if (fs.existsSync(config.FRONTEND_DIR)) {
 // seed a demo account so the game is playable out of the box
 if (!db.getUser("demo")) {
   db.createUser("demo", "demo1234");
-  console.log('Seeded demo user: demo / demo1234');
+  console.log("Seeded demo user: demo / demo1234");
 }
 
-engine.start();
+manager.start();
 app.listen(config.PORT, () => {
-  console.log(`Dragon Tiger backend on http://localhost:${config.PORT}`);
+  console.log(`Casino backend on http://localhost:${config.PORT}`);
+  console.log(
+    "Games:",
+    manager
+      .all()
+      .map((e) => `${e.game.name} (${e.game.gtype}, matchId ${e.game.matchId})`)
+      .join(", ")
+  );
   console.log(`Game page: http://localhost:${config.PORT}/login.html`);
 });

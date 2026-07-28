@@ -1,44 +1,58 @@
-// Game data feed — the endpoints livegame.js polls every second.
-//   GET /CasinoAdmin/GetData/dt20Data
-//   GET /CasinoAdmin/GetData/dt20Result
+// Game data feeds — one set of endpoints for every registered game:
+//   GET /CasinoAdmin/GetData/<gtype>Data     e.g. dt20Data, lucky7Data
+//   GET /CasinoAdmin/GetData/<gtype>Result   e.g. dt20Result
 //   GET /CasinoAdmin/GameResultById?mid=...
+//   GET /CasinoAdmin/Games                   list of live games + state
 
 const express = require("express");
-const engine = require("../game/engine");
+const manager = require("../game/manager");
 const db = require("../db");
 
 const router = express.Router();
 
-router.get("/GetData/dt20Data", (req, res) => {
-  res.json({
-    success: true,
-    data: { t1: engine.getT1(), t2: engine.getT2() },
-  });
-});
+router.get("/GetData/:key", (req, res) => {
+  const key = String(req.params.key);
 
-router.get("/GetData/dt20Result", (req, res) => {
-  res.json(
-    db.lastResults(10).map((r) => ({
-      mid: r.mid,
-      winner: r.winner,
-      C1: r.C1,
-      C2: r.C2,
-    }))
-  );
+  if (key.endsWith("Data")) {
+    const engine = manager.byGtype(key.slice(0, -4));
+    if (!engine) return res.status(404).json({ success: false, message: "Unknown game" });
+    return res.json({
+      success: true,
+      data: { t1: engine.getT1(), t2: engine.getT2() },
+    });
+  }
+
+  if (key.endsWith("Result")) {
+    const gtype = key.slice(0, -6);
+    if (!manager.byGtype(gtype))
+      return res.status(404).json({ success: false, message: "Unknown game" });
+    return res.json(
+      db.lastResults(10, gtype).map(({ createdAt, gtype: g, ...r }) => r)
+    );
+  }
+
+  res.status(404).json({ success: false, message: "Unknown feed" });
 });
 
 router.get("/GameResultById", (req, res) => {
   const result = db.resultByMid(req.query.mid);
   if (!result)
     return res.status(404).json({ status: false, message: "Result not found" });
+  const { createdAt, ...rest } = result;
+  res.json(rest);
+});
+
+router.get("/Games", (req, res) => {
   res.json({
-    mid: result.mid,
-    winner: result.winner,
-    C1: result.C1,
-    C2: result.C2,
-    dragonDetail: result.dragonDetail,
-    tigerDetail: result.tigerDetail,
-    winnerDetail: result.winnerDetail,
+    success: true,
+    data: manager.all().map((e) => ({
+      gtype: e.game.gtype,
+      name: e.game.name,
+      matchId: e.game.matchId,
+      mid: e.state.mid,
+      autotime: e.autotime(),
+      bettingOpen: e.isBettingOpen(),
+    })),
   });
 });
 

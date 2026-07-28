@@ -94,8 +94,9 @@ function addResult(result) {
   save();
 }
 
-function lastResults(n = 10) {
-  return db.results.slice(0, n);
+function lastResults(n = 10, gtype = null) {
+  const rows = gtype ? db.results.filter((r) => r.gtype === gtype) : db.results;
+  return rows.slice(0, n);
 }
 
 function resultByMid(mid) {
