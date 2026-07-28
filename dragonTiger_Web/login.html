@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dragon Tiger — Login</title>
+  <link rel="icon" type="image/x-icon" href="/assets/images/desktopimg/icon.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at 50% 30%, #2b0f0f 0%, #120505 70%);
+      color: #f5e6c8;
+    }
+    .card {
+      width: 340px; padding: 32px 28px; border-radius: 14px;
+      background: rgba(0, 0, 0, 0.55); border: 1px solid #a2792f;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+    }
+    h1 { font-size: 26px; text-align: center; margin-bottom: 4px; color: #e9c46a; }
+    p.sub { text-align: center; font-size: 13px; margin-bottom: 22px; color: #cbb27f; }
+    label { display: block; font-size: 13px; margin: 12px 0 4px; }
+    input {
+      width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #6b5220;
+      background: #1d1108; color: #f5e6c8; font-size: 15px; outline: none;
+    }
+    input:focus { border-color: #e9c46a; }
+    button {
+      width: 100%; margin-top: 20px; padding: 12px; border: none; border-radius: 8px;
+      background: linear-gradient(180deg, #e9c46a, #b8892f); color: #241303;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+    }
+    button.secondary { background: none; border: 1px solid #6b5220; color: #cbb27f; margin-top: 10px; font-weight: 400; font-size: 14px; }
+    .msg { margin-top: 14px; min-height: 18px; text-align: center; font-size: 13px; color: #ff7b6b; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>DRAGON &nbsp;TIGER</h1>
+    <p class="sub">Sign in to play</p>
+    <label for="username">Username</label>
+    <input id="username" autocomplete="username" />
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" />
+    <button id="loginBtn">LOGIN</button>
+    <button id="registerBtn" class="secondary">Create account</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <script>
+    const msg = (t) => (document.getElementById("msg").textContent = t);
+
+    async function call(path) {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      if (!username || !password) return msg("Enter username and password");
+      try {
+        const res = await fetch("/auth/" + path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (!data.status) return msg(data.message || "Failed");
+        window.location.href =
+          "index.html?id=" + encodeURIComponent(data.data.token) +
+          "&username=" + encodeURIComponent(data.data.username);
+      } catch (e) {
+        msg("Cannot reach server");
+      }
+    }
+
+    document.getElementById("loginBtn").onclick = () => call("login");
+    document.getElementById("registerBtn").onclick = () => call("register");
+    document.getElementById("password").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") call("login");
+    });
+  </script>
+</body>
+</html>

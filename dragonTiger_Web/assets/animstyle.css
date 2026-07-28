@@ -1,0 +1,417 @@
+.stotscreen {
+  top: -300px;
+}
+
+.upslideScreen {
+  position: relative;
+  -webkit-animation: upslidescn 0.2s linear;
+  -moz-animation: upslidescn 0.2s linear;
+  animation: upslidescn 0.2s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes upslidescn {
+  0% {
+    top: 0px;
+  }
+
+  100% {
+    top: -300px;
+  }
+}
+
+@-webkit-keyframes upslidescn {
+  0% {
+    top: 0px;
+  }
+
+  100% {
+    top: -300px;
+  }
+}
+
+@keyframes upslidescn {
+  0% {
+    top: 0px;
+  }
+
+  100% {
+    top: -300px;
+  }
+}
+.downslideScreen {
+  position: relative;
+  -webkit-animation: dwnslidescn 0.2s linear;
+  -moz-animation: dwnslidescn 0.2s linear;
+  animation: dwnslidescn 0.2s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes dwnslidescn {
+  0% {
+    top: -300px;
+  }
+
+  100% {
+    top: 0px;
+  }
+}
+
+@-webkit-keyframes dwnslidescn {
+  0% {
+    top: -300px;
+  }
+
+  100% {
+    top: 0px;
+  }
+}
+
+@keyframes dwnslidescn {
+  0% {
+    top: -300px;
+  }
+
+  100% {
+    top: 0px;
+  }
+}
+.firstusershake {
+  -webkit-animation: chipanimbet 1s linear;
+  -moz-animation: chipanimbet 1s linear;
+  animation: chipanimbet 1s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes chipanimbet {
+  0% {
+    left: 19%;
+  }
+
+  25% {
+    left: 20%;
+  }
+  50% {
+    left: 19%;
+  }
+  50% {
+    left: 18%;
+  }
+
+  100% {
+    left: 19%;
+  }
+}
+
+@-webkit-keyframes chipanimbet {
+  0% {
+    left: 19%;
+  }
+
+  25% {
+    left: 20%;
+  }
+  50% {
+    left: 19%;
+  }
+  50% {
+    left: 18%;
+  }
+
+  100% {
+    left: 19%;
+  }
+}
+
+@keyframes chipanimbet {
+  0% {
+    left: 19%;
+  }
+
+  25% {
+    left: 20%;
+  }
+  50% {
+    left: 19%;
+  }
+  50% {
+    left: 18%;
+  }
+
+  100% {
+    left: 19%;
+  }
+}
+.secondUserShake {
+  -webkit-animation: secSheke 1s linear;
+  -moz-animation: secSheke 1s linear;
+  animation: secSheke 1s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes secSheke {
+  0% {
+    left: 1460px;
+  }
+
+  25% {
+    left: 1440px;
+  }
+  50% {
+    left: 1460px;
+  }
+  75% {
+    left: 1480px;
+  }
+
+  100% {
+    left: 1460px;
+  }
+}
+
+@-webkit-keyframes secSheke {
+  0% {
+    left: 1460px;
+  }
+
+  25% {
+    left: 1440px;
+  }
+  50% {
+    left: 1460px;
+  }
+  75% {
+    left: 1480px;
+  }
+
+  100% {
+    left: 1460px;
+  }
+}
+
+@keyframes secSheke {
+  0% {
+    left: 1460px;
+  }
+
+  25% {
+    left: 1440px;
+  }
+  50% {
+    left: 1460px;
+  }
+  75% {
+    left: 1480px;
+  }
+
+  100% {
+    left: 1460px;
+  }
+}
+/* current User Bet Place Style Start */
+
+.userBetPlaceAnim_1 {
+  -webkit-animation: betShekecurrentfsttbl 0.5s linear;
+  -moz-animation: betShekecurrentfsttbl 0.5s linear;
+  animation: betShekecurrentfsttbl 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes betShekecurrentfsttbl {
+  0% {
+    top: 294%;
+    left: 156%;
+  }
+}
+
+@-moz-keyframes betShekecurrentfsttbl {
+  0% {
+    top: 294%;
+    left: 156%;
+  }
+}
+
+@-webkit-keyframes betShekecurrentfsttbl {
+  0% {
+    top: 294%;
+    left: 156%;
+  }
+}
+.userBetPlaceAnim_2 {
+  -webkit-animation: betShekecurrentscndtbl 0.5s linear;
+  -moz-animation: betShekecurrentscndtbl 0.5s linear;
+  animation: betShekecurrentscndtbl 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes betShekecurrentscndtbl {
+  0% {
+    top: 302%;
+    left: -26%;
+  }
+}
+
+@-moz-keyframes betShekecurrentscndtbl {
+  0% {
+    top: 302%;
+    left: -26%;
+  }
+}
+
+@-webkit-keyframes betShekecurrentscndtbl {
+  0% {
+    top: 302%;
+    left: -26%;
+  }
+}
+
+/* current User Bet Place Style End */
+
+/* dummy first user betplace style Start */
+
+.dummyuser_table1 {
+  -webkit-animation: dummyFirstUser1 0.5s linear;
+  -moz-animation: dummyFirstUser1 0.5s linear;
+  animation: dummyFirstUser1 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstUser1 {
+  0% {
+    top: -68%;
+    left: -196%;
+  }
+}
+
+@-moz-keyframes dummyFirstUser1 {
+  0% {
+    top: -68%;
+    left: -196%;
+  }
+}
+
+@-webkit-keyframes dummyFirstUser1 {
+  0% {
+    top: -68%;
+    left: -196%;
+  }
+}
+.dummyuser_table2 {
+  -webkit-animation: dummyFirstUser2 0.5s linear;
+  -moz-animation: dummyFirstUser2 0.5s linear;
+  animation: dummyFirstUser2 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstUser2 {
+  0% {
+    top: -66%;
+    left: -380%;
+  }
+}
+
+@-moz-keyframes dummyFirstUser2 {
+  0% {
+    top: -66%;
+    left: -380%;
+  }
+}
+
+@-webkit-keyframes dummyFirstUser2 {
+  0% {
+    top: -66%;
+    left: -380%;
+  }
+}
+
+/* dummy first user betplace style End */
+
+/* dummy second user betplace style Start */
+
+.dummyuser2_table1 {
+  -webkit-animation: dummySecondUser1 0.5s linear;
+  -moz-animation: dummySecondUser1 0.5s linear;
+  animation: dummySecondUser1 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondUser1 {
+  0% {
+    top: -67%;
+    left: 491%;
+  }
+}
+
+@-moz-keyframes dummySecondUser1 {
+  0% {
+    top: -67%;
+    left: 491%;
+  }
+}
+
+@-webkit-keyframes dummySecondUser1 {
+  0% {
+    top: -67%;
+    left: 491%;
+  }
+}
+.dummyuser2_table2 {
+  -webkit-animation: dummySecondUser2 0.5s linear;
+  -moz-animation: dummySecondUser2 0.5s linear;
+  animation: dummySecondUser2 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondUser2 {
+  0% {
+    top: -66%;
+    left: 307%;
+  }
+}
+
+@-moz-keyframes dummySecondUser2 {
+  0% {
+    top: -66%;
+    left: 307%;
+  }
+}
+
+@-webkit-keyframes dummySecondUser2 {
+  0% {
+    top: -66%;
+    left: 307%;
+  }
+}
+
+/* dummy secomnd user betplace style End */
+
+.roundidtxtstyle {
+  animation: 2.5s anim-popoutin ease infinite;
+}
+
+@keyframes anim-popoutin {
+  0% {
+    color: #028ba9;
+    transform: scale(0);
+    opacity: 0;
+    text-shadow: 0 0 0 rgba(243, 70, 70, 0);
+  }
+  25% {
+    color: #b9bb44c0;
+    transform: scale(1.5);
+    opacity: 1;
+    text-shadow: 3px 10px 5px rgba(32, 12, 12, 0.5);
+  }
+  50% {
+    color: #028ba9;
+    transform: scale(1);
+    opacity: 1;
+    text-shadow: 1px 0 0 rgba(243, 70, 70, 0);
+  }
+  100% {
+    /* animate nothing to add pause at the end of animation */
+    transform: scale(1);
+    opacity: 1;
+    text-shadow: 1px 0 0 rgba(248, 65, 65, 0);
+  }
+}
