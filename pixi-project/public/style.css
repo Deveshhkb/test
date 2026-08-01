@@ -1,15 +1,95 @@
+/*
+ * Page shell for a full-bleed canvas game.
+ *
+ * Goals: the canvas box always equals the visible viewport (including when
+ * Safari's toolbar collapses), the page itself can never scroll or bounce, and
+ * no browser gesture (double-tap zoom, long-press menu, text selection) can
+ * fire on top of gameplay.
+ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
 body {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #05070d;
     color: rgba(255, 255, 255, 0.87);
-    background-color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
+
+    /* Block page panning/zooming: every gesture belongs to the game. */
+    touch-action: none;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    /* Stop iOS from re-flowing text when the device rotates. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    /* `fixed` keeps iOS from rubber-banding the document behind the canvas. */
+    position: fixed;
+    inset: 0;
+    overscroll-behavior-y: none;
 }
 
 #app {
+    position: absolute;
+    inset: 0;
     width: 100%;
+    /* 100dvh tracks the *dynamic* viewport, so the layout is correct while the
+       mobile browser chrome is collapsing. Older browsers fall back to vh. */
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+#pixi-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    touch-action: none;
+}
+
+#pixi-container canvas {
+    display: block;
+    /* The renderer sizes the backing store; these guards make sure no stray
+       CSS can ever scale the canvas non-uniformly. */
+    max-width: 100%;
+    max-height: 100%;
+    touch-action: none;
+    outline: none;
+}
+
+/* Simple fade-in once the renderer has completed its first layout pass. */
+#pixi-container canvas {
+    opacity: 0;
+    transition: opacity 180ms ease-out;
+}
+
+body.game-ready #pixi-container canvas {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #pixi-container canvas {
+        transition: none;
+        opacity: 1;
+    }
 }

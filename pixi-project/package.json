@@ -7,9 +7,11 @@
     "start": "npm run dev",
     "build": "npm run lint && tsc && vite build",
     "lint": "eslint .",
-    "dev": "vite"
+    "dev": "vite",
+    "verify:responsive": "npm run build && node scripts/verify-responsive.mjs"
   },
   "dependencies": {
+    "gsap": "^3.13.0",
     "pixi.js": "^8.8.1"
   },
   "devDependencies": {
@@ -17,6 +19,7 @@
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
+    "playwright": "^1.62.1",
     "prettier": "^3.5.3",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.25.0",
