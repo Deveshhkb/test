@@ -1,7 +1,12 @@
 /* ---------------------------------------------------------------------------
- * Global styles: reset, design tokens, canvas host, glassmorphism primitives.
- * Component-specific styling stays next to its component in later phases;
- * these are the shared foundations.
+ * Global styles: reset, fluid design tokens, canvas host, glassmorphism
+ * primitives, responsive + safe-area rules.
+ *
+ * Sizing philosophy: no fixed pixel dimensions on UI chrome — everything is
+ * clamp(min, fluid, max) so the same stylesheet serves a 320px phone, a
+ * foldable, and a 4K monitor, and browser zoom (50%–200%) simply rides the
+ * fluid curve. Component-specific styling stays next to its component in
+ * later phases; these are the shared foundations.
  * ------------------------------------------------------------------------ */
 
 :root {
@@ -13,10 +18,15 @@
   --color-text-dim: #8fa3c8;
   --color-accent: #e0304f;
 
-  --radius-panel: 16px;
-  --blur-glass: 18px;
+  /* Fluid tokens: min ↔ viewport-driven ↔ max. */
+  --radius-panel: clamp(10px, 1.6vmin, 18px);
+  --blur-glass: clamp(10px, 2vmin, 20px);
+  --space-hud: clamp(8px, 1.6vmin, 16px);
+  --font-hud: clamp(0.72rem, 0.55rem + 0.9vmin, 1rem);
+  --hud-pad-y: clamp(6px, 1.2vmin, 12px);
+  --hud-pad-x: clamp(10px, 2.2vmin, 20px);
 
-  /* Notch / home-indicator safe areas (iOS, foldables). */
+  /* Notch / Dynamic Island / camera-hole / gesture-bar safe areas. */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -29,12 +39,25 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  width: 100%;
+  height: 100%;
+}
+
 body,
 #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+/* Dynamic viewport units track the real visible area on mobile (URL bar
+ * collapse, on-screen keyboard) — no dead zones, no clipped UI. */
+@supports (height: 100dvh) {
+  body,
+  #root {
+    height: 100dvh;
+  }
 }
 
 body {
@@ -48,11 +71,13 @@ body {
     Roboto,
     sans-serif;
   -webkit-font-smoothing: antialiased;
-  /* Block pull-to-refresh and double-tap zoom inside the game. */
+  /* Block pull-to-refresh, overscroll bounce and double-tap zoom. */
   overscroll-behavior: none;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  /* Suppress the iOS long-press callout over game surfaces. */
+  -webkit-touch-callout: none;
 }
 
 /* --- Layout ------------------------------------------------------------- */
@@ -66,6 +91,8 @@ body {
 .game-canvas-host {
   position: absolute;
   inset: 0;
+  /* The canvas owns its gestures: no browser panning/pinching over it. */
+  touch-action: none;
 }
 
 .game-canvas-host canvas {
@@ -77,12 +104,18 @@ body {
 .hud-overlay {
   position: absolute;
   inset: 0;
-  padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right))
-    calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
+  padding: calc(var(--space-hud) + var(--safe-top)) calc(var(--space-hud) + var(--safe-right))
+    calc(var(--space-hud) + var(--safe-bottom)) calc(var(--space-hud) + var(--safe-left));
   pointer-events: none; /* Only individual panels re-enable pointer events. */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+/* In portrait the status chip is centred so it clears the flight area's
+ * left edge where the plane parks. */
+.hud-overlay[data-orientation='portrait'] {
+  align-items: center;
 }
 
 .glass-panel {
@@ -98,29 +131,39 @@ body {
 .hud-status {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 10px 18px;
-  font-size: 14px;
+  flex-wrap: wrap;
+  gap: clamp(8px, 1.8vmin, 18px);
+  padding: var(--hud-pad-y) var(--hud-pad-x);
+  font-size: var(--font-hud);
+  max-width: calc(100vw - 2 * var(--space-hud));
 }
 
 .hud-phase {
   font-weight: 600;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .hud-crash {
   color: var(--color-accent);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .hud-fps {
   color: var(--color-text-dim);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The FPS diagnostic yields space on the narrowest screens. */
+.hud-overlay[data-breakpoint='compact'][data-orientation='portrait'] .hud-fps {
+  display: none;
 }
 
 .hud-loading {
-  padding: 10px 18px;
+  padding: var(--hud-pad-y) var(--hud-pad-x);
   color: var(--color-text-dim);
 }
 
@@ -129,6 +172,16 @@ body {
   place-items: center;
   height: 100%;
   color: var(--color-text-dim);
+}
+
+/* --- Touch ergonomics ---------------------------------------------------- */
+
+/* Coarse pointers (fingers) get taller interactive surfaces. Applies to the
+ * glass panels that become buttons/panels in the betting phase. */
+@media (pointer: coarse) {
+  :root {
+    --hud-pad-y: clamp(8px, 1.8vmin, 14px);
+  }
 }
 
 /* --- Accessibility ------------------------------------------------------ */

@@ -27,9 +27,17 @@ export interface GameEngineOptions {
  *
  * The engine owns the Pixi Application, the frame loop, the scene manager,
  * the round state machine and the round director — and nothing else.
- * Rendering details live in scenes; game rules will move to the server
- * (the RoundDirector is the swap point); React talks to the engine only
- * through `events` and the state machine.
+ *
+ * Resize pipeline (three independent triggers, one sink):
+ *   • ResizeObserver on the host element — catches window resizes,
+ *     orientation changes, foldable posture changes and layout-driven size
+ *     changes that never fire a window resize event.
+ *   • A re-arming DPR media query — catches browser zoom and moving the
+ *     window between monitors, updating the renderer resolution live so
+ *     the canvas stays retina-sharp without a reload.
+ *   • Pixi's own resizeTo plumbing as the baseline.
+ * All converge on renderer.resize → the renderer's 'resize' event →
+ * scenes.resize, so scenes see exactly one authoritative signal.
  */
 export class GameEngine {
   readonly events = new EventBus<EngineEvents>();
@@ -39,12 +47,15 @@ export class GameEngine {
   readonly round: RoundDirector;
 
   private readonly app: Application;
+  private resizeObserver: ResizeObserver | null = null;
+  private dprQuery: MediaQueryList | null = null;
+  private dprDisposed = false;
   private elapsed = 0;
   private fpsAccumulatorMs = 0;
   private frameCount = 0;
   private destroyed = false;
 
-  private constructor(app: Application, quality: QualitySettings) {
+  private constructor(app: Application, quality: QualitySettings, parent: HTMLElement) {
     this.app = app;
     this.quality = quality;
     this.state = createGameStateMachine();
@@ -59,6 +70,18 @@ export class GameEngine {
     if (quality.targetFPS > 0) {
       this.app.ticker.maxFPS = quality.targetFPS;
     }
+
+    // ResizeObserver catches host-element size changes that never fire a
+    // window resize (orientation change on some browsers, flex/grid
+    // reflows, foldable posture changes).
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (!this.destroyed) this.app.resize();
+      });
+      this.resizeObserver.observe(parent);
+    }
+
+    this.armDprWatcher();
   }
 
   /**
@@ -80,7 +103,7 @@ export class GameEngine {
 
     options.parent.appendChild(app.canvas);
 
-    const engine = new GameEngine(app, quality);
+    const engine = new GameEngine(app, quality, options.parent);
     await engine.scenes.changeScene(new FlightScene(engine));
     engine.handleResize();
     engine.events.emit('engine:ready', undefined);
@@ -124,10 +147,39 @@ export class GameEngine {
     this.events.emit('engine:resize', { width, height });
   }
 
+  /**
+   * Watch for devicePixelRatio changes (browser zoom, monitor moves). The
+   * media query matches only the *current* DPR, so each firing re-arms a
+   * fresh query for the new value — the standard pattern for continuous
+   * DPR observation.
+   */
+  private armDprWatcher(): void {
+    if (this.dprDisposed || typeof window.matchMedia !== 'function') return;
+    this.dprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    this.dprQuery.addEventListener('change', this.handleDprChange, { once: true });
+  }
+
+  private readonly handleDprChange = (): void => {
+    if (this.destroyed) return;
+    const resolution = Math.min(window.devicePixelRatio || 1, this.quality.maxResolution);
+    if (this.app.renderer.resolution !== resolution) {
+      this.app.renderer.resolution = resolution;
+      // autoDensity re-syncs the canvas CSS size on the next resize.
+      this.app.resize();
+    }
+    this.armDprWatcher();
+  };
+
   /** Full teardown: safe to call once, idempotent afterwards. */
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    this.dprDisposed = true;
+    this.dprQuery?.removeEventListener('change', this.handleDprChange);
+    this.dprQuery = null;
 
     this.app.ticker.remove(this.update, this);
     this.app.renderer.off('resize', this.handleResize, this);

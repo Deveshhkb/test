@@ -28,9 +28,15 @@ export class Trail {
 
   private readonly points: TrailPoint[] = [];
   private readonly options: TrailOptions;
+  private widthScale = 1;
 
   constructor(options: TrailOptions) {
     this.options = options;
+  }
+
+  /** Responsive scaling: stroke width follows the plane's screen scale. */
+  setWidthScale(scale: number): void {
+    this.widthScale = scale;
   }
 
   /** Record the emitter's current position (world coordinates). */
@@ -89,7 +95,7 @@ export class Trail {
       g.moveTo(a.x, a.y)
         .lineTo(b.x, b.y)
         .stroke({
-          width: Math.max(0.5, width * strength),
+          width: Math.max(0.5, width * this.widthScale * strength),
           color,
           alpha: alpha * strength,
           cap: 'round',

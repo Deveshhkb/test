@@ -10,7 +10,13 @@ import { ParticleSystem } from '@/game/fx/ParticleSystem';
 import { Trail } from '@/game/fx/Trail';
 import { TextureLibrary } from '@/game/fx/textures';
 import { flightPosition } from '@/game/flight/FlightPath';
-import { PLAYFIELD_CONFIG } from '@/config/flight';
+import {
+  resolveMultiplierAnchor,
+  resolvePlaneScale,
+  resolvePlayfield,
+  resolveUiScale,
+  type PlayfieldLayout,
+} from '@/config/flight';
 import { clamp, damp } from '@/utils/math';
 
 /**
@@ -24,8 +30,10 @@ import { clamp, damp } from '@/utils/math';
  *   ParticleSystem   pooled exhaust smoke + crash fire
  *   screen-space UI  multiplier readout, countdown, crash flash
  *
- * The scene *reads* round state from the engine (RoundDirector + state
- * machine) and reacts to round events; it never advances game logic itself.
+ * Layout is fully responsive: every position and size derives from the
+ * resolver functions in config/flight (viewport fractions with pixel
+ * clamps). Orientation/viewport changes re-resolve the layout and glide
+ * the screen-space UI to its new anchors instead of snapping.
  */
 
 /** Multiplier readout colour buckets — style changes only at bucket edges. */
@@ -37,6 +45,9 @@ const MULTIPLIER_COLORS: ReadonlyArray<{ from: number; color: number }> = [
 ];
 
 const CRASH_COLOR = 0xff4d5e;
+
+/** Duration of the UI glide when the viewport changes shape. */
+const REFLOW_TWEEN_SECONDS = 0.3;
 
 export class FlightScene extends Scene {
   // --- display tree ------------------------------------------------------
@@ -55,12 +66,18 @@ export class FlightScene extends Scene {
   private flewAwayText!: Text;
   private countdownText!: Text;
 
-  // --- viewport / playfield ----------------------------------------------
+  // --- responsive layout --------------------------------------------------
   private width = 0;
-  private originX = 0;
-  private originY = 0;
-  private fieldWidth = 0;
-  private fieldHeight = 0;
+  private layout: PlayfieldLayout = {
+    originX: 0,
+    originY: 0,
+    fieldWidth: 1,
+    fieldHeight: 1,
+    groundY: 0,
+  };
+  private uiScale = 1;
+  private planeScale = 1;
+  private hasLaidOut = false;
 
   // --- flight state -------------------------------------------------------
   private planeX = 0;
@@ -183,8 +200,8 @@ export class FlightScene extends Scene {
     // --- plane position ---------------------------------------------------
     if (flying) {
       const point = flightPosition(this.engine.round.flightTime);
-      const targetX = this.originX + point.fx * this.fieldWidth;
-      const targetY = this.originY - point.fy * this.fieldHeight;
+      const targetX = this.layout.originX + point.fx * this.layout.fieldWidth;
+      const targetY = this.layout.originY - point.fy * this.layout.fieldHeight;
       if (dt > 0) {
         this.velX = damp(this.velX, (targetX - this.planeX) / dt, 0.01, dt);
         this.velY = damp(this.velY, (targetY - this.planeY) / dt, 0.01, dt);
@@ -204,8 +221,8 @@ export class FlightScene extends Scene {
       this.planeRotation = damp(this.planeRotation, -0.35, 0.01, dt);
     } else if (!this.crashed) {
       // Parked on the runway between rounds.
-      this.planeX = damp(this.planeX, this.originX, 0.001, dt);
-      this.planeY = damp(this.planeY, this.originY, 0.001, dt);
+      this.planeX = damp(this.planeX, this.layout.originX, 0.001, dt);
+      this.planeY = damp(this.planeY, this.layout.originY, 0.001, dt);
       this.planeRotation = damp(this.planeRotation, 0, 0.01, dt);
       this.velX = 0;
       this.velY = 0;
@@ -231,8 +248,7 @@ export class FlightScene extends Scene {
     this.sky.update(dt, elapsed, speed, this.camera.currentPanX, this.camera.currentPanY);
 
     // --- multiplier readout ----------------------------------------------
-    const showMultiplier =
-      flying || phase === GamePhase.Crash || phase === GamePhase.Result;
+    const showMultiplier = flying || phase === GamePhase.Crash || phase === GamePhase.Result;
     this.multiplierText.visible = showMultiplier;
     if (showMultiplier) {
       this.multiplierText.text = `${multiplier.toFixed(2)}×`;
@@ -243,40 +259,31 @@ export class FlightScene extends Scene {
   resize(width: number, height: number): void {
     this.width = width;
 
-    const pad = PLAYFIELD_CONFIG;
-    this.originX = pad.padLeft;
-    this.originY = height - pad.padBottom;
-    this.fieldWidth = Math.max(1, width - pad.padLeft - pad.padRight);
-    this.fieldHeight = Math.max(1, height - pad.padTop - pad.padBottom);
+    this.layout = resolvePlayfield(width, height);
+    this.uiScale = resolveUiScale(width, height);
+    this.planeScale = resolvePlaneScale(width, height);
 
     this.sky.resize(width, height);
     this.camera.resize(width, height);
+    this.drawGround();
 
-    this.ground
-      .clear()
-      .moveTo(this.originX - 30, this.originY + 26)
-      .lineTo(width - pad.padRight + 30, this.originY + 26)
-      .stroke({ width: 2, color: 0x2a3558, alpha: 0.9 });
-    for (let x = this.originX; x < width - pad.padRight; x += 56) {
-      this.ground.circle(x, this.originY + 26, 2.2).fill({ color: 0x3d4d7d, alpha: 0.8 });
-    }
+    this.plane.container.scale.set(this.planeScale);
+    this.trail.setWidthScale(this.planeScale);
 
-    this.plane.container.scale.set(clamp(width / 1400, 0.55, 1.1));
-
-    const uiScale = clamp(width / 1200, 0.6, 1.3);
-    this.multiplierText.scale.set(uiScale);
-    this.multiplierText.position.set(width / 2, height * 0.3);
-    this.flewAwayText.scale.set(uiScale);
-    this.flewAwayText.position.set(width / 2, height * 0.3 - 78 * uiScale);
-    this.countdownText.scale.set(uiScale);
-    this.countdownText.position.set(width / 2, height / 2);
+    // Screen-space UI: first layout snaps into place, later reflows glide.
+    const anchor = resolveMultiplierAnchor(width, height);
+    const flewAwayY = anchor.y - 78 * this.uiScale;
+    this.placeText(this.multiplierText, anchor.x, anchor.y, this.uiScale);
+    this.placeText(this.flewAwayText, anchor.x, flewAwayY, this.uiScale);
+    this.placeText(this.countdownText, width / 2, height / 2, this.uiScale);
 
     this.flash.clear().rect(0, 0, width, height).fill(0xfff1e6);
 
     if (!this.crashed && this.engine.state.current !== GamePhase.Running) {
-      this.planeX = this.originX;
-      this.planeY = this.originY;
+      this.planeX = this.layout.originX;
+      this.planeY = this.layout.originY;
     }
+    this.hasLaidOut = true;
   }
 
   override destroy(): void {
@@ -285,9 +292,13 @@ export class FlightScene extends Scene {
       this.flash,
       this.countdownText,
       this.countdownText.scale,
+      this.countdownText.position,
       this.multiplierText.scale,
+      this.multiplierText.position,
       this.flewAwayText,
+      this.flewAwayText.position,
       this.curve,
+      this.plane.container,
     ]);
     this.trail.destroy();
     this.smoke.destroy();
@@ -310,8 +321,8 @@ export class FlightScene extends Scene {
     this.flewAwayText.visible = false;
     this.countdownText.visible = false;
     this.applyMultiplierColor(1);
-    this.planeX = this.originX;
-    this.planeY = this.originY;
+    this.planeX = this.layout.originX;
+    this.planeY = this.layout.originY;
     this.velX = 0;
     this.velY = 0;
   }
@@ -330,43 +341,44 @@ export class FlightScene extends Scene {
       this.crashVelY = -scale * 0.35;
     }
 
-    // Engine blowout burst at the nose.
+    // Engine blowout burst at the nose, sized to the plane's screen scale.
     const nose = this.anchorWorld(PLANE_ANCHORS.noseFire);
     const density = this.engine.quality.particleDensity;
+    const fx = this.planeScale;
     this.fire.emit({
       x: nose.x,
       y: nose.y,
       count: Math.round(26 * density),
-      speedMin: 120,
-      speedMax: 420,
+      speedMin: 120 * fx,
+      speedMax: 420 * fx,
       angleMin: 0,
       angleMax: Math.PI * 2,
       lifeMin: 0.5,
       lifeMax: 1.0,
-      scaleStart: 0.55,
-      scaleEnd: 0.1,
+      scaleStart: 0.55 * fx,
+      scaleEnd: 0.1 * fx,
       alphaStart: 0.9,
       alphaEnd: 0,
       tint: 0xff8a3c,
-      gravity: 220,
+      gravity: 220 * fx,
       drag: 1.2,
     });
     this.fire.emit({
       x: nose.x,
       y: nose.y,
       count: Math.round(16 * density),
-      speedMin: 200,
-      speedMax: 520,
+      speedMin: 200 * fx,
+      speedMax: 520 * fx,
       angleMin: 0,
       angleMax: Math.PI * 2,
       lifeMin: 0.3,
       lifeMax: 0.7,
-      scaleStart: 0.3,
-      scaleEnd: 0.05,
+      scaleStart: 0.3 * fx,
+      scaleEnd: 0.05 * fx,
       alphaStart: 1,
       alphaEnd: 0,
       tint: 0xffd166,
-      gravity: 320,
+      gravity: 320 * fx,
       drag: 0.8,
     });
 
@@ -385,11 +397,10 @@ export class FlightScene extends Scene {
     this.flewAwayText.visible = true;
 
     gsap.killTweensOf(this.multiplierText.scale);
-    const uiScale = clamp(this.width / 1200, 0.6, 1.3);
     gsap.fromTo(
       this.multiplierText.scale,
-      { x: uiScale * 1.35, y: uiScale * 1.35 },
-      { x: uiScale, y: uiScale, duration: 0.55, ease: 'elastic.out(1, 0.45)' },
+      { x: this.uiScale * 1.35, y: this.uiScale * 1.35 },
+      { x: this.uiScale, y: this.uiScale, duration: 0.55, ease: 'elastic.out(1, 0.45)' },
     );
   }
 
@@ -400,9 +411,8 @@ export class FlightScene extends Scene {
     this.trail.clear();
     this.flewAwayText.visible = false;
     this.multiplierText.visible = false;
-    this.camera.addTrauma(0);
-    this.planeX = this.originX;
-    this.planeY = this.originY;
+    this.planeX = this.layout.originX;
+    this.planeY = this.layout.originY;
     this.planeRotation = 0;
     this.plane.container.alpha = 0;
     gsap.to(this.plane.container, { alpha: 1, duration: 0.45, ease: 'power2.out' });
@@ -412,18 +422,59 @@ export class FlightScene extends Scene {
     this.countdownText.text = String(seconds);
     this.countdownText.visible = true;
     gsap.killTweensOf([this.countdownText, this.countdownText.scale]);
-    const uiScale = clamp(this.width / 1200, 0.6, 1.3);
     this.countdownText.alpha = 0;
     gsap.fromTo(
       this.countdownText.scale,
-      { x: uiScale * 1.8, y: uiScale * 1.8 },
-      { x: uiScale, y: uiScale, duration: 0.4, ease: 'back.out(2)' },
+      { x: this.uiScale * 1.8, y: this.uiScale * 1.8 },
+      { x: this.uiScale, y: this.uiScale, duration: 0.4, ease: 'back.out(2)' },
     );
     gsap.to(this.countdownText, { alpha: 1, duration: 0.18 });
     gsap.to(this.countdownText, { alpha: 0, duration: 0.3, delay: 0.6 });
   }
 
   // --- helpers ------------------------------------------------------------
+
+  /**
+   * Position a screen-space text element. On the first layout it snaps;
+   * on later viewport changes (rotation, window resize) it glides, which
+   * is what makes orientation changes feel animated rather than jarring.
+   */
+  private placeText(text: Text, x: number, y: number, scale: number): void {
+    if (!this.hasLaidOut) {
+      text.position.set(x, y);
+      text.scale.set(scale);
+      return;
+    }
+    gsap.to(text.position, {
+      x,
+      y,
+      duration: REFLOW_TWEEN_SECONDS,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    });
+    gsap.to(text.scale, {
+      x: scale,
+      y: scale,
+      duration: REFLOW_TWEEN_SECONDS,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    });
+  }
+
+  private drawGround(): void {
+    const { originX, groundY } = this.layout;
+    const rightEdge = originX + this.layout.fieldWidth;
+    const dotSpacing = clamp(this.width / 24, 36, 96);
+
+    this.ground
+      .clear()
+      .moveTo(originX - 30, groundY)
+      .lineTo(rightEdge + 30, groundY)
+      .stroke({ width: 2, color: 0x2a3558, alpha: 0.9 });
+    for (let x = originX; x < rightEdge; x += dotSpacing) {
+      this.ground.circle(x, groundY, 2.2).fill({ color: 0x3d4d7d, alpha: 0.8 });
+    }
+  }
 
   private emitExhaust(dt: number, speed: number): void {
     this.smokeAccumulator += (8 + speed * 22) * this.engine.quality.particleDensity * dt;
@@ -433,22 +484,23 @@ export class FlightScene extends Scene {
 
     const exhaust = this.anchorWorld(PLANE_ANCHORS.exhaust);
     const backward = this.planeRotation + Math.PI;
+    const fx = this.planeScale;
     this.smoke.emit({
       x: exhaust.x,
       y: exhaust.y,
       count,
-      speedMin: 30,
-      speedMax: 80,
+      speedMin: 30 * fx,
+      speedMax: 80 * fx,
       angleMin: backward - 0.35,
       angleMax: backward + 0.35,
       lifeMin: 0.7,
       lifeMax: 1.5,
-      scaleStart: 0.22,
-      scaleEnd: 0.85,
+      scaleStart: 0.22 * fx,
+      scaleEnd: 0.85 * fx,
       alphaStart: 0.3,
       alphaEnd: 0,
       tint: 0x9aa3b5,
-      gravity: -14,
+      gravity: -14 * fx,
       drag: 0.7,
       spin: 1.5,
     });
@@ -456,22 +508,25 @@ export class FlightScene extends Scene {
 
   private drawCurve(): void {
     const g = this.curve;
-    const controlX = this.originX + (this.planeX - this.originX) * 0.55;
+    const { originX, originY } = this.layout;
+    const controlX = originX + (this.planeX - originX) * 0.55;
+    const strokeCore = clamp(4 * this.planeScale, 2, 7);
+    const strokeGlow = strokeCore * 2.5;
 
     g.clear();
     // Area fill under the curve.
-    g.moveTo(this.originX, this.originY)
-      .quadraticCurveTo(controlX, this.originY, this.planeX, this.planeY)
-      .lineTo(this.planeX, this.originY)
+    g.moveTo(originX, originY)
+      .quadraticCurveTo(controlX, originY, this.planeX, this.planeY)
+      .lineTo(this.planeX, originY)
       .closePath()
       .fill({ color: 0xe0304f, alpha: 0.1 });
     // Outer glow stroke, then the crisp core stroke.
-    g.moveTo(this.originX, this.originY)
-      .quadraticCurveTo(controlX, this.originY, this.planeX, this.planeY)
-      .stroke({ width: 10, color: 0xe0304f, alpha: 0.18, cap: 'round' });
-    g.moveTo(this.originX, this.originY)
-      .quadraticCurveTo(controlX, this.originY, this.planeX, this.planeY)
-      .stroke({ width: 4, color: 0xe0304f, alpha: 0.95, cap: 'round' });
+    g.moveTo(originX, originY)
+      .quadraticCurveTo(controlX, originY, this.planeX, this.planeY)
+      .stroke({ width: strokeGlow, color: 0xe0304f, alpha: 0.18, cap: 'round' });
+    g.moveTo(originX, originY)
+      .quadraticCurveTo(controlX, originY, this.planeX, this.planeY)
+      .stroke({ width: strokeCore, color: 0xe0304f, alpha: 0.95, cap: 'round' });
   }
 
   private applyMultiplierColor(multiplier: number): void {
