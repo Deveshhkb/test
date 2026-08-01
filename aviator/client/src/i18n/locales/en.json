@@ -3,8 +3,13 @@
     "title": "Aviator",
     "loading": "Loading…"
   },
+  "game": {
+    "flewAway": "FLEW AWAY!"
+  },
   "hud": {
     "fps": "{{value}} FPS",
+    "startingIn": "Starting in {{seconds}}",
+    "flewAwayAt": "Flew away at {{multiplier}}×",
     "phase": {
       "waiting": "Waiting",
       "betting": "Place your bets",

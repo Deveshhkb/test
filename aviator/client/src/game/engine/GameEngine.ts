@@ -1,10 +1,12 @@
 import { Application, type Ticker } from 'pixi.js';
 import type { GamePhase } from '@aviator/shared';
 import { EventBus } from './EventBus';
+import type { EngineEvents } from './events';
 import { createGameStateMachine } from './GameStateMachine';
 import type { StateMachine } from './StateMachine';
 import { SceneManager } from '@/game/scenes/SceneManager';
-import { PreviewScene } from '@/game/scenes/PreviewScene';
+import { FlightScene } from '@/game/scenes/FlightScene';
+import { RoundDirector } from '@/game/managers/RoundDirector';
 import {
   detectQualityTier,
   getQualitySettings,
@@ -12,14 +14,6 @@ import {
   type QualityTier,
 } from '@/config/quality';
 import { ENGINE_CONFIG } from '@/config/engine';
-
-/** Events the engine publishes to the outside world (React, audio, …). */
-export interface EngineEvents extends Record<string, unknown> {
-  'engine:ready': undefined;
-  'engine:fps': number;
-  'engine:resize': { width: number; height: number };
-  'phase:changed': { from: GamePhase; to: GamePhase };
-}
 
 export interface GameEngineOptions {
   /** DOM element the canvas fills. The engine tracks its size. */
@@ -31,17 +25,18 @@ export interface GameEngineOptions {
 /**
  * Composition root of the rendering side of the game.
  *
- * The engine owns the Pixi Application, the frame loop, the scene manager
- * and the round state machine — and nothing else. Rendering details live in
- * scenes; game rules live on the server; React talks to the engine only
- * through `events` and the state machine. That separation is what keeps
- * this class small as the game grows.
+ * The engine owns the Pixi Application, the frame loop, the scene manager,
+ * the round state machine and the round director — and nothing else.
+ * Rendering details live in scenes; game rules will move to the server
+ * (the RoundDirector is the swap point); React talks to the engine only
+ * through `events` and the state machine.
  */
 export class GameEngine {
   readonly events = new EventBus<EngineEvents>();
   readonly state: StateMachine<GamePhase>;
   readonly quality: QualitySettings;
   readonly scenes: SceneManager;
+  readonly round: RoundDirector;
 
   private readonly app: Application;
   private elapsed = 0;
@@ -54,6 +49,7 @@ export class GameEngine {
     this.quality = quality;
     this.state = createGameStateMachine();
     this.scenes = new SceneManager();
+    this.round = new RoundDirector({ state: this.state, events: this.events });
 
     this.app.stage.addChild(this.scenes.container);
 
@@ -85,7 +81,7 @@ export class GameEngine {
     options.parent.appendChild(app.canvas);
 
     const engine = new GameEngine(app, quality);
-    await engine.scenes.changeScene(new PreviewScene(engine));
+    await engine.scenes.changeScene(new FlightScene(engine));
     engine.handleResize();
     engine.events.emit('engine:ready', undefined);
     return engine;
@@ -102,6 +98,9 @@ export class GameEngine {
   private update(ticker: Ticker): void {
     const dt = Math.min(ticker.deltaMS / 1000, ENGINE_CONFIG.maxDeltaSeconds);
     this.elapsed += dt;
+    // Game logic advances before rendering so scenes always draw the
+    // freshest state within the same frame.
+    this.round.update(dt);
     this.scenes.update(dt, this.elapsed);
     this.reportFPS(ticker.deltaMS);
   }
@@ -132,6 +131,7 @@ export class GameEngine {
 
     this.app.ticker.remove(this.update, this);
     this.app.renderer.off('resize', this.handleResize, this);
+    this.round.destroy();
     this.scenes.destroy();
     this.state.destroy();
     this.events.clear();
