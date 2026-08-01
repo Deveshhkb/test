@@ -1,0 +1,22 @@
+{
+  "app": {
+    "title": "Aviator",
+    "loading": "Loading…"
+  },
+  "hud": {
+    "fps": "{{value}} FPS",
+    "phase": {
+      "waiting": "Waiting",
+      "betting": "Place your bets",
+      "countdown": "Get ready",
+      "takeoff": "Takeoff",
+      "running": "Flying",
+      "crash": "Flew away!",
+      "result": "Round over",
+      "celebration": "Big win!",
+      "reset": "Next round",
+      "reconnect": "Reconnecting…",
+      "recovery": "Syncing…"
+    }
+  }
+}
