@@ -1,12 +1,4 @@
-import {
-  BitmapText,
-  Container,
-  FederatedPointerEvent,
-  Graphics,
-  Matrix,
-  Point,
-  Sprite,
-} from 'pixi.js';
+import { BitmapText, Container, FederatedPointerEvent, Graphics, Point, Sprite } from 'pixi.js';
 import { TableLayout } from '../Game/TableLayout';
 import { TextureFactory } from '../Game/TextureFactory';
 import { FONT } from '../Game/Fonts';
@@ -43,6 +35,16 @@ export class BettingBoard extends Container {
   private readonly winLayer = new Graphics();
   private readonly winGlow: Sprite;
   private readonly chipLayer = new Container();
+  /**
+   * Additive glows laid over the cells a hovered bet covers.
+   *
+   * Pooled sprites rather than drawn rectangles, because the effect depends on
+   * *additive blending*: one cyan sprite reads pale pink over a red cell and
+   * stays cyan over a black one, which is exactly the two-colour behaviour the
+   * reference client shows - from a single texture.
+   */
+  private readonly glowLayer = new Container();
+  private readonly glowPool: Sprite[] = [];
 
   /** Pixel size of one board unit. */
   private cell = 40;
@@ -68,8 +70,8 @@ export class BettingBoard extends Container {
     this.winGlow.alpha = 0;
     this.winGlow.blendMode = 'add';
 
-    this.addChild(this.felt, this.grid, this.labels, this.hoverLayer, this.winGlow, this.winLayer);
-    this.addChild(this.chipLayer);
+    this.addChild(this.felt, this.grid, this.labels, this.glowLayer, this.hoverLayer);
+    this.addChild(this.winGlow, this.winLayer, this.chipLayer);
 
     this.eventMode = 'static';
     this.cursor = 'pointer';
@@ -190,6 +192,7 @@ export class BettingBoard extends Container {
     if (this.hoveredSpotId === undefined) return;
     this.hoveredSpotId = undefined;
     this.hoverLayer.clear();
+    this.releaseGlows();
     this.onSpotHover?.(undefined);
   }
 
@@ -203,25 +206,56 @@ export class BettingBoard extends Container {
   /* Highlights                                                            */
   /* --------------------------------------------------------------------- */
 
-  /** Outline every cell a hovered spot pays on. */
+  /**
+   * Light every cell a hovered spot pays on.
+   *
+   * Glow sprites are recycled between hovers - moving the pointer across the
+   * grid must not allocate, and on a 12-number column bet that would otherwise
+   * be twelve sprites per pointer move.
+   */
   private drawHover(spot: BetSpot | undefined): void {
+    this.releaseGlows();
     this.hoverLayer.clear();
     if (!spot) return;
 
     for (const number of spot.numbers) {
       const rect = this.cellRect(number);
       if (!rect) continue;
-      this.hoverLayer
-        .rect(rect.x, rect.y, rect.width, rect.height)
-        .fill({ color: this.theme.highlight, alpha: 0.22 });
+      this.showGlow(rect);
     }
 
-    // A marker on the spot itself disambiguates split/corner bets, where the
-    // highlighted cells alone do not say which point was picked.
+    // Split, corner and six-line bets cover cells that are not adjacent on
+    // screen, so a marker on the spot itself says which point was picked.
     const centre = this.boardToLocal(spot.x, spot.y);
     this.hoverLayer
-      .circle(centre.x, centre.y, this.cell * 0.16)
-      .fill({ color: this.theme.highlight, alpha: 0.85 });
+      .circle(centre.x, centre.y, this.cell * 0.1)
+      .fill({ color: this.theme.feltLine, alpha: 0.9 });
+  }
+
+  /** Take a glow from the pool and lay it over a cell. */
+  private showGlow(rect: { x: number; y: number; width: number; height: number }): void {
+    let glow = this.glowPool.find((candidate) => !candidate.visible);
+
+    if (!glow) {
+      glow = new Sprite(this.textures.getGlowTexture());
+      glow.anchor.set(0.5);
+      glow.blendMode = 'add';
+      this.glowPool.push(glow);
+      this.glowLayer.addChild(glow);
+    }
+
+    glow.visible = true;
+    glow.tint = this.theme.betGlow;
+    glow.alpha = 0.55;
+    glow.position.set(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    // Slightly larger than the cell so the falloff bleeds over the white rule,
+    // which is what makes the whole cell read as lit rather than just its middle.
+    glow.width = rect.width * 1.15;
+    glow.height = rect.height * 1.15;
+  }
+
+  private releaseGlows(): void {
+    for (const glow of this.glowPool) glow.visible = false;
   }
 
   /**
@@ -260,6 +294,7 @@ export class BettingBoard extends Container {
   public dimLosingSpots(winning: RouletteNumber): void {
     const winningKey = numberKey(winning);
     this.hoverLayer.clear();
+    this.releaseGlows();
 
     for (let column = 0; column < BOARD.COLUMNS; column += 1) {
       for (let row = 0; row < BOARD.ROWS; row += 1) {
@@ -276,6 +311,7 @@ export class BettingBoard extends Container {
 
   public clearDim(): void {
     this.hoverLayer.clear();
+    this.releaseGlows();
   }
 
   /** Board-local rectangle of a number's cell. */
@@ -313,77 +349,42 @@ export class BettingBoard extends Container {
     this.drawPointMarkers();
   }
 
+  /**
+   * The reference layout is printed *directly onto the table* - there is no
+   * panel, no surround and no border around the grid. The scene owns the felt
+   * background, so this draws nothing at all; the method is kept as the single
+   * place that decision is recorded.
+   */
   private drawFelt(): void {
-    const { width, height } = this.getBoardSize();
-    const pad = this.cell * 0.35;
-    const radius = this.cell * 0.3;
-
-    // Table surround, slightly larger than the printed layout.
-    this.felt
-      .roundRect(-pad, -pad, width + pad * 2, height + pad * 2, radius)
-      .fill({ color: this.theme.feltSecondary })
-      .stroke({ width: Math.max(2, this.cell * 0.07), color: this.theme.goldDark, alpha: 0.85 });
-
-    const inner = {
-      x: -pad * 0.4,
-      y: -pad * 0.4,
-      width: width + pad * 0.8,
-      height: height + pad * 0.8,
-    };
-    const feltTexture = this.textures.getFeltTexture();
-
-    if (feltTexture) {
-      // Scale the felt photograph to cover the layout. `cover` rather than
-      // `stretch` keeps the weave isotropic - a non-uniform scale on a fabric
-      // texture reads immediately as wrong.
-      const cover = Math.max(
-        inner.width / feltTexture.width,
-        inner.height / feltTexture.height,
-      );
-      // Centre the overflow. The felt art is vignetted, so anchoring it at the
-      // top-left would park its bright spot in a corner and leave the layout
-      // visibly lit from one side.
-      const scaledWidth = feltTexture.width * cover;
-      const scaledHeight = feltTexture.height * cover;
-      const matrix = new Matrix()
-        .scale(cover, cover)
-        .translate(
-          inner.x + (inner.width - scaledWidth) / 2,
-          inner.y + (inner.height - scaledHeight) / 2,
-        );
-
-      this.felt
-        .roundRect(inner.x, inner.y, inner.width, inner.height, radius * 0.7)
-        .fill({ texture: feltTexture, matrix });
-      return;
-    }
-
-    this.felt
-      .roundRect(inner.x, inner.y, inner.width, inner.height, radius * 0.7)
-      .fill({ color: this.theme.feltPrimary });
+    /* Intentionally empty - see the comment above. */
   }
 
+  /**
+   * The 36 numbered cells plus the zero.
+   *
+   * Zero is drawn as a left-pointing pentagon rather than a rectangle, which is
+   * how it is printed on a real single-zero layout and how the reference client
+   * renders it.
+   */
   private drawNumberCells(): void {
-    const stroke = Math.max(1, this.cell * 0.045);
+    const stroke = this.lineWidth();
 
-    // Zero (and 00 on an American layout) are their own spots, coloured green.
     for (const spot of this.layout.getSpotsOfType(BetType.STRAIGHT_UP)) {
       const value = spot.numbers[0];
       const rect = this.cellRect(value);
       if (!rect) continue;
 
       const color = getNumberColor(value);
-      const fill =
-        color === PocketColor.RED
-          ? this.theme.red
-          : color === PocketColor.BLACK
-            ? this.theme.black
-            : this.theme.green;
+      const isZero = color === PocketColor.GREEN;
 
-      this.grid
-        .rect(rect.x, rect.y, rect.width, rect.height)
-        .fill({ color: fill })
-        .stroke({ width: stroke, color: this.theme.feltLine, alpha: 0.9 });
+      if (isZero) {
+        this.drawZeroPentagon(rect, stroke);
+      } else {
+        this.grid
+          .rect(rect.x, rect.y, rect.width, rect.height)
+          .fill({ color: color === PocketColor.RED ? this.theme.red : this.theme.black })
+          .stroke({ width: stroke, color: this.theme.feltLine });
+      }
 
       this.addLabel(
         String(value),
@@ -395,60 +396,54 @@ export class BettingBoard extends Container {
     }
   }
 
+  /** Left-pointing pentagon occupying the zero cell. */
+  private drawZeroPentagon(
+    rect: { x: number; y: number; width: number; height: number },
+    stroke: number,
+  ): void {
+    const tip = rect.x - this.cell * 0.34;
+    const midY = rect.y + rect.height / 2;
+    // The shoulders sit a little in from the corners so the point reads as a
+    // chamfer on the cell rather than a separate arrow head.
+    const shoulder = rect.height * 0.22;
+
+    this.grid
+      .moveTo(rect.x + rect.width, rect.y)
+      .lineTo(rect.x, rect.y)
+      .lineTo(tip, rect.y + shoulder)
+      .lineTo(tip, midY)
+      .lineTo(tip, rect.y + rect.height - shoulder)
+      .lineTo(rect.x, rect.y + rect.height)
+      .lineTo(rect.x + rect.width, rect.y + rect.height)
+      .closePath()
+      .fill({ color: this.theme.green })
+      .stroke({ width: stroke, color: this.theme.feltLine });
+  }
+
+  /** White rule width, scaled with the cell but never sub-pixel. */
+  private lineWidth(): number {
+    return Math.max(1.5, this.cell * 0.035);
+  }
+
   private drawColumnBets(): void {
-    const stroke = Math.max(1, this.cell * 0.045);
-
     for (const spot of this.layout.getSpotsOfType(BetType.COLUMN)) {
-      const topLeft = this.boardToLocal(spot.x - spot.hitWidth, spot.y - spot.hitHeight);
-      const width = spot.hitWidth * 2 * this.cell;
-      const height = spot.hitHeight * 2 * this.cell;
-
-      this.grid
-        .rect(topLeft.x, topLeft.y, width, height)
-        .fill({ color: this.theme.feltPrimary })
-        .stroke({ width: stroke, color: this.theme.feltLine, alpha: 0.9 });
-
-      this.addLabel(
-        this.localization.t('label.column'),
-        topLeft.x + width / 2,
-        topLeft.y + height / 2,
-        this.cell * 0.26,
-        FONT.UI,
-      );
+      this.drawOutsideCell(spot, '2:1', this.cell * 0.4);
     }
   }
 
   private drawDozens(): void {
-    const stroke = Math.max(1, this.cell * 0.045);
-
     for (const spot of this.layout.getSpotsOfType(BetType.DOZEN)) {
-      const topLeft = this.boardToLocal(spot.x - spot.hitWidth, spot.y - spot.hitHeight);
-      const width = spot.hitWidth * 2 * this.cell;
-      const height = spot.hitHeight * 2 * this.cell;
-
-      this.grid
-        .rect(topLeft.x, topLeft.y, width, height)
-        .fill({ color: this.theme.feltPrimary })
-        .stroke({ width: stroke, color: this.theme.feltLine, alpha: 0.9 });
-
-      this.addLabel(
-        this.localization.t(spot.label),
-        topLeft.x + width / 2,
-        topLeft.y + height / 2,
-        this.cell * 0.34,
-        FONT.UI,
-      );
+      this.drawOutsideCell(spot, this.localization.t(spot.label), this.cell * 0.3);
     }
   }
 
   /**
-   * Even-money row. Red and Black are drawn as diamonds rather than words,
-   * which is both the table convention and language-independent.
+   * Even-money row.
+   *
+   * Red and Black are solid blocks of their colour filling the whole cell -
+   * that is what the reference prints, and it is language independent.
    */
   private drawOutsideBets(): void {
-    const stroke = Math.max(1, this.cell * 0.045);
-    const diamondTypes = new Set<BetType>([BetType.RED, BetType.BLACK]);
-
     for (const type of [
       BetType.LOW,
       BetType.EVEN,
@@ -458,31 +453,37 @@ export class BettingBoard extends Container {
       BetType.HIGH,
     ]) {
       for (const spot of this.layout.getSpotsOfType(type)) {
-        const topLeft = this.boardToLocal(spot.x - spot.hitWidth, spot.y - spot.hitHeight);
-        const width = spot.hitWidth * 2 * this.cell;
-        const height = spot.hitHeight * 2 * this.cell;
-        const cx = topLeft.x + width / 2;
-        const cy = topLeft.y + height / 2;
-
-        this.grid
-          .rect(topLeft.x, topLeft.y, width, height)
-          .fill({ color: this.theme.feltPrimary })
-          .stroke({ width: stroke, color: this.theme.feltLine, alpha: 0.9 });
-
-        if (diamondTypes.has(type)) {
-          const size = height * 0.32;
-          this.grid
-            .moveTo(cx, cy - size)
-            .lineTo(cx + size, cy)
-            .lineTo(cx, cy + size)
-            .lineTo(cx - size, cy)
-            .closePath()
-            .fill({ color: type === BetType.RED ? this.theme.red : this.theme.black })
-            .stroke({ width: Math.max(1, this.cell * 0.03), color: this.theme.feltLine });
+        if (type === BetType.RED || type === BetType.BLACK) {
+          this.drawOutsideCell(spot, '', 0, type === BetType.RED ? this.theme.red : this.theme.black);
         } else {
-          this.addLabel(this.localization.t(spot.label), cx, cy, this.cell * 0.3, FONT.UI);
+          this.drawOutsideCell(spot, this.localization.t(spot.label), this.cell * 0.34);
         }
       }
+    }
+  }
+
+  /**
+   * One outside-bet cell: an optional solid fill, a white rule and a label.
+   *
+   * `fill` omitted leaves the felt showing through, which is how every
+   * non-colour outside bet is printed.
+   */
+  private drawOutsideCell(
+    spot: BetSpot,
+    label: string,
+    fontSize: number,
+    fill?: number,
+  ): void {
+    const topLeft = this.boardToLocal(spot.x - spot.hitWidth, spot.y - spot.hitHeight);
+    const width = spot.hitWidth * 2 * this.cell;
+    const height = spot.hitHeight * 2 * this.cell;
+
+    const shape = this.grid.rect(topLeft.x, topLeft.y, width, height);
+    if (fill !== undefined) shape.fill({ color: fill });
+    shape.stroke({ width: this.lineWidth(), color: this.theme.feltLine });
+
+    if (label) {
+      this.addLabel(label, topLeft.x + width / 2, topLeft.y + height / 2, fontSize, FONT.UI);
     }
   }
 

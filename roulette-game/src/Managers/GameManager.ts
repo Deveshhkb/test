@@ -3,6 +3,7 @@ import {
   GameEvent,
   GameState,
   HistoryEntry,
+  RoundMode,
   RoundResult,
   RouletteNumber,
 } from '../Types';
@@ -242,18 +243,43 @@ export class GameManager {
   /* Round phases - shared by both modes                                   */
   /* --------------------------------------------------------------------- */
 
+  /**
+   * Open the felt.
+   *
+   * In MANUAL mode no countdown runs: the round waits on the player pressing
+   * SPIN, so there is nothing for a timer to count down to and showing one
+   * would be a lie about when betting closes.
+   */
   public openBetting(duration: number): void {
     if (!this.transition(GameState.BETTING_OPEN)) return;
 
-    this.timerTotal = duration;
-    this.timerRemaining = duration;
-    this.timerRunning = true;
+    const timed = this.config.timing.mode === RoundMode.AUTO;
+    this.timerTotal = timed ? duration : 0;
+    this.timerRemaining = timed ? duration : 0;
+    this.timerRunning = timed;
     this.lastEmittedSecond = -1;
     this.lastCallFired = false;
 
     this.bets.openBetting();
-    this.bus.emit(GameEvent.BET_OPEN, { roundId: this.roundId, duration });
-    this.bus.emit(GameEvent.SYNC_TIMER, { remaining: duration, total: duration });
+    this.bus.emit(GameEvent.BET_OPEN, { roundId: this.roundId, duration: this.timerTotal });
+    if (timed) {
+      this.bus.emit(GameEvent.SYNC_TIMER, { remaining: duration, total: duration });
+    }
+  }
+
+  /**
+   * Player-initiated spin.
+   *
+   * The whole of the rest of the round is identical to the timed path - this
+   * only supplies the trigger that a countdown would otherwise supply, which is
+   * why MANUAL and AUTO share every downstream line of code.
+   */
+  public requestSpin(): boolean {
+    if (this.state !== GameState.BETTING_OPEN && this.state !== GameState.LAST_CALL) return false;
+    if (!this.bets.hasBets()) return false;
+
+    this.closeBetting();
+    return true;
   }
 
   public closeBetting(): void {

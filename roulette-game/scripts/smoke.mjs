@@ -48,8 +48,8 @@ const page = await open('desktop', { width: 1280, height: 720 });
 const fps = await page.evaluate(() => Math.round(window.game.app.ticker.FPS));
 console.log('desktop FPS (software rendering):', fps);
 
-// Shorten the round through the public API, then restart it.
-await page.evaluate(() => window.game.updateConfig({ timing: { bettingDuration: 6 } }));
+// The table is player-driven (RoundMode.MANUAL), so the round starts when SPIN
+// is pressed rather than when a countdown expires.
 await page.evaluate(() => window.game.reset());
 await page.waitForTimeout(1200);
 
@@ -59,6 +59,12 @@ await page.screenshot({ path: `${OUT}01-desktop-bets.png` });
 const totalBet = await page.evaluate(() => window.game.sceneManager.current.bets.getTotalBet());
 const betCount = await page.evaluate(() => window.game.sceneManager.current.bets.getBets().length);
 console.log('bets placed:', betCount, 'total staked:', totalBet);
+
+// Press SPIN.
+const spun = await page.evaluate(() =>
+  window.game.sceneManager.current.gameManager.requestSpin(),
+);
+console.log('spin accepted:', spun);
 
 const seen = [];
 const deadline = Date.now() + 240000;

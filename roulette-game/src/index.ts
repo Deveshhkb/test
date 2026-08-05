@@ -61,7 +61,7 @@ export {
   resolveTheme,
 } from './Game/Config';
 
-export { Localization, EN, ES, HI } from './Localization';
+export { Localization, EN, ES, HI, ID } from './Localization';
 
 /* ------------------------------------------------------------------------- */
 /* Domain constants - useful when driving the engine from a backend           */
@@ -95,6 +95,7 @@ export type { AssetBundle, AssetEntry } from './Game/AssetLoader';
 export {
   GameState,
   GameEvent,
+  RoundMode,
   BetType,
   WheelType,
   PocketColor,

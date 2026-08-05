@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Matrix } from 'pixi.js';
 import { Scene, GameContext } from './Scene';
 import { mixColors } from './BootScene';
 
@@ -8,9 +8,10 @@ import { BettingBoard } from '../Objects/BettingBoard';
 import { WinningMarker } from '../Objects/WinningMarker';
 import { HistoryPanel } from '../Objects/HistoryPanel';
 
-import { Hud } from '../UI/Hud';
-import { ChipTray } from '../UI/ChipTray';
-import { ControlBar, ControlAction } from '../UI/ControlBar';
+import { TopBar } from '../UI/TopBar';
+import { BottomBar, BottomBarAction } from '../UI/BottomBar';
+import { ChipStepper } from '../UI/ChipStepper';
+import { ActionBar, TableAction } from '../UI/ActionBar';
 
 import { TableLayout } from '../Game/TableLayout';
 import { BetManager } from '../Managers/BetManager';
@@ -18,6 +19,7 @@ import { ChipManager } from '../Managers/ChipManager';
 import { WheelManager } from '../Managers/WheelManager';
 import { HistoryManager } from '../Managers/HistoryManager';
 import { GameManager, PresentationDrivers } from '../Managers/GameManager';
+import { AnimationManager } from '../Managers/AnimationManager';
 import { InputAction } from '../Managers/InputManager';
 
 import {
@@ -95,14 +97,20 @@ export class RouletteScene extends Scene {
   private readonly wheelLayer = new Container();
   private readonly hudLayer = new Container();
 
+  /** Full-screen felt behind everything. */
+  private readonly feltLayer = new Graphics();
+  /** Darkens the table while the wheel overlay is up. */
+  private readonly dimLayer = new Graphics();
+
   private readonly wheel: Wheel;
   private readonly ball: Ball;
   private readonly board: BettingBoard;
   private readonly marker: WinningMarker;
   private readonly history: HistoryPanel;
-  private readonly hud: Hud;
-  private readonly chipTray: ChipTray;
-  private readonly controls: ControlBar;
+  private readonly topBar: TopBar;
+  private readonly bottomBar: BottomBar;
+  private readonly chipStepper: ChipStepper;
+  private readonly actions: ActionBar;
 
   /* Logic */
   private readonly tableLayout: TableLayout;
@@ -168,13 +176,20 @@ export class RouletteScene extends Scene {
     this.tableLayer.addChild(this.board);
 
     /* ----- UI ----- */
-    this.hud = new Hud(animations, theme, localization);
-    this.hud.setCurrency(config.network.currency);
+    this.topBar = new TopBar(animations, theme, localization);
+    this.bottomBar = new BottomBar(animations, theme, localization);
+    this.bottomBar.setCurrency(config.network.currency);
+    this.bottomBar.refreshCaptions();
+    this.chipStepper = new ChipStepper(config.betting.chips, textures, animations, theme);
+    this.actions = new ActionBar(animations, theme, localization);
+
+    // The statistics panel is retained but off by default: the reference client
+    // does not show one, and the top strip already carries recent results.
     this.history = new HistoryPanel(animations, theme, localization);
-    this.chipTray = new ChipTray(config.betting.chips, textures, animations, theme);
-    this.controls = new ControlBar(theme, localization);
-    this.hudLayer.addChild(this.hud, this.history, this.chipTray, this.controls);
-    this.hudLayer.addChild(this.marker.getBannerLayer());
+    this.history.visible = false;
+
+    this.hudLayer.addChild(this.topBar, this.bottomBar, this.chipStepper, this.actions);
+    this.hudLayer.addChild(this.history, this.marker.getBannerLayer());
 
     /* ----- State machine ----- */
     this.gameManager = new GameManager(
@@ -190,7 +205,20 @@ export class RouletteScene extends Scene {
     this.wheelLayer.zIndex = LAYER.WHEEL;
     this.hudLayer.zIndex = LAYER.HUD;
     this.container.sortableChildren = true;
-    this.container.addChild(this.background, this.tableLayer, this.wheelLayer, this.hudLayer);
+    this.container.addChild(
+      this.background,
+      this.feltLayer,
+      this.tableLayer,
+      this.dimLayer,
+      this.wheelLayer,
+      this.hudLayer,
+    );
+
+    // The wheel is not part of the betting screen at all - it flies in as an
+    // overlay when the spin starts and shrinks away afterwards.
+    this.wheelLayer.visible = false;
+    this.wheelLayer.alpha = 0;
+    this.dimLayer.eventMode = 'none';
   }
 
   /* --------------------------------------------------------------------- */
@@ -222,9 +250,8 @@ export class RouletteScene extends Scene {
     this.chips.warmUp(48);
 
     this.gameManager.setDrivers(this.buildDrivers());
-    this.hud.setBalance(this.bets.getBalance(), false);
-    this.hud.setTotalBet(0);
-    this.hud.setLastWin(0);
+    this.bottomBar.setCash(this.bets.getBalance(), false);
+    this.bottomBar.setStake(0);
 
     // Boot and loading are already finished by the time this scene exists;
     // `start()` replays them so the published state sequence stays complete.
@@ -250,24 +277,27 @@ export class RouletteScene extends Scene {
       }
     };
 
-    this.chipTray.onSelect = (value) => {
+    this.chipStepper.onSelect = (value) => {
       this.bets.selectChip(value);
       this.context.audio.play(SoundId.BUTTON_CLICK, 0.6);
     };
 
-    this.controls.onAction = (action) => this.handleControlAction(action);
+    this.actions.onAction = (action) => this.handleTableAction(action);
+    this.bottomBar.onAction = (action) => {
+      if (action === BottomBarAction.SOUND) this.context.audio.toggleMute();
+      this.context.audio.play(SoundId.BUTTON_CLICK, 0.5);
+    };
   }
 
   private subscribeToEvents(): void {
     const bus = this.context.bus;
 
     bus.on(GameEvent.STATE_CHANGE, ({ to }) => this.handleStateChange(to), this);
-    bus.on(GameEvent.SYNC_TIMER, ({ remaining, total }) => this.handleTimer(remaining, total), this);
     bus.on(GameEvent.BETS_CHANGED, ({ total }) => this.handleBetsChanged(total), this);
-    bus.on(GameEvent.BALANCE_CHANGE, ({ balance }) => this.hud.setBalance(balance), this);
-    bus.on(GameEvent.HISTORY_UPDATE, ({ entries, stats }) => this.history.update(entries, stats), this);
+    bus.on(GameEvent.BALANCE_CHANGE, ({ balance }) => this.bottomBar.setCash(balance), this);
+    bus.on(GameEvent.HISTORY_UPDATE, ({ entries }) => this.topBar.update(entries), this);
     bus.on(GameEvent.WIN_NUMBER, ({ number, color }) => this.presentWinner(number, color), this);
-    bus.on(GameEvent.CHIP_SELECTED, ({ value }) => this.chipTray.select(value, false), this);
+    bus.on(GameEvent.CHIP_SELECTED, ({ value }) => this.chipStepper.select(value, false), this);
     bus.on(GameEvent.BET_REJECTED, ({ reason }) => this.handleRejection(reason), this);
   }
 
@@ -282,38 +312,33 @@ export class RouletteScene extends Scene {
 
     this.context.audio.play(SoundId.CHIP_PLACE);
 
-    // Fly a chip from the tray to the spot. Positions are converted through
-    // global space so the animation is correct regardless of how the board is
-    // rotated or scaled in the current layout.
-    const trayGlobal = this.chipTray.getSlotGlobalPosition(value);
+    const from = this.board
+      .getChipLayer()
+      .toLocal(this.chipStepper.getChipGlobalPosition());
     const target = this.board.getSpotPosition(spot.id);
-    if (!trayGlobal || !target) return;
+    if (!target) return;
 
-    const from = this.board.getChipLayer().toLocal({ x: trayGlobal.x, y: trayGlobal.y });
     const bet = this.bets.getBet(spot.id);
     this.chips.animatePlacement(value, from, target, (bet?.chips.length ?? 1) - 1);
   }
 
-  private handleControlAction(action: ControlAction): void {
+  private handleTableAction(action: TableAction): void {
     this.context.audio.play(SoundId.BUTTON_CLICK, 0.7);
 
     switch (action) {
-      case ControlAction.UNDO:
-        if (this.bets.undo()) this.context.audio.play(SoundId.CHIP_CLEAR, 0.7);
-        this.context.bus.emit(GameEvent.UNDO_BET);
+      case TableAction.SPIN:
+        if (this.gameManager.requestSpin()) this.context.audio.play(SoundId.BET_CONFIRM, 0.8);
         break;
-      case ControlAction.REPEAT:
-        this.bets.repeat();
-        this.context.bus.emit(GameEvent.REPEAT_BET);
-        break;
-      case ControlAction.DOUBLE:
-        this.bets.double();
-        this.context.bus.emit(GameEvent.DOUBLE_BET);
-        break;
-      case ControlAction.CLEAR:
+      case TableAction.CLEAR_BETS:
         this.bets.clear();
         this.context.audio.play(SoundId.CHIP_CLEAR);
         this.context.bus.emit(GameEvent.CLEAR_BET);
+        break;
+      case TableAction.SPECIAL_BETS:
+        // Racetrack / neighbour bets are not implemented yet; the control is
+        // present so the layout matches, and is left disabled rather than
+        // silently doing nothing when pressed.
+        this.log.debug('special bets requested - not implemented');
         break;
       default:
         break;
@@ -325,16 +350,17 @@ export class RouletteScene extends Scene {
   public handleInputAction(action: InputAction): void {
     switch (action) {
       case InputAction.UNDO:
-        this.handleControlAction(ControlAction.UNDO);
+        if (this.bets.undo()) this.context.audio.play(SoundId.CHIP_CLEAR, 0.7);
+        this.refreshControls();
         break;
       case InputAction.REPEAT:
-        this.handleControlAction(ControlAction.REPEAT);
+        this.bets.repeat();
         break;
       case InputAction.DOUBLE:
-        this.handleControlAction(ControlAction.DOUBLE);
+        this.bets.double();
         break;
       case InputAction.CLEAR:
-        this.handleControlAction(ControlAction.CLEAR);
+        this.handleTableAction(TableAction.CLEAR_BETS);
         break;
       case InputAction.TOGGLE_MUTE:
         this.context.audio.toggleMute();
@@ -351,15 +377,13 @@ export class RouletteScene extends Scene {
   private cycleChip(direction: 1 | -1): void {
     const chips = this.context.config.betting.chips;
     const index = chips.findIndex((chip) => chip.value === this.bets.getSelectedChip());
-    const next = (index + direction + chips.length) % chips.length;
+    const next = Math.min(chips.length - 1, Math.max(0, index + direction));
 
     this.bets.selectChip(chips[next].value);
-    this.chipTray.select(chips[next].value, false);
-    this.context.audio.play(SoundId.BUTTON_CLICK, 0.5);
+    this.chipStepper.select(chips[next].value, false);
   }
 
   private handleRejection(reason: string): void {
-    // The rejection reason *is* a localisation key - see `BetRejection`.
     this.log.debug(`bet rejected: ${this.context.localization.t(reason)}`);
     this.context.audio.play(SoundId.LOSE, 0.3);
   }
@@ -369,34 +393,28 @@ export class RouletteScene extends Scene {
   /* --------------------------------------------------------------------- */
 
   private handleStateChange(to: GameState): void {
-    this.hud.setStatus(to);
-
     switch (to) {
       case GameState.BETTING_OPEN:
-        this.board.setInteractiveEnabled(true);
-        this.chipTray.setEnabled(true);
-        this.hud.showTimer();
-        this.hud.setLastWin(0);
-        break;
-
       case GameState.LAST_CALL:
-        this.context.audio.play(SoundId.COUNTDOWN_URGENT, 0.8);
+        this.board.setInteractiveEnabled(true);
+        this.chipStepper.setEnabled(true);
         break;
 
       case GameState.BETTING_CLOSED:
         this.board.setInteractiveEnabled(false);
-        this.chipTray.setEnabled(false);
-        this.controls.setAllEnabled(false);
-        this.hud.hideTimer();
+        this.chipStepper.setEnabled(false);
+        this.actions.setAllEnabled(false);
         this.context.audio.play(SoundId.NO_MORE_BETS);
         break;
 
       case GameState.SPINNING:
         this.context.audio.playLoop(SoundId.WHEEL_SPIN, 0.45);
+        this.showWheelOverlay();
         break;
 
       case GameState.RESET:
         this.marker.hideBanner();
+        this.hideWheelOverlay();
         break;
 
       default:
@@ -406,28 +424,97 @@ export class RouletteScene extends Scene {
     this.refreshControls();
   }
 
-  private handleTimer(remaining: number, total: number): void {
-    const urgent = remaining <= this.context.config.timing.lastCallThreshold;
-    this.hud.setTimer(remaining, total, urgent);
-
-    // One tick per whole second in the closing seconds.
-    if (urgent && remaining > 0 && Math.abs(remaining - Math.round(remaining)) < 0.05) {
-      this.context.audio.play(SoundId.COUNTDOWN_TICK, 0.5);
-    }
-  }
-
   private handleBetsChanged(total: number): void {
-    this.hud.setTotalBet(total);
+    this.bottomBar.setStake(total);
     this.chips.syncStacks(this.bets.getBets(), (spotId) => this.board.getSpotPosition(spotId));
     this.refreshControls();
   }
 
+  /**
+   * Reflect the current situation on the action cluster.
+   *
+   * Clear appears only when there is something to clear, and SPIN is live only
+   * with a stake on the felt - a spin with no bet is not a round, it is just an
+   * animation.
+   */
   private refreshControls(): void {
-    this.controls.reflect({
-      bettingOpen: this.bets.isBettingOpen(),
-      hasBets: this.bets.hasBets(),
-      canUndo: this.bets.canUndo(),
-      canRepeat: this.bets.canRepeat(),
+    const open = this.bets.isBettingOpen();
+    const hasBets = this.bets.hasBets();
+
+    this.actions.setEnabled(TableAction.SPIN, open && hasBets);
+    this.actions.setEnabled(TableAction.SPECIAL_BETS, false);
+    this.actions.setEnabled(TableAction.CLEAR_BETS, open && hasBets);
+
+    // Showing or hiding a button changes the cluster's width.
+    if (this.actions.setVisibleAction(TableAction.CLEAR_BETS, hasBets) && this.metrics) {
+      this.onResize(this.metrics);
+    }
+  }
+
+  /* --------------------------------------------------------------------- */
+  /* Wheel overlay                                                         */
+  /* --------------------------------------------------------------------- */
+
+  /**
+   * Bring the wheel in over the table.
+   *
+   * The reference client hides the wheel entirely while betting and zooms it in
+   * for the spin. That is worth copying for more than looks: it lets the felt
+   * use the full screen during the only phase where the player is reading it,
+   * and it puts the wheel at a size where the ball is actually followable
+   * during the only phase where that matters.
+   */
+  private showWheelOverlay(): void {
+    const metrics = this.metrics;
+    if (!metrics) return;
+
+    this.wheelLayer.visible = true;
+    this.dimLayer.visible = true;
+
+    this.context.animations.to(this.dimLayer, {
+      alpha: 1,
+      duration: 0.4,
+      ease: AnimationManager.EASE_UI_IN,
+      overwrite: 'auto',
+    });
+    this.context.animations.fromTo(
+      this.wheelLayer,
+      { alpha: 0 },
+      { alpha: 1, duration: 0.35, ease: AnimationManager.EASE_UI_IN, overwrite: 'auto' },
+    );
+    this.context.animations.fromTo(
+      this.wheelLayer.scale,
+      { x: 0.25, y: 0.25 },
+      { x: 1, y: 1, duration: 0.62, ease: 'back.out(1.25)', overwrite: 'auto' },
+    );
+  }
+
+  private hideWheelOverlay(): void {
+    if (!this.wheelLayer.visible) return;
+
+    this.context.animations.to(this.dimLayer, {
+      alpha: 0,
+      duration: 0.45,
+      overwrite: 'auto',
+      onComplete: () => {
+        this.dimLayer.visible = false;
+      },
+    });
+    this.context.animations.to(this.wheelLayer, {
+      alpha: 0,
+      duration: 0.45,
+      overwrite: 'auto',
+      onComplete: () => {
+        this.wheelLayer.visible = false;
+        this.wheelLayer.scale.set(1);
+      },
+    });
+    this.context.animations.to(this.wheelLayer.scale, {
+      x: 0.22,
+      y: 0.22,
+      duration: 0.5,
+      ease: 'power2.in',
+      overwrite: 'auto',
     });
   }
 
@@ -435,24 +522,16 @@ export class RouletteScene extends Scene {
   /* Result presentation                                                   */
   /* --------------------------------------------------------------------- */
 
-  /** Light the winning cell, drop the dolly, raise the banner. */
   private presentWinner(number: RouletteNumber, color: PocketColor): void {
     const cell = this.board.highlightWinner(number);
-    if (cell) {
-      this.marker.showDolly(cell.x, cell.y, number);
-      this.context.animations.fromTo(
-        this.board.getWinGlow(),
-        { alpha: 0 },
-        { alpha: 0.7, duration: 0.3, ease: 'power2.out' },
-      );
-    }
+    if (cell) this.marker.showDolly(cell.x, cell.y, number);
 
     const metrics = this.metrics;
     if (metrics) {
-      // Screen centre, expressed in the HUD layer's space.
+      // Card sits to the right of the wheel overlay, as in the reference.
       const local = this.hudLayer.toLocal({
-        x: metrics.width / 2,
-        y: metrics.height * 0.44,
+        x: metrics.width * 0.82,
+        y: metrics.height * 0.46,
       });
       this.marker.showBanner(local.x, local.y, number, this.colorLabel(color));
     }
@@ -466,55 +545,38 @@ export class RouletteScene extends Scene {
     return '0';
   }
 
-  /**
-   * Sweep the losers, pay the winners.
-   *
-   * Losing chips leave first and winning chips are paid second, which is both
-   * the order a real table works in and the order that reads most clearly -
-   * the felt empties, then the win arrives.
-   */
   private async runPayout(result: RoundResult): Promise<void> {
     this.lastResult = result;
-
-    // The banner has had its hold during WINNER_DETECTED; it comes down now so
-    // the player can actually watch their chips being paid, which is the part
-    // of the round that matters to them.
     this.marker.hideBanner();
 
     const winners = result.resolutions.filter((r) => r.won).map((r) => r.spotId);
     const losers = result.resolutions.filter((r) => !r.won).map((r) => r.spotId);
 
-    this.board.dimLosingSpots(result.winningNumber);
-
-    // Losing chips sweep off the dealer edge of the felt.
-    const sweepTarget = this.board.getChipLayer().toLocal(
-      this.wheelLayer.getGlobalPosition(),
-    );
+    const sweepTarget = this.board
+      .getChipLayer()
+      .toLocal(this.wheelLayer.getGlobalPosition());
     if (losers.length > 0) {
       this.chips.animateLoss(losers, sweepTarget);
       this.context.audio.play(SoundId.CHIP_CLEAR, 0.55);
     }
 
     if (winners.length === 0) {
-      this.hud.setLastWin(0);
       this.context.audio.play(SoundId.LOSE, 0.5);
       await this.context.animations.wait(this.context.config.timing.payoutDuration * 0.5);
       return;
     }
 
-    // Winning chips travel to the balance readout.
-    const balanceGlobal = this.hud.getGlobalPosition();
-    const collectTarget = this.board.getChipLayer().toLocal(balanceGlobal);
+    const collectTarget = this.board
+      .getChipLayer()
+      .toLocal(this.bottomBar.getGlobalPosition());
 
     const big = result.totalPayout >= result.totalStaked * 8;
     this.context.audio.play(big ? SoundId.BIG_WIN : SoundId.WIN);
     this.context.audio.play(SoundId.PAYOUT, 0.7);
 
     await this.chips.animateWin(winners, collectTarget);
-    this.hud.setLastWin(result.totalPayout);
   }
 
-  /** Return the table to a clean state for the next round. */
   private async runCleanup(): Promise<void> {
     this.board.clearDim();
     this.board.clearWinHighlight();
@@ -544,147 +606,78 @@ export class RouletteScene extends Scene {
     this.drawBackground(metrics, this.context.theme);
     this.board.setTouchMode(metrics.isTouch);
 
-    const regions =
-      metrics.orientation === Orientation.LANDSCAPE
-        ? this.solveLandscape(metrics)
-        : this.solvePortrait(metrics);
-
+    const regions = this.solve(metrics);
     this.applyRegions(regions, metrics);
   }
 
   /**
-   * Landscape: wheel in a left column, felt and controls in a right column.
-   * This is the shape a desktop or tablet player expects, and it keeps the
-   * wheel permanently visible while betting.
-   */
-  private solveLandscape(metrics: LayoutMetrics): Record<string, Rect> {
-    const scale = metrics.scale;
-    const pad = 12 * scale;
-    const left = metrics.safeLeft + pad;
-    const top = metrics.safeTop + pad;
-    const width = metrics.safeWidth - pad * 2;
-    const height = metrics.safeHeight - pad * 2;
-
-    const columnWidth = Math.max(200 * scale, Math.min(width * 0.34, 420 * scale));
-    const rightX = left + columnWidth + pad;
-    const rightWidth = width - columnWidth - pad;
-
-    const hudHeight = Math.max(MIN_PX.HUD_HEIGHT, 60 * scale);
-    const statusHeight = Math.max(MIN_PX.STATUS_HEIGHT, 34 * scale);
-    const historyHeight = Math.min(height * 0.42, 220 * scale);
-    const trayHeight = Math.max(MIN_PX.TRAY_HEIGHT, 78 * scale);
-    const controlsHeight = Math.max(MIN_PX.TOUCH, 52 * scale);
-
-    return {
-      wheel: {
-        x: left,
-        y: top,
-        width: columnWidth,
-        height: height - historyHeight - pad,
-      },
-      history: {
-        x: left,
-        y: top + height - historyHeight,
-        width: columnWidth,
-        height: historyHeight,
-      },
-      hud: { x: rightX, y: top, width: rightWidth, height: hudHeight },
-      status: { x: rightX, y: top + hudHeight, width: rightWidth, height: statusHeight },
-      board: {
-        x: rightX,
-        y: top + hudHeight + statusHeight,
-        width: rightWidth,
-        height: height - hudHeight - statusHeight - trayHeight - controlsHeight - pad * 3,
-      },
-      tray: {
-        x: rightX,
-        y: top + height - trayHeight - controlsHeight - pad,
-        width: rightWidth,
-        height: trayHeight,
-      },
-      controls: {
-        x: rightX,
-        y: top + height - controlsHeight,
-        width: rightWidth,
-        height: controlsHeight,
-      },
-    };
-  }
-
-  /**
-   * Portrait: a vertical stack with the felt rotated a quarter turn.
+   * One solver for both orientations.
    *
-   * Controls occupy two rows at the bottom, inside the safe area, so the home
-   * indicator on a modern phone never overlaps a button.
+   * The reference is a desktop layout: bars top and bottom, the felt filling
+   * everything between, and the controls tucked into the bottom corners *over*
+   * the felt rather than in reserved strips. Portrait keeps the same structure
+   * and rotates the felt a quarter turn, which is the only way a 14:5 layout is
+   * legible on a phone.
    */
-  private solvePortrait(metrics: LayoutMetrics): Record<string, Rect> {
+  private solve(metrics: LayoutMetrics): Record<string, Rect> {
     const scale = metrics.scale;
+    const portrait = metrics.orientation === Orientation.PORTRAIT;
+
+    const left = metrics.safeLeft;
+    const top = metrics.safeTop;
+    const width = metrics.safeWidth;
+    const height = metrics.safeHeight;
+
+    const topBarHeight = Math.max(MIN_PX.HUD_HEIGHT, (portrait ? 56 : 62) * scale);
+    const bottomBarHeight = Math.max(38, (portrait ? 44 : 48) * scale);
+    const controlsHeight = Math.max(MIN_PX.TOUCH + 24, (portrait ? 110 : 128) * scale);
+
+    const bodyTop = top + topBarHeight;
+    const bodyHeight = height - topBarHeight - bottomBarHeight;
+
+    // The felt takes the body minus the control strip along its bottom.
+    const boardHeight = Math.max(60, bodyHeight - controlsHeight);
     const pad = 10 * scale;
-    const left = metrics.safeLeft + pad;
-    const top = metrics.safeTop + pad;
-    const width = metrics.safeWidth - pad * 2;
-    const height = metrics.safeHeight - pad * 2;
-
-    const hudHeight = Math.max(MIN_PX.HUD_HEIGHT, 58 * scale);
-    const statusHeight = Math.max(MIN_PX.STATUS_HEIGHT, 32 * scale);
-    const historyHeight = Math.max(44, 52 * scale);
-    const trayHeight = Math.max(MIN_PX.TRAY_HEIGHT, 84 * scale);
-    const controlsHeight = Math.max(MIN_PX.CONTROLS_TWO_ROW, 96 * scale);
-    const wheelHeight = Math.min(height * 0.25, width * 0.68);
-
-    const historyTop = top + hudHeight + statusHeight;
-    const wheelTop = historyTop + historyHeight + pad;
-    const boardTop = wheelTop + wheelHeight + pad;
-    const boardHeight =
-      height -
-      hudHeight -
-      statusHeight -
-      historyHeight -
-      wheelHeight -
-      trayHeight -
-      controlsHeight -
-      pad * 4;
 
     return {
-      hud: { x: left, y: top, width, height: hudHeight },
-      status: { x: left, y: top + hudHeight, width, height: statusHeight },
-      history: { x: left, y: historyTop, width, height: historyHeight },
-      wheel: { x: left, y: wheelTop, width, height: wheelHeight },
-      board: { x: left, y: boardTop, width, height: Math.max(80 * scale, boardHeight) },
-      tray: {
+      topBar: { x: left, y: top, width, height: topBarHeight },
+      bottomBar: {
         x: left,
-        y: top + height - trayHeight - controlsHeight - pad,
+        y: top + height - bottomBarHeight,
         width,
-        height: trayHeight,
+        height: bottomBarHeight,
       },
-      controls: {
-        x: left,
-        y: top + height - controlsHeight,
-        width,
+      board: {
+        x: left + pad,
+        y: bodyTop + pad,
+        width: width - pad * 2,
+        height: boardHeight - pad * 2,
+      },
+      chips: {
+        x: left + pad,
+        y: bodyTop + boardHeight,
+        width: portrait ? width * 0.55 : width * 0.34,
         height: controlsHeight,
       },
+      actions: {
+        x: left + width * (portrait ? 0.45 : 0.5),
+        y: bodyTop + boardHeight,
+        width: width * (portrait ? 0.55 : 0.5) - pad,
+        height: controlsHeight,
+      },
+      wheel: { x: left, y: bodyTop, width, height: bodyHeight },
     };
   }
 
-  /** Fit every component into its solved rectangle. */
   private applyRegions(regions: Record<string, Rect>, metrics: LayoutMetrics): void {
     const portrait = metrics.orientation === Orientation.PORTRAIT;
     const scale = metrics.scale;
 
-    /* ----- Wheel ----- */
-    const wheelRect = regions.wheel;
-    const radius = Math.max(40, Math.min(wheelRect.width, wheelRect.height) * 0.47);
-    this.wheel.setRadius(radius);
-    this.ball.setWheelRadius(radius);
-    this.wheelLayer.position.set(
-      wheelRect.x + wheelRect.width / 2,
-      wheelRect.y + wheelRect.height / 2,
-    );
+    /* ----- Felt background, full bleed ----- */
+    this.drawFelt(metrics);
 
     /* ----- Board ----- */
     const boardRect = regions.board;
-    // A quarter turn in portrait means the board is fitted against swapped
-    // extents; its own `resize` still works in unrotated board space.
     this.board.rotation = portrait ? -Math.PI / 2 : 0;
     this.board.resize(
       portrait ? boardRect.height : boardRect.width,
@@ -696,46 +689,81 @@ export class RouletteScene extends Scene {
     );
 
     const cell = this.board.getCellSize();
-    this.chips.setChipSize(cell * 0.66);
+    this.chips.setChipSize(cell * 0.62);
     this.marker.setScale(cell);
-    // Rebuild stacks at the new scale.
     this.chips.syncStacks(this.bets.getBets(), (spotId) => this.board.getSpotPosition(spotId));
 
-    /* ----- HUD ----- */
-    const hudRect = regions.hud;
-    this.hud.position.set(hudRect.x, hudRect.y);
-    this.hud.resize(hudRect.width, hudRect.height, scale);
-
-    // The status pill gets a row of its own so it can never land on the history
-    // strip or the felt. Coordinates are HUD-local.
-    const statusRect = regions.status;
-    this.hud.setStatusPosition(
-      statusRect.x - hudRect.x + statusRect.width / 2,
-      statusRect.y - hudRect.y + statusRect.height / 2,
+    /* ----- Wheel overlay: as large as the body allows ----- */
+    const wheelRect = regions.wheel;
+    const radius = Math.max(60, Math.min(wheelRect.width, wheelRect.height) * 0.47);
+    this.wheel.setRadius(radius);
+    this.ball.setWheelRadius(radius);
+    this.wheelLayer.position.set(
+      wheelRect.x + wheelRect.width / 2,
+      wheelRect.y + wheelRect.height / 2,
     );
 
-    /* ----- History ----- */
-    const historyRect = regions.history;
-    this.history.position.set(historyRect.x, historyRect.y);
-    this.history.resize(historyRect.width, historyRect.height, metrics.orientation, scale);
-    this.history.update(this.historyManager.getEntries(), this.historyManager.getStatistics());
+    this.dimLayer.clear();
+    this.dimLayer
+      .rect(0, 0, metrics.width, metrics.height)
+      .fill({ color: 0x000000, alpha: 0.62 });
 
-    /* ----- Chip tray ----- */
-    const trayRect = regions.tray;
-    this.chipTray.position.set(trayRect.x + trayRect.width / 2, trayRect.y + trayRect.height / 2);
-    this.chipTray.resize(trayRect.width, trayRect.height, scale, !portrait);
+    /* ----- Bars ----- */
+    const topRect = regions.topBar;
+    this.topBar.position.set(topRect.x, topRect.y);
+    this.topBar.resize(topRect.width, topRect.height, scale);
+    this.topBar.setLimits(
+      this.context.config.betting.minBet,
+      this.context.config.betting.maxBet,
+      this.context.config.network.currency,
+    );
+    this.topBar.update(this.historyManager.getEntries());
+
+    const bottomRect = regions.bottomBar;
+    this.bottomBar.position.set(bottomRect.x, bottomRect.y);
+    this.bottomBar.resize(bottomRect.width, bottomRect.height, scale);
 
     /* ----- Controls ----- */
-    const controlsRect = regions.controls;
-    this.controls.position.set(
-      controlsRect.x + controlsRect.width / 2,
-      controlsRect.y + controlsRect.height / 2,
+    const chipsRect = regions.chips;
+    this.chipStepper.position.set(
+      chipsRect.x + chipsRect.width / 2,
+      chipsRect.y + chipsRect.height / 2,
     );
-    this.controls.resize(controlsRect.width, controlsRect.height, scale, metrics.orientation);
+    this.chipStepper.resize(chipsRect.width, chipsRect.height, scale);
+
+    const actionsRect = regions.actions;
+    this.actions.position.set(
+      actionsRect.x + actionsRect.width / 2,
+      actionsRect.y + actionsRect.height / 2,
+    );
+    this.actions.resize(actionsRect.width, actionsRect.height, scale);
+  }
+
+  /** Full-bleed felt, using the operator texture when one is supplied. */
+  private drawFelt(metrics: LayoutMetrics): void {
+    const texture = this.context.textures.getFeltTexture();
+    this.feltLayer.clear();
+
+    if (!texture) {
+      this.feltLayer
+        .rect(0, 0, metrics.width, metrics.height)
+        .fill({ color: this.context.theme.feltPrimary });
+      return;
+    }
+
+    const cover = Math.max(metrics.width / texture.width, metrics.height / texture.height);
+    const matrix = new Matrix()
+      .scale(cover, cover)
+      .translate(
+        (metrics.width - texture.width * cover) / 2,
+        (metrics.height - texture.height * cover) / 2,
+      );
+
+    this.feltLayer.rect(0, 0, metrics.width, metrics.height).fill({ texture, matrix });
   }
 
   private drawBackground(metrics: LayoutMetrics, theme: Theme): void {
-    const bands = 20;
+    const bands = 12;
     const bandHeight = Math.ceil(metrics.height / bands);
 
     this.background.clear();
@@ -752,34 +780,34 @@ export class RouletteScene extends Scene {
 
   public override onThemeChange(theme: Theme): void {
     this.board.setTheme(theme);
-    this.history.setTheme(theme);
-    this.hud.setTheme(theme);
-    this.chipTray.setTheme(theme);
-    this.controls.setTheme(theme);
+    this.topBar.setTheme(theme);
+    this.bottomBar.setTheme(theme);
+    this.chipStepper.setTheme(theme);
+    this.actions.setTheme(theme);
     this.marker.setTheme(theme);
+    this.history.setTheme(theme);
 
-    if (this.metrics) {
-      this.drawBackground(this.metrics, theme);
-      this.onResize(this.metrics);
-    }
+    if (this.metrics) this.onResize(this.metrics);
   }
 
   public override onLanguageChange(): void {
     const localization = this.context.localization;
     this.board.setLocalization(localization);
+    this.topBar.setLocalization(localization);
+    this.bottomBar.setLocalization(localization);
+    this.actions.setLocalization(localization);
     this.history.setLocalization(localization);
-    this.hud.setLocalization(localization);
-    this.controls.setLocalization(localization);
-    this.hud.setStatus(this.gameManager.getState());
+
+    if (this.metrics) this.onResize(this.metrics);
   }
 
   public override onConfigChange(config: typeof this.context.config): void {
     this.bets.updateConfig(config.betting);
     this.chips.updateDenominations(config.betting.chips);
-    this.chipTray.updateDenominations(config.betting.chips);
+    this.chipStepper.updateDenominations(config.betting.chips);
     this.wheelManager.updateConfig(config.wheel);
     this.gameManager.updateConfig(config);
-    this.hud.setCurrency(config.network.currency);
+    this.bottomBar.setCurrency(config.network.currency);
 
     if (this.metrics) this.onResize(this.metrics);
   }
@@ -800,13 +828,13 @@ export class RouletteScene extends Scene {
     this.board.clearDim();
     this.board.clearWinHighlight();
     this.marker.reset();
+    this.hideWheelOverlay();
     this.bets.resetAll(this.context.config.network.startingBalance);
     this.historyManager.clear();
     this.lastResult = undefined;
 
-    this.hud.setBalance(this.context.config.network.startingBalance, false);
-    this.hud.setTotalBet(0);
-    this.hud.setLastWin(0);
+    this.bottomBar.setCash(this.context.config.network.startingBalance, false);
+    this.bottomBar.setStake(0);
 
     this.gameManager.restart();
   }
@@ -822,8 +850,9 @@ export class RouletteScene extends Scene {
 
     this.board.onSpotSelected = undefined;
     this.board.onSpotHover = undefined;
-    this.chipTray.onSelect = undefined;
-    this.controls.onAction = undefined;
+    this.chipStepper.onSelect = undefined;
+    this.actions.onAction = undefined;
+    this.bottomBar.onAction = undefined;
 
     super.destroy();
   }

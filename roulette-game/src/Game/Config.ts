@@ -2,6 +2,7 @@ import {
   BetType,
   GameConfig,
   PartialGameConfig,
+  RoundMode,
   SoundId,
   Theme,
   WheelType,
@@ -44,37 +45,53 @@ export const DEFAULT_PAYOUTS: Record<BetType, number> = {
 /* ------------------------------------------------------------------------- */
 
 /**
- * The default look: deep green felt, brushed gold furniture, mahogany wheel -
- * the palette live-casino studios light their tables for.
+ * The default look, sampled directly from the reference client: bright olive
+ * felt, blood-red and near-black cells, white printing, dark navy action
+ * housing and a cyan bet glow.
+ *
+ * Values are medians taken from flat areas of the reference frames rather than
+ * eyeballed, so the felt reads at the same luminance and the cells sit at the
+ * same saturation.
  */
 export const CLASSIC_THEME: Theme = {
   name: 'classic',
-  backgroundTop: 0x0d1f18,
-  backgroundBottom: 0x040a07,
-  feltPrimary: 0x0f5132,
-  feltSecondary: 0x0a3d26,
-  feltLine: 0xd9c17a,
-  red: 0xc8102e,
-  black: 0x14181c,
-  green: 0x0f8a4a,
+  // Felt is vignetted: bright in the middle, falling off at the edges.
+  backgroundTop: 0x508210,
+  backgroundBottom: 0x2c5a06,
+  feltPrimary: 0x46770f,
+  feltSecondary: 0x3d6e0a,
+  feltLine: 0xffffff,
+  red: 0x9f0006,
+  black: 0x070a00,
+  green: 0x109b1c,
   gold: 0xe8c96a,
   goldDark: 0x9a7b32,
   wood: 0x6b3f22,
   woodDark: 0x3a2113,
   metal: 0xbfc6cc,
-  text: 0xf5f1e6,
-  textMuted: 0x9aa5a0,
-  panel: 0x0b1a14,
-  panelBorder: 0x1d3a2c,
+  text: 0xffffff,
+  textMuted: 0xc9d6b4,
+  panel: 0x161332,
+  panelBorder: 0x3a3466,
   highlight: 0xffe9a8,
   danger: 0xe23c3c,
   success: 0x3ddc84,
+  topBar: 0x395616,
+  bottomBar: 0x000000,
+  actionBar: 0x161332,
+  // Additive cyan: over a red cell it reads pale pink, over black it stays
+  // cyan. One sprite, two apparent colours - exactly what the reference does.
+  betGlow: 0x35e5e0,
+  winWedge: 0xffd54a,
 };
 
 /** High-contrast midnight blue variant. */
 export const MIDNIGHT_THEME: Theme = {
   ...CLASSIC_THEME,
   name: 'midnight',
+  topBar: 0x0f2140,
+  bottomBar: 0x03060d,
+  actionBar: 0x101a33,
   backgroundTop: 0x0b1526,
   backgroundBottom: 0x03070f,
   feltPrimary: 0x14305c,
@@ -94,6 +111,9 @@ export const MIDNIGHT_THEME: Theme = {
 export const NOIR_THEME: Theme = {
   ...CLASSIC_THEME,
   name: 'noir',
+  topBar: 0x2a1e18,
+  bottomBar: 0x070605,
+  actionBar: 0x1a1512,
   backgroundTop: 0x1a1614,
   backgroundBottom: 0x070605,
   feltPrimary: 0x3a2a22,
@@ -138,6 +158,9 @@ export const DEFAULT_CONFIG: GameConfig = {
     ballBounces: 4,
   },
   timing: {
+    // The reference client is player-driven: no countdown, the felt stays open
+    // until SPIN is pressed. Switch to AUTO for a live-dealer style round.
+    mode: RoundMode.MANUAL,
     bettingDuration: 25,
     lastCallThreshold: 5,
     preSpinDelay: 0.9,
@@ -146,24 +169,25 @@ export const DEFAULT_CONFIG: GameConfig = {
     resultDuration: 2.6,
   },
   betting: {
+    // The reference table runs $1 to $100, so the ladder spans that range.
+    // Gold first, because the $1 chip is the one a player sees most.
     chips: [
-      { value: 1, color: 0xf2f2f2, accent: 0x9aa0a6, label: '1' },
+      { value: 1, color: 0xe8a83a, accent: 0xa9701a, label: '1' },
       { value: 5, color: 0xd0342c, accent: 0x8c1f1a, label: '5' },
-      { value: 25, color: 0x2e7d32, accent: 0x1b4d1f, label: '25' },
-      { value: 100, color: 0x1e1e1e, accent: 0x4a4a4a, label: '100' },
-      { value: 500, color: 0x6a1b9a, accent: 0x3d0f59, label: '500' },
-      { value: 1000, color: 0xf9a825, accent: 0xa96f00, label: '1K' },
-      { value: 5000, color: 0x0277bd, accent: 0x014a75, label: '5K' },
+      { value: 10, color: 0x2e7d32, accent: 0x1b4d1f, label: '10' },
+      { value: 25, color: 0x1e5fb0, accent: 0x0f3a70, label: '25' },
+      { value: 50, color: 0x6a1b9a, accent: 0x3d0f59, label: '50' },
+      { value: 100, color: 0x1e1e1e, accent: 0x5a5a5a, label: '100' },
     ],
     minBet: 1,
-    maxBet: 5000,
-    maxTotalBet: 50000,
+    maxBet: 100,
+    maxTotalBet: 5000,
     limits: {
-      [BetType.STRAIGHT_UP]: { min: 1, max: 500 },
-      [BetType.SPLIT]: { min: 1, max: 1000 },
-      [BetType.STREET]: { min: 1, max: 1500 },
-      [BetType.CORNER]: { min: 1, max: 2000 },
-      [BetType.SIX_LINE]: { min: 1, max: 3000 },
+      [BetType.STRAIGHT_UP]: { min: 1, max: 100 },
+      [BetType.SPLIT]: { min: 1, max: 200 },
+      [BetType.STREET]: { min: 1, max: 300 },
+      [BetType.CORNER]: { min: 1, max: 400 },
+      [BetType.SIX_LINE]: { min: 1, max: 600 },
     },
     payouts: { ...DEFAULT_PAYOUTS },
   },
@@ -186,7 +210,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   },
   network: {
     serverDriven: false,
-    startingBalance: 10000,
+    startingBalance: 100000,
     currency: '$',
     seed: undefined,
   },

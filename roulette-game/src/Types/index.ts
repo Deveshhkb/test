@@ -258,6 +258,16 @@ export interface Theme {
   readonly textMuted: number;
   readonly panel: number;
   readonly panelBorder: number;
+  /** Bar behind the title and the recent-numbers strip. */
+  readonly topBar: number;
+  /** Bar carrying the cash and stake readouts. */
+  readonly bottomBar: number;
+  /** Housing behind the action buttons. */
+  readonly actionBar: number;
+  /** Additive glow laid over cells a pending bet covers. */
+  readonly betGlow: number;
+  /** Outline drawn on the wheel pocket that won. */
+  readonly winWedge: number;
   readonly highlight: number;
   readonly danger: number;
   readonly success: number;
@@ -307,7 +317,23 @@ export interface WheelConfig {
   ballBounces: number;
 }
 
+/**
+ * Who decides when a round runs.
+ *
+ * `AUTO` is the live-casino model: a countdown opens and closes betting on a
+ * schedule, whether or not the player acts. `MANUAL` is the RNG/solo model the
+ * reference client uses - the felt stays open indefinitely and the player
+ * presses SPIN when ready, so there is no timer on screen at all.
+ */
+export enum RoundMode {
+  AUTO = 'AUTO',
+  MANUAL = 'MANUAL',
+}
+
 export interface TimingConfig {
+  /** Countdown-driven or player-driven rounds. */
+  mode: RoundMode;
+
   /** Seconds bets stay open. */
   bettingDuration: number;
   /** Seconds remaining at which LAST_CALL styling kicks in. */

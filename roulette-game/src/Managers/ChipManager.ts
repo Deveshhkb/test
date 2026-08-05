@@ -314,7 +314,10 @@ export class ChipManager {
     });
 
     stack.amount = bet.amount;
-    stack.label.text = formatCompact(bet.amount);
+    // A single chip already shows its own denomination - repeating it above the
+    // stack is noise, and on a dense layout it is noise that overlaps a
+    // neighbouring cell.
+    stack.label.text = composition.length > 1 ? formatCompact(bet.amount) : '';
     stack.label.alpha = 1;
     stack.label.scale.set(1);
     stack.label.position.set(

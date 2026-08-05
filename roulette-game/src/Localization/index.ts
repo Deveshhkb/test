@@ -26,8 +26,12 @@ export const EN: LocaleStrings = {
   'action.double': 'Double',
   'action.clear': 'Clear',
   'action.spin': 'Spin',
+  'action.specialBets': 'Special Bets',
+  'action.clearBets': 'Clear Bets',
 
   'label.balance': 'Balance',
+  'label.cash': 'Cash',
+  'label.stake': 'Bet',
   'label.totalBet': 'Total Bet',
   'label.lastWin': 'Last Win',
   'label.winner': 'Winner',
@@ -44,6 +48,12 @@ export const EN: LocaleStrings = {
   'label.dozen1': '1st 12',
   'label.dozen2': '2nd 12',
   'label.dozen3': '3rd 12',
+  'result.high': 'High',
+  'result.low': 'Low',
+  'result.odd': 'Odd',
+  'result.even': 'Even',
+  'result.noWin': 'No Win',
+  'result.youWin': 'You Win',
   'label.column': '2 to 1',
   'label.chips': 'Chips',
   'label.minMax': 'Min {min} / Max {max}',
@@ -96,7 +106,35 @@ export const HI: LocaleStrings = {
   'label.winner': 'Vijeta',
 };
 
-const LOCALES: Record<string, LocaleStrings> = { en: EN, es: ES, hi: HI };
+/**
+ * Indonesian - the locale the reference client ships in, kept here so the
+ * layout can be checked against it directly.
+ */
+export const ID: LocaleStrings = {
+  ...EN,
+  'state.bettingOpen': 'Pasang taruhan Anda',
+  'state.bettingClosed': 'Tidak ada taruhan lagi',
+  'action.spin': 'Putar',
+  'action.specialBets': 'Bet Spesial',
+  'action.clearBets': 'Kosongkan Taruhan',
+  'label.cash': 'Tunai',
+  'label.stake': 'Taruhan',
+  'label.dozen1': '12 pertama',
+  'label.dozen2': '12 kedua',
+  'label.dozen3': '12 ketiga',
+  'label.red': 'Merah',
+  'label.black': 'Hitam',
+  'label.odd': 'Ganjil',
+  'label.even': 'Genap',
+  'result.high': 'Tinggi',
+  'result.low': 'Rendah',
+  'result.odd': 'Ganjil',
+  'result.even': 'Genap',
+  'result.noWin': 'Tidak Menang',
+  'result.youWin': 'Anda Menang',
+};
+
+const LOCALES: Record<string, LocaleStrings> = { en: EN, es: ES, hi: HI, id: ID };
 
 /**
  * Runtime string resolver. Instantiated once by `Game` and injected into every
