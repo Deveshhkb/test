@@ -1,0 +1,41 @@
+:root {
+  color-scheme: dark;
+  --felt-deep: #04120c;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--felt-deep);
+  color: rgba(255, 255, 255, 0.87);
+  font-family: "Trebuchet MS", "Segoe UI", Roboto, system-ui, sans-serif;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+/*
+ * The engine mounts into whatever element it is handed and fills it exactly.
+ * In standalone mode that element is the full viewport (safe-area aware so the
+ * table never slides under an iOS notch in landscape).
+ */
+#baccarat-root {
+  position: fixed;
+  inset: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  overflow: hidden;
+}
+
+#baccarat-root canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
