@@ -3,15 +3,25 @@
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#04101c" />
+    <meta name="description" content="Single-deck-feel casino blackjack built with PixiJS." />
     <link rel="stylesheet" href="/style.css">
-    <title>First Project</title>
+    <title>Blackjack — Casino Table</title>
 </head>
 
-<body>
+<body class="blackjack">
     <div id="app">
-        <div id="pixi-container"></div>
+        <div id="game-root"></div>
+        <div id="loader">
+            <div class="loader-ring"></div>
+            <p id="loader-message">Shuffling the shoe…</p>
+        </div>
+        <div id="rotate-hint" aria-hidden="true">
+            <div class="rotate-phone"></div>
+            <p>Rotate your device to play</p>
+        </div>
     </div>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/blackjack/main.ts"></script>
 </body>
 </html>
