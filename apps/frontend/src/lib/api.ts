@@ -24,13 +24,19 @@ function signal(status: 'online' | 'offline') {
 export async function api<T = any>(path: string, options: FetchOptions = {}): Promise<T> {
   const { auth, headers, ...rest } = options;
 
+  // Only declare a JSON content-type when we actually send a body. Setting it
+  // on bodyless GETs makes them non-simple CORS requests, forcing a wasteful
+  // OPTIONS preflight on every read (and turning any CORS misconfiguration
+  // into a total outage instead of a single failed request).
+  const hasBody = rest.body != null;
+
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
       ...rest,
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
+        ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
         ...headers,
       },
       cache: rest.cache ?? 'no-store',

@@ -1,10 +1,16 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.clothinary.cloudpunch.in/api';
 
 export async function api<T = any>(path: string, options: RequestInit = {}): Promise<T> {
+  // Only send a JSON content-type when there's a body — otherwise every GET
+  // becomes a non-simple CORS request and pays for an OPTIONS preflight.
+  const hasBody = options.body != null;
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+      ...options.headers,
+    },
     cache: 'no-store',
   });
   let data: any = null;
