@@ -58,33 +58,62 @@ if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
 
 const rejectedOrigins = new Set();
 
+/**
+ * Origins implied by the host this API is served from. When the API runs at
+ * `api.example.com`, its storefront is almost always `example.com` /
+ * `www.example.com`, so allow those even when nothing is configured.
+ *
+ * Only the exact sibling site is derived — never the whole parent domain —
+ * so unrelated subdomains (a shared hosting neighbour, say) stay blocked.
+ */
+const siblingOrigins = (req) => {
+  const host = (req.headers['x-forwarded-host'] || req.headers.host || '')
+    .split(',')[0]
+    .trim()
+    .split(':')[0];
+  if (!host || !host.startsWith('api.')) return [];
+  const site = host.slice(4); // drop the leading "api."
+  if (!site.includes('.')) return [];
+  return [`https://${site}`, `https://www.${site}`];
+};
+
+// Behind nginx/a load balancer: needed for correct client IPs (rate limiting)
+// and for `secure` cookies to be issued over the proxied HTTPS connection.
+app.set('trust proxy', 1);
+
 app.use(helmet({
   // The API is served from a different subdomain than the storefront, so the
   // default same-origin resource policy would block it.
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 app.use(
-  cors({
-    origin: (origin, cb) => {
-      // No Origin header = same-origin, curl, or a server-side call.
-      if (!origin) return cb(null, true);
-      if (allowedOrigins.includes(origin.replace(/\/$/, ''))) return cb(null, true);
+  cors((req, done) => {
+    const derived = allowedOrigins.length ? [] : siblingOrigins(req);
+    const permitted = allowedOrigins.concat(derived);
 
-      // Reject WITHOUT throwing. Passing an Error here would surface as a
-      // confusing 500 on the CORS preflight; returning false simply omits the
-      // CORS headers so the browser reports a proper CORS error instead.
-      if (!rejectedOrigins.has(origin)) {
-        rejectedOrigins.add(origin);
-        console.warn(
-          `[cors] Blocked origin "${origin}". Add it to CORS_ORIGINS to allow it. ` +
-            `Currently allowed: ${allowedOrigins.join(', ') || '(none)'}`
-        );
-      }
-      return cb(null, false);
-    },
-    credentials: true,
+    done(null, {
+      credentials: true,
+      origin: (origin, cb) => {
+        // No Origin header = same-origin, curl, or a server-side call.
+        if (!origin) return cb(null, true);
+        if (permitted.includes(origin.replace(/\/$/, ''))) return cb(null, true);
+
+        // Reject WITHOUT throwing. Passing an Error here would surface as a
+        // confusing 500 on the CORS preflight; returning false simply omits the
+        // CORS headers so the browser reports a proper CORS error instead.
+        if (!rejectedOrigins.has(origin)) {
+          rejectedOrigins.add(origin);
+          console.warn(
+            `[cors] Blocked origin "${origin}". Add it to CORS_ORIGINS to allow it. ` +
+              `Currently allowed: ${permitted.join(', ') || '(none)'}`
+          );
+        }
+        return cb(null, false);
+      },
+    });
   })
 );
+
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -110,11 +139,16 @@ app.get('/', (req, res) => res.json({ name: 'Clothinary API', version: '1.0.0' }
  */
 app.get('/api/cors-check', (req, res) => {
   const origin = req.headers.origin || null;
+  const derived = allowedOrigins.length ? [] : siblingOrigins(req);
+  const permitted = allowedOrigins.concat(derived);
   res.json({
     success: true,
     yourOrigin: origin,
-    allowed: origin ? allowedOrigins.includes(origin.replace(/\/$/, '')) : null,
-    allowedOrigins,
+    allowed: origin ? permitted.includes(origin.replace(/\/$/, '')) : null,
+    allowedOrigins: permitted,
+    fromEnv: allowedOrigins,
+    derivedFromHost: derived,
+    corsOriginsEnvSet: Boolean(process.env.CORS_ORIGINS),
     nodeEnv: process.env.NODE_ENV || '(unset)',
     hint:
       'If "allowed" is false, add "yourOrigin" to the CORS_ORIGINS environment variable and restart the server.',
