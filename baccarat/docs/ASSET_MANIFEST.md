@@ -20,7 +20,7 @@ keys below are the contract.
 
 | Key             | Size    | Notes                                                     |
 | --------------- | ------- | --------------------------------------------------------- |
-| `chip_<value>`  | 92 × 92 | Generated from `config.chips`, e.g. `chip_25000`. Adding a chip to config adds a frame. |
+| `chip_<value>`  | 92 × 92 | Generated from `config.chips`, e.g. `chip_25`. Adding a chip to config adds a frame. The default ladder is 1 / 5 / 10 / 25 / 50 / 100. |
 
 ### Roadmap markers — 40 × 40 each
 

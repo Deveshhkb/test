@@ -277,6 +277,20 @@ export class BetManager {
     return placed;
   }
 
+  /**
+   * Asks the table to close betting and deal. Only meaningful on a manual
+   * (player-driven) table; a timed table ignores it and runs on its clock.
+   */
+  requestDeal(): boolean {
+    if (!this.open || this.total <= 0) return false;
+    this.network.send(ClientEvent.Deal, { roundId: this.roundId });
+    return true;
+  }
+
+  get canDeal(): boolean {
+    return this.open && this.total > 0;
+  }
+
   /* ---------------------------------------------------------------- *
    * Server reconciliation
    * ---------------------------------------------------------------- */

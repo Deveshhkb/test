@@ -55,6 +55,8 @@ export class LocalRngAdapter implements NetworkAdapter {
 
   private countdownHandle: ReturnType<typeof setInterval> | null = null;
   private bettingEndsAt = 0;
+  /** True while a manual table is waiting for the player to press Deal. */
+  private awaitingDeal = false;
 
   constructor(config: GameConfig) {
     this.config = config;
@@ -144,9 +146,12 @@ export class LocalRngAdapter implements NetworkAdapter {
           entries: this.history.slice(),
         });
         break;
+      case ClientEvent.Deal:
+      case ClientEvent.ConfirmBets:
+        this.handleDealRequest();
+        break;
       case ClientEvent.JoinTable:
       case ClientEvent.LeaveTable:
-      case ClientEvent.ConfirmBets:
         break;
       default:
         this.log.warn("unhandled client event", event);
@@ -282,8 +287,11 @@ export class LocalRngAdapter implements NetworkAdapter {
   }
 
   private openBetting(): void {
-    const seconds = this.config.timing.bettingSeconds;
-    this.bettingEndsAt = Date.now() + seconds * 1000;
+    const manual = this.config.roundMode === "manual";
+    const seconds = manual ? 0 : this.config.timing.bettingSeconds;
+    // Manual tables have no clock: betting stays open until DEAL arrives.
+    this.bettingEndsAt = manual ? Number.POSITIVE_INFINITY : Date.now() + seconds * 1000;
+    this.awaitingDeal = manual;
 
     this.emit(ServerEvent.BettingOpen, {
       roundId: this.roundId,
@@ -291,8 +299,33 @@ export class LocalRngAdapter implements NetworkAdapter {
       serverTime: Date.now(),
     });
 
+    if (manual) return;
     this.startCountdown(seconds);
     this.schedule(() => this.closeBetting(), seconds * 1000);
+  }
+
+  /**
+   * The player pressed Deal. Refused with no stake on the layout — a real table
+   * will not deal a coup nobody has bet on.
+   */
+  private handleDealRequest(): void {
+    if (!this.awaitingDeal) return;
+
+    const staked = Object.values(this.bets).reduce<number>((sum, v) => sum + (v ?? 0), 0);
+    if (staked <= 0) {
+      this.emit(ServerEvent.BetRejected, {
+        roundId: this.roundId,
+        betType: BetType.Player,
+        amount: 0,
+        reason: "LIMIT_MIN",
+        message: "Place a bet before dealing",
+      });
+      return;
+    }
+
+    this.awaitingDeal = false;
+    this.bettingEndsAt = 0;
+    this.closeBetting();
   }
 
   private startCountdown(totalSeconds: number): void {
@@ -366,6 +399,7 @@ export class LocalRngAdapter implements NetworkAdapter {
       nextRoundInSeconds: waiting,
     });
     this.schedule(() => this.beginRound(), waiting * 1000);
+    this.log.debug(`next coup in ${waiting}s`);
   }
 
   /** Worst-case wall time the client needs to reveal this coup. */

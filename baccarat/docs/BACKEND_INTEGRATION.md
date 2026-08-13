@@ -83,6 +83,12 @@ await game.init(host, config, {
 | `BURN_CARD`      | `{ roundId, cards }`                                 | optional |
 | `ERROR`          | `{ code, message, fatal }`                           | recommended |
 
+### Manual tables
+
+Send `durationSeconds: 0` on `BETTING_OPEN` to indicate "no clock": the client hides the
+countdown, shows the Deal button, and closes the window by sending `DEAL`. Your server
+should then emit `BETTING_CLOSED` followed by `RESULT` exactly as a timed table would.
+
 ### `RESULT` is the important one
 
 ```jsonc
@@ -122,6 +128,7 @@ and still animates off `RESULT`, so both backend styles need one code path.
 | `PLACE_BET`       | `{ roundId, betType, amount, chipValue }`  | Chip placed on a spot         |
 | `CANCEL_BET`      | `{ roundId, betType? }`                    | Undo, or clear (no `betType`) |
 | `CONFIRM_BETS`    | `{ roundId, bets }`                        | If your flow needs a confirm  |
+| `DEAL`            | `{ roundId }`                              | Player-driven tables: close betting and deal |
 | `REQUEST_HISTORY` | `{ tableId, limit }`                       | On demand                     |
 | `JOIN_TABLE` / `LEAVE_TABLE` | `{ tableId }`                   | Session lifecycle             |
 

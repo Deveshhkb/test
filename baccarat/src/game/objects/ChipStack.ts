@@ -50,6 +50,11 @@ export class ChipStack extends Container {
     return this.total;
   }
 
+  /** Shrinks the pile so it sits inside a short betting band. */
+  setChipScale(scale: number): void {
+    this.chipLayer.scale.set(scale);
+  }
+
   /* ---------------------------------------------------------------- *
    * Placement
    * ---------------------------------------------------------------- */
@@ -64,7 +69,7 @@ export class ChipStack extends Container {
 
     const denominations = this.decompose(amount);
     const config = this.ctx.config.table;
-    const local = this.toLocal(fromGlobal);
+    const local = this.chipLayer.toLocal(fromGlobal);
 
     denominations.forEach((value, index) => {
       if (this.chips.length >= config.maxVisibleChipsPerSpot) return;
@@ -172,7 +177,7 @@ export class ChipStack extends Container {
 
   /** Winning stack: chips flash, then fly back to the player. */
   collect(toGlobal: { x: number; y: number }, onDone?: () => void): void {
-    const local = this.toLocal(toGlobal);
+    const local = this.chipLayer.toLocal(toGlobal);
     const chips = this.chips.splice(0);
 
     if (chips.length === 0) {
@@ -210,7 +215,7 @@ export class ChipStack extends Container {
 
   /** Losing stack: chips slide off toward the house and fade. */
   sweep(toGlobal: { x: number; y: number }, onDone?: () => void): void {
-    const local = this.toLocal(toGlobal);
+    const local = this.chipLayer.toLocal(toGlobal);
     const chips = this.chips.splice(0);
 
     if (chips.length === 0) {

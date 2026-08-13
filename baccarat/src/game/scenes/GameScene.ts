@@ -1,16 +1,19 @@
-import { Container, Graphics, Sprite } from "pixi.js";
+import { BitmapText, Container, Graphics, Sprite } from "pixi.js";
 
-import { CHIP_SIZE, Depth, POOL_SIZE_CHIPS, Palette } from "../Constants";
+import { Depth, Fonts, POOL_SIZE_CHIPS, Palette } from "../Constants";
 import { ObjectPool } from "../core/ObjectPool";
+import { ActionButton } from "../objects/ActionButton";
 import { BettingSpot, type BettingSpotOptions } from "../objects/BettingSpot";
-import { Button } from "../objects/Button";
 import { Chip } from "../objects/Chip";
-import { ChipTray } from "../objects/ChipTray";
+import { ChipStepper } from "../objects/ChipStepper";
 import { Deck } from "../objects/Deck";
-import { InfoBar } from "../objects/InfoBar";
+import { InfoPanel } from "../objects/InfoPanel";
 import { ResultBanner } from "../objects/ResultBanner";
+import { ResultsPanel } from "../objects/ResultsPanel";
 import { RoadMap } from "../objects/RoadMap";
 import { ScorePlate } from "../objects/ScoreBoard";
+import { StatusBar } from "../objects/StatusBar";
+import { CardShoeCase, ChipRack, LimitSign, TableLogo } from "../objects/TableDressing";
 import { Timer } from "../objects/Timer";
 import {
   BetType,
@@ -26,77 +29,143 @@ import { clamp } from "../utils/MathUtils";
 
 import { Scene } from "./Scene";
 
+/** Resolved geometry for one wager band. */
 interface SpotLayout {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 /**
  * The table.
  *
  * Composes every display object, wires them to the event bus, and owns the two
- * layouts (landscape and portrait). It contains no game logic whatsoever: it
- * reacts to events and asks managers for actions. That separation is what lets
- * the entire look be replaced without touching a rule.
+ * layouts. It contains no game logic: it reacts to events and asks managers for
+ * actions, which is what lets the entire look be replaced without touching a
+ * rule.
+ *
+ * The layout follows a single-player RNG table: three arced wager bands stacked
+ * in the middle of the felt, the two hands flanking them, a chip stepper and an
+ * action cluster on the near rail, and a black status strip along the bottom.
  */
 export class GameScene extends Scene {
-  /* Display -------------------------------------------------------- */
-  private readonly background = new Sprite();
-  private readonly feltArt = new Graphics();
-  private readonly tableLayer = new Container();
+  /* Layers --------------------------------------------------------- */
+  private readonly voidFill = new Graphics();
+  private readonly felt = new Sprite();
+  private readonly feltMask = new Graphics();
+  private readonly rail = new Graphics();
+  private readonly dressing = new Container();
   private readonly betLayer = new Container();
   private readonly cardLayer = new Container();
   private readonly hudLayer = new Container();
   private readonly overlayLayer = new Container();
 
+  /* Table furniture ------------------------------------------------- */
+  private readonly limitSign: LimitSign;
+  private readonly chipRack: ChipRack;
+  private readonly shoeCase: CardShoeCase;
+  private readonly logo: TableLogo;
   private readonly deck: Deck;
   private readonly discardTray = new Graphics();
+
+  /* Play ------------------------------------------------------------ */
   private readonly playerAnchor = new Container();
   private readonly bankerAnchor = new Container();
   private readonly playerPlate: ScorePlate;
   private readonly bankerPlate: ScorePlate;
+  private readonly spots = new Map<BetType, BettingSpot>();
+  private readonly chipPool: ObjectPool<Chip>;
+
+  /* HUD -------------------------------------------------------------- */
   private readonly timer: Timer;
-  private readonly infoBar: InfoBar;
+  private readonly statusMessage: BitmapText;
+  private readonly statusBar: StatusBar;
+  private readonly stepper: ChipStepper;
+  private readonly resultsPanel: ResultsPanel;
   private readonly roadmap: RoadMap;
   private readonly banner: ResultBanner;
-  private readonly chipTray: ChipTray;
+  private readonly infoPanel: InfoPanel;
 
-  private readonly chipPool: ObjectPool<Chip>;
-  private readonly spots = new Map<BetType, BettingSpot>();
-  private readonly buttons: Record<"undo" | "repeat" | "double" | "clear" | "sound", Button>;
+  private readonly buttons: Record<
+    "clear" | "deal" | "history" | "undo" | "repeat" | "double" | "info" | "sound",
+    ActionButton
+  >;
 
-  private houseAnchor = { x: 0, y: 0 };
   private lastResult: RoundResult | null = null;
+  private portraitPanelInitialised = false;
 
   constructor(...args: ConstructorParameters<typeof Scene>) {
     super(...args);
+    const strings = this.ctx.config.strings;
 
     this.chipPool = new ObjectPool<Chip>(() => new Chip(this.ctx), {
-      initial: 24,
+      initial: 20,
       max: POOL_SIZE_CHIPS,
       name: "chips",
     });
 
-    this.background.anchor.set(0.5);
-    this.background.texture = this.ctx.assets.get("fx_vignette");
+    this.felt.anchor.set(0.5);
+    this.felt.texture = this.ctx.assets.get("fx_vignette");
+    this.felt.mask = this.feltMask;
 
+    this.limitSign = new LimitSign(this.ctx);
+    this.chipRack = new ChipRack(this.ctx);
+    this.shoeCase = new CardShoeCase();
+    this.logo = new TableLogo(this.ctx);
     this.deck = new Deck(this.ctx);
-    this.playerPlate = new ScorePlate(this.ctx, HandSide.Player);
-    this.bankerPlate = new ScorePlate(this.ctx, HandSide.Banker);
+
+    this.playerPlate = new ScorePlate(this.ctx, HandSide.Player, {
+      plain: true,
+      label: strings.player,
+      titleColor: Palette.goldBright,
+    });
+    this.bankerPlate = new ScorePlate(this.ctx, HandSide.Banker, {
+      plain: true,
+      label: strings.banker,
+      titleColor: 0xffffff,
+    });
+
     this.timer = new Timer(this.ctx);
-    this.infoBar = new InfoBar(this.ctx);
+    this.statusMessage = new BitmapText({
+      text: "",
+      style: { fontFamily: Fonts.Label, fontSize: 30 },
+    });
+    this.statusMessage.anchor.set(0.5);
+    this.statusMessage.alpha = 0.9;
+
+    this.statusBar = new StatusBar(this.ctx);
+    this.stepper = new ChipStepper(this.ctx);
+    this.resultsPanel = new ResultsPanel(this.ctx);
     this.roadmap = new RoadMap(this.ctx);
     this.banner = new ResultBanner(this.ctx);
-    this.chipTray = new ChipTray(this.ctx);
+    this.infoPanel = new InfoPanel(this.ctx);
 
     this.buttons = {
-      undo: new Button(this.ctx, { label: "Undo", onTap: () => this.ctx.bets.undo() }),
-      repeat: new Button(this.ctx, { label: "Repeat", onTap: () => this.ctx.bets.repeat() }),
-      double: new Button(this.ctx, { label: "Double", onTap: () => this.ctx.bets.double() }),
-      clear: new Button(this.ctx, { label: "Clear", onTap: () => this.ctx.bets.clear() }),
-      sound: new Button(this.ctx, { label: "Sound", onTap: () => this.toggleSound() }),
+      clear: new ActionButton(this.ctx, {
+        icon: "clear",
+        caption: strings.clearBet,
+        onTap: () => this.ctx.bets.clear(),
+      }),
+      deal: new ActionButton(this.ctx, {
+        icon: "deal",
+        caption: strings.deal,
+        onTap: () => this.requestDeal(),
+      }),
+      history: new ActionButton(this.ctx, {
+        icon: "history",
+        highlight: true,
+        onTap: () => this.toggleResults(),
+      }),
+      undo: new ActionButton(this.ctx, { icon: "undo", onTap: () => this.ctx.bets.undo() }),
+      repeat: new ActionButton(this.ctx, { icon: "repeat", onTap: () => this.ctx.bets.repeat() }),
+      double: new ActionButton(this.ctx, {
+        icon: "double",
+        glyphText: "2\u00d7",
+        onTap: () => this.ctx.bets.double(),
+      }),
+      info: new ActionButton(this.ctx, { icon: "info", onTap: () => this.infoPanel.toggle() }),
+      sound: new ActionButton(this.ctx, { icon: "sound", onTap: () => this.toggleSound() }),
     };
 
     this.buildLayers();
@@ -104,29 +173,38 @@ export class GameScene extends Scene {
   }
 
   private buildLayers(): void {
-    this.tableLayer.addChild(this.feltArt, this.discardTray, this.deck);
+    this.dressing.addChild(this.chipRack, this.limitSign, this.shoeCase, this.logo, this.discardTray, this.deck);
     this.cardLayer.addChild(this.playerAnchor, this.bankerAnchor);
+
     this.hudLayer.addChild(
-      this.infoBar,
-      this.roadmap,
       this.playerPlate,
       this.bankerPlate,
       this.timer,
-      this.chipTray,
+      this.statusMessage,
+      this.roadmap,
+      this.resultsPanel,
+      this.stepper,
+      this.statusBar,
     );
     for (const button of Object.values(this.buttons)) this.hudLayer.addChild(button);
-    this.overlayLayer.addChild(this.banner);
 
-    this.background.zIndex = Depth.Background;
-    this.tableLayer.zIndex = Depth.TableFelt;
+    this.overlayLayer.addChild(this.banner, this.infoPanel);
+
+    this.voidFill.zIndex = Depth.Background;
+    this.felt.zIndex = Depth.Background + 1;
+    this.rail.zIndex = Depth.TableFelt;
+    this.dressing.zIndex = Depth.TableFelt + 1;
     this.betLayer.zIndex = Depth.BettingLayer;
     this.cardLayer.zIndex = Depth.CardLayer;
     this.hudLayer.zIndex = Depth.HudLayer;
     this.overlayLayer.zIndex = Depth.OverlayLayer;
 
     this.addChild(
-      this.background,
-      this.tableLayer,
+      this.voidFill,
+      this.felt,
+      this.feltMask,
+      this.rail,
+      this.dressing,
       this.betLayer,
       this.cardLayer,
       this.hudLayer,
@@ -137,19 +215,20 @@ export class GameScene extends Scene {
 
   /** The layout is data — adding a side bet means adding a row here. */
   private buildSpots(): void {
-    const theme = this.ctx.config.theme;
+    const { theme, strings, features } = this.ctx.config;
+
     const definitions: BettingSpotOptions[] = [
-      { betType: BetType.Player, label: "Player", color: theme.player, shape: "left-trapezoid", primary: true },
-      { betType: BetType.Tie, label: "Tie", color: theme.tie, shape: "hex", primary: true },
-      { betType: BetType.Banker, label: "Banker", color: theme.banker, shape: "right-trapezoid", primary: true },
+      { betType: BetType.Tie, label: strings.tie, color: theme.tie, primary: true },
+      { betType: BetType.Banker, label: strings.banker, color: theme.banker, primary: true },
+      { betType: BetType.Player, label: strings.player, color: theme.player, primary: true },
     ];
 
-    if (this.ctx.config.features.sidebets) {
+    if (features.sidebets) {
       definitions.push(
-        { betType: BetType.PlayerPair, label: "P Pair", color: theme.player },
-        { betType: BetType.PerfectPair, label: "Perfect Pair", color: theme.pair },
-        { betType: BetType.Natural, label: "Natural", color: theme.gold },
-        { betType: BetType.BankerPair, label: "B Pair", color: theme.banker },
+        { betType: BetType.PlayerPair, label: strings.playerPair, color: theme.player },
+        { betType: BetType.BankerPair, label: strings.bankerPair, color: theme.banker },
+        { betType: BetType.PerfectPair, label: strings.perfectPair, color: theme.pair },
+        { betType: BetType.Natural, label: strings.natural, color: theme.gold },
       );
     }
 
@@ -177,7 +256,8 @@ export class GameScene extends Scene {
     this.bindEvents();
     this.bindShortcuts();
 
-    this.infoBar.setBalance(this.ctx.bets.currentBalance, false);
+    this.statusBar.setBalance(this.ctx.bets.currentBalance, false);
+    this.resultsPanel.render(this.ctx.roadmaps.snapshot.beadPlate, false);
     this.roadmap.render(this.ctx.roadmaps.snapshot, false);
     this.deck.startIdle();
     this.refreshControls();
@@ -188,28 +268,23 @@ export class GameScene extends Scene {
 
     this.track(
       bus.on("bet:changed", ({ bets, total }) => {
-        const origin = this.chipTray.originGlobal();
-        for (const [betType, spot] of this.spots) {
-          spot.setAmount(bets[betType] ?? 0, origin);
-        }
-        this.infoBar.setBet(total);
-        this.infoBar.setPotentialWin(this.ctx.bets.potentialWin());
-        this.infoBar.setCommission(this.ctx.bets.pendingCommission());
+        const origin = this.stepper.originGlobal();
+        for (const [betType, spot] of this.spots) spot.setAmount(bets[betType] ?? 0, origin);
+        this.statusBar.setBet(total);
         this.refreshControls();
       }),
     );
 
-    this.track(
-      bus.on("bet:chipSelected", ({ index }) => this.chipTray.setSelected(index)),
-    );
+    this.track(bus.on("bet:chipSelected", ({ index }) => this.stepper.setSelected(index)));
 
     this.track(
-      bus.on("bet:rejected", ({ betType }) => {
+      bus.on("bet:rejected", ({ betType, message }) => {
         this.spots.get(betType)?.setHovering(false);
+        this.flashStatus(message);
       }),
     );
 
-    this.track(bus.on("balance:changed", ({ balance }) => this.infoBar.setBalance(balance)));
+    this.track(bus.on("balance:changed", ({ balance }) => this.statusBar.setBalance(balance)));
 
     this.track(
       bus.on("timer:tick", ({ remainingSeconds, totalSeconds }) => {
@@ -220,25 +295,33 @@ export class GameScene extends Scene {
     this.track(
       bus.on("round:bettingOpen", ({ durationSeconds }) => {
         this.banner.hide();
-        this.timer.start();
-        this.timer.update(durationSeconds, durationSeconds);
+        this.setStatus(this.ctx.config.strings.placeYourBets);
+        if (durationSeconds > 0) {
+          this.timer.start(this.ctx.config.strings.placeYourBets);
+          this.timer.update(durationSeconds, durationSeconds);
+        } else {
+          this.timer.hideImmediately();
+        }
         for (const spot of this.spots.values()) spot.setLocked(false);
-        this.chipTray.setEnabled(true);
+        this.stepper.setEnabled(true);
         this.refreshControls();
       }),
     );
 
     this.track(
       bus.on("round:bettingClosed", () => {
-        this.timer.stop();
+        this.setStatus(this.ctx.config.strings.betsClosed);
+        this.timer.stop(this.ctx.config.strings.betsClosed);
         for (const spot of this.spots.values()) spot.setLocked(true);
-        this.chipTray.setEnabled(false);
+        this.stepper.setEnabled(false);
         this.refreshControls();
       }),
     );
 
     this.track(
       bus.on("hand:scoreChanged", ({ player, banker }) => {
+        this.playerPlate.setHandPresent(true);
+        this.bankerPlate.setHandPresent(true);
         this.playerPlate.setTotal(player);
         this.bankerPlate.setTotal(banker);
       }),
@@ -265,6 +348,8 @@ export class GameScene extends Scene {
 
     this.track(
       bus.on("round:settled", ({ settlements, netProfit, totalStake }) => {
+        // The banner carries the outcome, so the phase line gets out of its way.
+        this.statusMessage.visible = false;
         this.presentSettlements(settlements, netProfit, totalStake);
       }),
     );
@@ -272,7 +357,10 @@ export class GameScene extends Scene {
     this.track(bus.on("round:reset", () => this.resetTable()));
 
     this.track(
-      bus.on("roadmap:updated", ({ snapshot }) => this.roadmap.render(snapshot, true)),
+      bus.on("roadmap:updated", ({ snapshot }) => {
+        this.resultsPanel.render(snapshot.beadPlate, true);
+        this.roadmap.render(snapshot, true);
+      }),
     );
 
     this.track(
@@ -290,20 +378,21 @@ export class GameScene extends Scene {
 
     this.track(
       bus.on("state:changed", ({ to }) => {
+        const dealing =
+          to === GameState.Dealing || to === GameState.PlayerDraw || to === GameState.BankerDraw;
+        if (dealing) this.setStatus(this.ctx.config.strings.dealing);
         // Dim the layout while cards are in the air so the table reads clearly.
-        const dealing = to === GameState.Dealing || to === GameState.PlayerDraw || to === GameState.BankerDraw;
         this.ctx.animation.to(this.betLayer, {
-          alpha: dealing ? 0.72 : 1,
+          alpha: dealing ? 0.62 : 1,
           duration: 0.3,
           ease: Ease.uiOut,
         });
+        this.refreshControls();
       }),
     );
 
     this.track(
-      bus.on("audio:muteChanged", ({ muted }) => {
-        this.buttons.sound.setLabel(muted ? "Muted" : "Sound");
-      }),
+      bus.on("audio:muteChanged", ({ muted }) => this.buttons.sound.setActive(muted)),
     );
   }
 
@@ -317,6 +406,24 @@ export class GameScene extends Scene {
     this.track(input.registerShortcut("d", () => this.ctx.bets.double()));
     this.track(input.registerShortcut("c", () => this.ctx.bets.clear()));
     this.track(input.registerShortcut("m", () => this.toggleSound()));
+    this.track(input.registerShortcut("h", () => this.toggleResults()));
+    this.track(input.registerShortcut("i", () => this.infoPanel.toggle()));
+    this.track(input.registerShortcut(" ", () => this.requestDeal()));
+    this.track(input.registerShortcut("enter", () => this.requestDeal()));
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Actions
+   * ---------------------------------------------------------------- */
+
+  private requestDeal(): void {
+    if (this.ctx.bets.requestDeal()) return;
+    this.flashStatus(this.ctx.config.strings.noBet);
+  }
+
+  private toggleResults(): void {
+    const open = this.resultsPanel.toggle();
+    this.buttons.history.setActive(open);
   }
 
   private toggleSound(): void {
@@ -324,12 +431,40 @@ export class GameScene extends Scene {
     this.ctx.bus.emit("audio:muteChanged", { muted });
   }
 
+  private setStatus(text: string): void {
+    this.statusMessage.text = text.toUpperCase();
+    this.statusMessage.tint = 0xffffff;
+    this.statusMessage.visible = true;
+  }
+
+  /** Momentary warning — reverts to the phase message afterwards. */
+  private flashStatus(text: string): void {
+    this.statusMessage.text = text.toUpperCase();
+    this.statusMessage.tint = Palette.danger;
+    this.ctx.animation.killTweensOf(this.statusMessage.scale);
+    this.ctx.animation.fromTo(
+      this.statusMessage.scale,
+      { x: 1.25, y: 1.25 },
+      { x: 1, y: 1, duration: 0.3, ease: Ease.uiIn },
+    );
+    this.ctx.animation.delayedCall(1.6, () => {
+      if (this.ctx.bets.isBettingOpen) this.setStatus(this.ctx.config.strings.placeYourBets);
+    });
+  }
+
   private refreshControls(): void {
     const bets = this.ctx.bets;
+    const open = bets.isBettingOpen;
+
+    this.buttons.clear.setEnabled(open && bets.total > 0);
     this.buttons.undo.setEnabled(bets.canUndo);
     this.buttons.repeat.setEnabled(bets.canRepeat);
     this.buttons.double.setEnabled(bets.canDouble);
-    this.buttons.clear.setEnabled(bets.isBettingOpen && bets.total > 0);
+
+    // A timed table deals on its own clock, so Deal is only live on manual ones.
+    const manual = this.ctx.config.roundMode === "manual";
+    this.buttons.deal.visible = manual;
+    this.buttons.deal.setEnabled(manual && bets.canDeal);
   }
 
   /* ---------------------------------------------------------------- *
@@ -341,8 +476,8 @@ export class GameScene extends Scene {
     netProfit: number,
     totalStake: number,
   ): void {
-    const playerPoint = this.chipTray.originGlobal();
-    const housePoint = this.houseGlobal();
+    const playerPoint = this.stepper.originGlobal();
+    const housePoint = this.deck.toGlobal({ x: 0, y: 0 });
 
     for (const settlement of settlements) {
       const spot = this.spots.get(settlement.betType);
@@ -359,12 +494,6 @@ export class GameScene extends Scene {
     }
 
     if (this.lastResult) this.banner.show(this.lastResult, netProfit, totalStake);
-  }
-
-  private houseGlobal(): { x: number; y: number } {
-    const point = this.deck.toGlobal({ x: 0, y: 0 });
-    this.houseAnchor = { x: point.x, y: point.y };
-    return this.houseAnchor;
   }
 
   private resetTable(): void {
@@ -388,18 +517,29 @@ export class GameScene extends Scene {
   applyConfig(): void {
     // Order matters: every holder of an atlas texture must re-resolve before
     // the engine frees the atlas it replaced.
-    this.background.texture = this.ctx.assets.get("fx_vignette");
+    const strings = this.ctx.config.strings;
+    this.felt.texture = this.ctx.assets.get("fx_vignette");
     this.chipPool.forEach((chip) => chip.refreshTextures());
-    this.chipTray.refresh();
+    this.stepper.refresh();
+
+    this.spots.get(BetType.Player)?.setLabel(strings.player);
+    this.spots.get(BetType.Banker)?.setLabel(strings.banker);
+    this.spots.get(BetType.Tie)?.setLabel(strings.tie);
     for (const spot of this.spots.values()) spot.refreshLabels();
+
     this.deck.refreshTextures();
     this.playerPlate.refreshTextures();
     this.bankerPlate.refreshTextures();
     this.banner.refreshTextures();
-    this.infoBar.refreshLabels();
+    this.limitSign.refresh();
+    this.statusBar.refreshLabels();
+    this.buttons.clear.setCaption(strings.clearBet);
+    this.buttons.deal.setCaption(strings.deal);
+    this.infoPanel.refresh();
     this.ctx.cards.refreshTextures();
     this.ctx.cards.relayout();
     this.roadmap.render(this.ctx.roadmaps.snapshot, false);
+    this.resultsPanel.render(this.ctx.roadmaps.snapshot.beadPlate, false);
     this.layout(this.ctx.metrics);
   }
 
@@ -412,241 +552,334 @@ export class GameScene extends Scene {
     const w = metrics.designWidth;
     const h = metrics.designHeight;
 
-    this.background.position.set(w / 2, h / 2);
-    // Cover: the vignette must never show an edge.
-    const cover = Math.max(w, h) * 1.25;
-    this.background.width = cover;
-    this.background.height = cover;
-
+    this.drawTable(w, h);
     if (metrics.isPortrait) this.layoutPortrait(w, h);
     else this.layoutLandscape(w, h);
 
+    this.infoPanel.position.set(w / 2, h / 2);
+    this.infoPanel.resizeTo(w, h);
     this.ctx.cards.relayout();
   }
 
+  /**
+   * The felt is an oversized oval whose top runs off screen, lit from the
+   * middle and rimmed with a leather rail along the near edge — the geometry
+   * that makes a flat canvas read as a table seen from a player's seat.
+   */
+  private drawTable(w: number, h: number): void {
+    const theme = this.ctx.config.theme;
+    const cx = w / 2;
+    const cy = h * 0.04;
+    const rx = w * 0.78;
+    const ry = h * 0.86;
+
+    this.voidFill.clear().rect(0, 0, w, h).fill(0x05070a);
+    this.feltMask.clear().ellipse(cx, cy, rx, ry).fill(0xffffff);
+
+    this.felt.position.set(cx, cy);
+    const cover = Math.max(rx, ry) * 2.1;
+    this.felt.width = cover;
+    this.felt.height = cover;
+
+    this.rail
+      .clear()
+      .ellipse(cx, cy, rx, ry)
+      .stroke({ width: h * 0.085, color: theme.rail, alpha: 1 })
+      .ellipse(cx, cy, rx, ry)
+      .stroke({ width: h * 0.02, color: 0x000000, alpha: 0.35 })
+      .ellipse(cx, cy, rx - h * 0.045, ry - h * 0.045)
+      .stroke({ width: 2, color: 0xffffff, alpha: 0.08 });
+  }
+
   private layoutLandscape(w: number, h: number): void {
-    const margin = Math.max(16, w * 0.012);
+    const margin = Math.max(14, w * 0.012);
+    const statusHeight = clamp(h * 0.065, 46, 70);
 
-    // --- Top: wallet strip ---------------------------------------------
-    const infoHeight = 76;
-    this.infoBar.position.set(margin, margin);
-    this.infoBar.resizeTo(w - margin * 2, infoHeight, false);
+    /* --- Table furniture across the back ------------------------------ */
+    const rackWidth = Math.min(560, w * 0.3);
+    const rackHeight = Math.min(78, h * 0.075);
+    this.chipRack.position.set(w * 0.5, rackHeight * 0.42);
+    this.chipRack.resizeTo(rackWidth, rackHeight);
 
-    // --- Roadmaps ------------------------------------------------------
-    const roadHeight = Math.min(178, h * 0.17);
-    const roadY = margin + infoHeight + 10;
-    this.roadmap.position.set(margin, roadY);
-    this.roadmap.resizeTo(w - margin * 2, roadHeight, false);
-    this.roadmap.visible = this.ctx.config.features.roadmaps;
+    const signWidth = Math.min(330, w * 0.185);
+    this.limitSign.position.set(w * 0.26, h * 0.1);
+    this.limitSign.resizeTo(signWidth);
 
-    // --- Table ---------------------------------------------------------
-    const tableTop = this.roadmap.visible ? roadY + roadHeight + 12 : roadY;
-    const controlsHeight = 172;
-    const betRowsHeight = 262;
-    const tableBottom = h - controlsHeight - betRowsHeight - margin;
-    const tableHeight = Math.max(260, tableBottom - tableTop);
-    // Cards shrink with the felt so a short viewport never crops a hand.
-    const handScale = clamp(tableHeight / 430, 0.5, 1);
+    const shoeWidth = Math.min(190, w * 0.11);
+    this.shoeCase.position.set(w * 0.78, h * 0.09);
+    this.shoeCase.resizeTo(shoeWidth, shoeWidth * 0.78);
 
-    this.drawFelt(margin, tableTop, w - margin * 2, tableHeight);
+    this.logo.position.set(w * 0.5, h * 0.2);
+    this.logo.resizeTo(Math.min(760, w * 0.42));
 
-    this.deck.position.set(margin + 96, tableTop + tableHeight * 0.32);
-    this.deck.scale.set(clamp(tableHeight / 420, 0.55, 1));
+    /* --- Shoe and discard, where cards come from and go --------------- */
+    this.deck.position.set(w * 0.782, h * 0.145);
+    this.deck.scale.set(clamp(h / 1400, 0.42, 0.72));
+    this.deck.setHousingVisible(false);
 
-    this.discardTray.clear()
-      .roundRect(-70, -50, 140, 100, 12)
-      .fill({ color: 0x000000, alpha: 0.35 })
-      .roundRect(-70, -50, 140, 100, 12)
-      .stroke({ width: 1.5, color: Palette.gold, alpha: 0.25 });
-    this.discardTray.position.set(w - margin - 96, tableTop + tableHeight * 0.32);
+    this.drawDiscardTray(112, 80);
+    this.discardTray.position.set(w * 0.075, h * 0.1);
 
-    const handY = tableTop + tableHeight * 0.72;
-    this.playerAnchor.position.set(w * 0.3, handY);
+    /* --- Wager bands, stacked and widening downward ------------------- */
+    const bandHeight = clamp(h * 0.1, 62, 104);
+    const bandGap = bandHeight * 0.35;
+    const bandCentre = w * 0.5;
+    const tieY = h * 0.43;
+    this.layoutBands(bandCentre, tieY, bandHeight, bandGap, Math.min(560, w * 0.3));
+
+    /* --- Hands and their name plates ---------------------------------- */
+    const handScale = clamp(h / 1500, 0.4, 0.72);
+    const handY = h * 0.44;
+    this.playerAnchor.position.set(w * 0.22, handY);
     this.playerAnchor.scale.set(handScale);
-    this.bankerAnchor.position.set(w * 0.7, handY);
+    this.bankerAnchor.position.set(w * 0.78, handY);
     this.bankerAnchor.scale.set(handScale);
 
-    const plateWidth = Math.min(240, w * 0.15);
-    this.playerPlate.position.set(w * 0.3, tableTop + tableHeight * 0.15);
-    this.playerPlate.resizeTo(plateWidth, 92);
-    this.bankerPlate.position.set(w * 0.7, tableTop + tableHeight * 0.15);
-    this.bankerPlate.resizeTo(plateWidth, 92);
+    const plateWidth = Math.min(260, w * 0.15);
+    this.playerPlate.position.set(w * 0.22, h * 0.61);
+    this.playerPlate.resizeTo(plateWidth, h * 0.09);
+    this.bankerPlate.position.set(w * 0.78, h * 0.61);
+    this.bankerPlate.resizeTo(plateWidth, h * 0.09);
 
-    this.timer.position.set(w / 2, tableTop + tableHeight * 0.3);
-    this.timer.setRadius(Math.min(66, tableHeight * 0.2));
+    /* --- Phase readout and countdown ---------------------------------- */
+    this.statusMessage.position.set(w * 0.5, h * 0.29);
+    this.statusMessage.scale.set(clamp(w / 1900, 0.65, 1.1));
+    this.timer.position.set(w * 0.5, h * 0.29);
+    this.timer.setRadius(clamp(h * 0.06, 34, 62));
 
-    // --- Betting layout ------------------------------------------------
-    const sideY = tableBottom + 60;
-    const mainY = sideY + 172;
-    this.layoutSpots(w, sideY, mainY, false);
+    /* --- Results list, right rail ------------------------------------- */
+    const panelWidth = Math.min(280, w * 0.155);
+    const panelHeight = Math.min(430, h * 0.44);
+    this.resultsPanel.position.set(w - margin - panelWidth, h * 0.2);
+    this.resultsPanel.resizeTo(panelWidth, panelHeight);
+    this.roadmap.visible = false;
 
-    // --- Controls ------------------------------------------------------
-    const controlY = h - margin - 58;
-    const trayWidth = Math.min(w * 0.52, 780);
-    this.chipTray.position.set(w / 2, controlY);
-    this.chipTray.resizeTo(trayWidth, CHIP_SIZE + 28);
+    /* --- Near rail: stepper left, actions right ----------------------- */
+    const controlY = h - statusHeight - clamp(h * 0.11, 60, 108);
+    const stepperWidth = Math.min(430, w * 0.26);
+    const stepperHeight = clamp(h * 0.105, 62, 104);
+    this.stepper.position.set(w * 0.175, controlY);
+    this.stepper.resizeTo(stepperWidth, stepperHeight);
 
-    const buttonWidth = Math.min(128, (w - trayWidth) / 2 / 2.4);
-    const buttonHeight = 60;
-    const leftX = w / 2 - trayWidth / 2 - buttonWidth / 2 - 16;
-    const rightX = w / 2 + trayWidth / 2 + buttonWidth / 2 + 16;
+    const radius = clamp(h * 0.048, 28, 50);
+    // Wide enough that the Indonesian captions sit side by side without touching.
+    const spacing = Math.max(radius * 2.55, Math.min(w * 0.115, 210));
+    const rightX = w - margin - radius * 1.4;
+    this.placeButton(this.buttons.history, rightX, controlY, radius);
+    this.placeButton(this.buttons.deal, rightX - spacing, controlY, radius);
+    this.placeButton(this.buttons.clear, rightX - spacing * 2, controlY, radius);
+    this.buttons.deal.setCaptionMaxWidth(spacing * 0.94);
+    this.buttons.clear.setCaptionMaxWidth(spacing * 0.94);
 
-    this.placeButton(this.buttons.clear, leftX - buttonWidth - 10, controlY, buttonWidth, buttonHeight);
-    this.placeButton(this.buttons.undo, leftX, controlY, buttonWidth, buttonHeight);
-    this.placeButton(this.buttons.repeat, rightX, controlY, buttonWidth, buttonHeight);
-    this.placeButton(this.buttons.double, rightX + buttonWidth + 10, controlY, buttonWidth, buttonHeight);
-    this.placeButton(this.buttons.sound, w - margin - 46, margin + infoHeight + 10 + roadHeight / 2, 78, 48);
-    this.buttons.sound.visible = false;
+    // Undo / repeat / double sit between the stepper and the action cluster.
+    const smallRadius = radius * 0.66;
+    const smallGap = smallRadius * 2.5;
+    const smallX = w * 0.175 + stepperWidth / 2 + smallRadius * 2;
+    this.placeButton(this.buttons.undo, smallX, controlY, smallRadius);
+    this.placeButton(this.buttons.repeat, smallX + smallGap, controlY, smallRadius);
+    this.placeButton(this.buttons.double, smallX + smallGap * 2, controlY, smallRadius);
+    this.setSecondaryVisible(true);
 
-    // Sits in the medallion above the hands: it carries both totals itself, so
-    // covering the score plates costs no information — covering cards would.
-    this.banner.position.set(w / 2, tableTop + tableHeight * 0.28);
-    this.banner.resizeTo(Math.min(620, w * 0.4), Math.min(168, tableHeight * 0.46));
+    /* --- Status strip -------------------------------------------------- */
+    this.layoutStatusBar(w, h, statusHeight, false);
+
+    /* --- Overlays ------------------------------------------------------ */
+    this.banner.position.set(w * 0.5, h * 0.28);
+    this.banner.resizeTo(Math.min(620, w * 0.36), clamp(h * 0.2, 130, 190));
   }
 
   private layoutPortrait(w: number, h: number): void {
-    const margin = Math.max(14, w * 0.03);
+    const margin = Math.max(12, w * 0.03);
+    const statusHeight = clamp(h * 0.042, 42, 64);
 
-    const infoHeight = 92;
-    this.infoBar.position.set(margin, margin);
-    this.infoBar.resizeTo(w - margin * 2, infoHeight, true);
+    const rackWidth = Math.min(w * 0.62, 620);
+    const rackHeight = clamp(h * 0.032, 40, 66);
+    this.chipRack.position.set(w * 0.56, rackHeight * 0.42);
+    this.chipRack.resizeTo(rackWidth, rackHeight);
 
-    const roadHeight = Math.min(300, h * 0.16);
-    const roadY = margin + infoHeight + 10;
-    this.roadmap.position.set(margin, roadY);
-    this.roadmap.resizeTo(w - margin * 2, roadHeight, true);
-    this.roadmap.visible = this.ctx.config.features.roadmaps;
+    const signWidth = Math.min(w * 0.3, 300);
+    this.limitSign.position.set(margin + signWidth * 0.5, h * 0.045);
+    this.limitSign.resizeTo(signWidth);
 
-    const tableTop = this.roadmap.visible ? roadY + roadHeight + 14 : roadY;
-    const controlsHeight = 230;
-    const betRowsHeight = 330;
-    const tableBottom = h - controlsHeight - betRowsHeight - margin;
-    const tableHeight = Math.max(300, tableBottom - tableTop);
-    const handScale = clamp((w * 0.42) / 300, 0.45, 0.9);
+    const shoeWidth = Math.min(w * 0.17, 180);
+    this.shoeCase.position.set(w - margin - shoeWidth * 0.5, h * 0.05);
+    this.shoeCase.resizeTo(shoeWidth, shoeWidth * 0.78);
 
-    this.drawFelt(margin, tableTop, w - margin * 2, tableHeight);
+    this.logo.position.set(w * 0.5, h * 0.115);
+    this.logo.resizeTo(Math.min(700, w * 0.72));
 
-    this.deck.position.set(margin + 78, tableTop + 96);
-    this.deck.scale.set(0.72);
+    this.deck.position.set(w - margin - shoeWidth * 0.5, h * 0.075);
+    this.deck.scale.set(clamp(w / 1900, 0.28, 0.5));
+    this.deck.setHousingVisible(false);
 
-    this.discardTray.clear()
-      .roundRect(-56, -42, 112, 84, 12)
-      .fill({ color: 0x000000, alpha: 0.35 })
-      .roundRect(-56, -42, 112, 84, 12)
-      .stroke({ width: 1.5, color: Palette.gold, alpha: 0.25 });
-    this.discardTray.position.set(w - margin - 78, tableTop + 96);
+    this.drawDiscardTray(92, 68);
+    this.discardTray.position.set(margin + 52, h * 0.16);
 
-    this.timer.position.set(w / 2, tableTop + 96);
-    this.timer.setRadius(58);
+    /* --- Names high, hands beneath them ------------------------------- */
+    const plateWidth = Math.min(300, w * 0.4);
+    this.playerPlate.position.set(w * 0.27, h * 0.28);
+    this.playerPlate.resizeTo(plateWidth, h * 0.05);
+    this.bankerPlate.position.set(w * 0.73, h * 0.28);
+    this.bankerPlate.resizeTo(plateWidth, h * 0.05);
 
-    const handY = tableTop + tableHeight * 0.72;
-    this.playerAnchor.position.set(w * 0.26, handY);
+    const handScale = clamp(w / 1500, 0.34, 0.6);
+    const handY = h * 0.38;
+    this.playerAnchor.position.set(w * 0.27, handY);
     this.playerAnchor.scale.set(handScale);
-    this.bankerAnchor.position.set(w * 0.74, handY);
+    this.bankerAnchor.position.set(w * 0.73, handY);
     this.bankerAnchor.scale.set(handScale);
 
-    const plateWidth = Math.min(210, w * 0.38);
-    this.playerPlate.position.set(w * 0.26, tableTop + tableHeight * 0.42);
-    this.playerPlate.resizeTo(plateWidth, 84);
-    this.bankerPlate.position.set(w * 0.74, tableTop + tableHeight * 0.42);
-    this.bankerPlate.resizeTo(plateWidth, 84);
+    this.statusMessage.position.set(w * 0.5, h * 0.465);
+    this.statusMessage.scale.set(clamp(w / 1100, 0.55, 1));
+    this.timer.position.set(w * 0.5, h * 0.465);
+    this.timer.setRadius(clamp(h * 0.03, 28, 52));
 
-    const sideY = tableBottom + 70;
-    const mainY = sideY + 190;
-    this.layoutSpots(w, sideY, mainY, true);
+    /* --- Wager bands -------------------------------------------------- */
+    const bandHeight = clamp(h * 0.058, 56, 96);
+    const bandGap = bandHeight * 0.3;
+    this.layoutBands(w * 0.5, h * 0.55, bandHeight, bandGap, Math.min(w * 0.66, 640));
 
-    const controlY = h - margin - 74;
-    const trayWidth = w - margin * 2;
-    this.chipTray.position.set(w / 2, controlY);
-    this.chipTray.resizeTo(trayWidth, CHIP_SIZE * 0.8 + 24);
+    /* --- Results panel floats over the upper felt --------------------- */
+    // Too narrow for a permanent rail, so the list floats over the felt and
+    // starts closed — the history button brings it up on demand.
+    const panelWidth = Math.min(w * 0.56, 420);
+    const panelHeight = Math.min(h * 0.26, 460);
+    this.resultsPanel.position.set((w - panelWidth) / 2, h * 0.15);
+    this.resultsPanel.resizeTo(panelWidth, panelHeight);
+    this.roadmap.visible = false;
+    if (!this.portraitPanelInitialised) {
+      this.portraitPanelInitialised = true;
+      this.resultsPanel.setOpen(false);
+      this.buttons.history.setActive(false);
+    }
 
-    const buttonWidth = (w - margin * 2 - 30) / 4;
-    const buttonHeight = 56;
-    const buttonY = controlY - CHIP_SIZE * 0.8 - 44;
-    const startX = margin + buttonWidth / 2;
-    this.placeButton(this.buttons.clear, startX, buttonY, buttonWidth, buttonHeight);
-    this.placeButton(this.buttons.undo, startX + (buttonWidth + 10), buttonY, buttonWidth, buttonHeight);
-    this.placeButton(this.buttons.repeat, startX + (buttonWidth + 10) * 2, buttonY, buttonWidth, buttonHeight);
-    this.placeButton(this.buttons.double, startX + (buttonWidth + 10) * 3, buttonY, buttonWidth, buttonHeight);
-    this.buttons.sound.visible = false;
+    /* --- Controls: actions on the edges, stepper centred -------------- */
+    const radius = clamp(w * 0.062, 26, 52);
+    const actionY = h * 0.775;
+    // Anchor by the pill, not the disc: the caption is wider than the button
+    // and would otherwise run off the edge of a narrow screen.
+    const captionBudget = Math.min(w * 0.32, radius * 4.4);
+    const edgeInset = margin + captionBudget / 2;
+    this.placeButton(this.buttons.clear, edgeInset, actionY, radius);
+    this.placeButton(this.buttons.deal, w - edgeInset, actionY, radius);
+    this.buttons.clear.setCaptionMaxWidth(captionBudget);
+    this.buttons.deal.setCaptionMaxWidth(captionBudget);
+    this.placeButton(this.buttons.history, w * 0.5, actionY - radius * 0.1, radius * 0.72);
 
-    this.banner.position.set(w / 2, tableTop + tableHeight * 0.2);
-    this.banner.resizeTo(Math.min(620, w * 0.86), 200);
+    const smallRadius = radius * 0.58;
+    const smallGap = smallRadius * 2.6;
+    this.placeButton(this.buttons.undo, w * 0.5 - smallGap, actionY + radius * 1.55, smallRadius);
+    this.placeButton(this.buttons.repeat, w * 0.5, actionY + radius * 1.55, smallRadius);
+    this.placeButton(this.buttons.double, w * 0.5 + smallGap, actionY + radius * 1.55, smallRadius);
+    this.setSecondaryVisible(true);
+
+    const stepperWidth = Math.min(w * 0.72, 520);
+    const stepperHeight = clamp(h * 0.05, 58, 96);
+    this.stepper.position.set(w * 0.5, h - statusHeight - stepperHeight * 0.85);
+    this.stepper.resizeTo(stepperWidth, stepperHeight);
+
+    this.layoutStatusBar(w, h, statusHeight, true);
+
+    this.banner.position.set(w * 0.5, h * 0.42);
+    this.banner.resizeTo(Math.min(620, w * 0.86), clamp(h * 0.11, 120, 200));
   }
 
   /**
-   * Places the seven wagers. Main lines sit on the bottom row in the
-   * Player / Tie / Banker order every baccarat player expects; side bets ride
-   * above them.
+   * Three concentric arcs: Tie at the top, then Banker, then Player nearest the
+   * player's edge, each a little wider than the one above so they read as bands
+   * on a curved table rather than a stack of boxes.
    */
-  private layoutSpots(w: number, sideY: number, mainY: number, portrait: boolean): void {
-    const mainHeight = portrait ? 150 : 156;
-    const mainWidth = Math.min(portrait ? w * 0.3 : 360, w * 0.32);
-    const tieWidth = mainWidth * (portrait ? 0.82 : 0.74);
+  private layoutBands(
+    centreX: number,
+    topY: number,
+    bandHeight: number,
+    gap: number,
+    baseWidth: number,
+  ): void {
+    const order: BetType[] = [BetType.Tie, BetType.Banker, BetType.Player];
+    const layouts = new Map<BetType, SpotLayout>();
 
-    const positions: Partial<Record<BetType, SpotLayout>> = {
-      [BetType.Player]: {
-        x: w / 2 - mainWidth * 0.55 - tieWidth / 2,
-        y: mainY,
-        width: mainWidth,
-        height: mainHeight,
-      },
-      [BetType.Tie]: { x: w / 2, y: mainY, width: tieWidth, height: mainHeight },
-      [BetType.Banker]: {
-        x: w / 2 + mainWidth * 0.55 + tieWidth / 2,
-        y: mainY,
-        width: mainWidth,
-        height: mainHeight,
-      },
-    };
+    order.forEach((betType, index) => {
+      layouts.set(betType, {
+        x: centreX,
+        y: topY + index * (bandHeight + gap),
+        width: baseWidth * (1 + index * 0.06),
+        height: bandHeight,
+      });
+    });
 
+    // Side bets, when enabled, ride as a narrower row beneath the main bands.
     if (this.ctx.config.features.sidebets) {
-      const sideHeight = portrait ? 96 : 92;
-      const sideWidth = Math.min(portrait ? w * 0.23 : 232, w * 0.24);
-      const gap = portrait ? 8 : 14;
-      const step = sideWidth + gap;
-      const order = [BetType.PlayerPair, BetType.PerfectPair, BetType.Natural, BetType.BankerPair];
-      const start = w / 2 - (step * (order.length - 1)) / 2;
-      order.forEach((betType, index) => {
-        positions[betType] = {
+      const sideY = topY + order.length * (bandHeight + gap) + bandHeight * 0.35;
+      const sideWidth = baseWidth * 0.3;
+      const sideOrder = [
+        BetType.PlayerPair,
+        BetType.PerfectPair,
+        BetType.Natural,
+        BetType.BankerPair,
+      ];
+      const step = sideWidth + gap * 0.6;
+      const start = centreX - (step * (sideOrder.length - 1)) / 2;
+      sideOrder.forEach((betType, index) => {
+        layouts.set(betType, {
           x: start + index * step,
           y: sideY,
           width: sideWidth,
-          height: sideHeight,
-        };
+          height: bandHeight * 0.66,
+        });
       });
     }
 
     for (const [betType, spot] of this.spots) {
-      const layout = positions[betType];
+      const layout = layouts.get(betType);
       if (!layout) {
         spot.visible = false;
         continue;
       }
       spot.visible = true;
       spot.position.set(layout.x, layout.y);
-      spot.resizeTo(layout.width, layout.height);
+      spot.resizeTo(layout.width, layout.height, layout.height * 0.14);
     }
   }
 
-  private placeButton(button: Button, x: number, y: number, width: number, height: number): void {
-    button.position.set(x, y);
-    button.resizeTo(width, height);
+  private layoutStatusBar(w: number, h: number, height: number, compact: boolean): void {
+    const radius = height * 0.34;
+    const pad = compact ? 8 : 14;
+
+    this.statusBar.position.set(0, h - height);
+    this.statusBar.resizeTo(w, height, compact, pad * 2 + radius * 4.4);
+
+    const y = h - height / 2;
+    this.placeButton(this.buttons.info, pad + radius * 1.2, y, radius);
+    this.placeButton(this.buttons.sound, pad + radius * 3.6, y, radius);
   }
 
-  /** The felt: a soft rounded table body with a gold rail. */
-  private drawFelt(x: number, y: number, width: number, height: number): void {
-    const theme = this.ctx.config.theme;
-    const radius = Math.min(height / 2, 180);
-
-    this.feltArt
+  /** The dealer's discard tray, where spent cards are swept. */
+  private drawDiscardTray(width: number, height: number): void {
+    const hw = width / 2;
+    const hh = height / 2;
+    this.discardTray
       .clear()
-      .roundRect(x, y, width, height, radius)
-      .fill({ color: theme.feltMid, alpha: 0.92 })
-      .roundRect(x + 10, y + 10, width - 20, height - 20, radius - 8)
-      .stroke({ width: 2, color: theme.gold, alpha: 0.35 })
-      .roundRect(x, y, width, height, radius)
-      .stroke({ width: 8, color: 0x0a1f16, alpha: 0.9 });
+      .roundRect(-hw, -hh, width, height, 10)
+      .fill({ color: 0x16323d, alpha: 0.95 })
+      .roundRect(-hw + 5, -hh + 5, width - 10, height - 10, 7)
+      .fill({ color: 0x0b1c24, alpha: 0.95 })
+      .roundRect(-hw, -hh, width, height, 10)
+      .stroke({ width: 2, color: 0x2f7286, alpha: 0.85 })
+      .moveTo(-hw + 8, -hh + 9)
+      .lineTo(hw - 8, -hh + 9)
+      .stroke({ width: 2, color: 0xffffff, alpha: 0.12 });
+  }
+
+  private placeButton(button: ActionButton, x: number, y: number, radius: number): void {
+    button.position.set(x, y);
+    button.setRadius(radius);
+  }
+
+  private setSecondaryVisible(visible: boolean): void {
+    this.buttons.undo.visible = visible;
+    this.buttons.repeat.visible = visible;
+    this.buttons.double.visible = visible;
   }
 
   /* ---------------------------------------------------------------- *
@@ -657,6 +890,7 @@ export class GameScene extends Scene {
     for (const spot of this.spots.values()) spot.destroy();
     this.spots.clear();
     this.chipPool.destroy();
+    this.felt.mask = null;
     super.destroy();
   }
 }

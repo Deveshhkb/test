@@ -19,12 +19,7 @@ if (import.meta.env.DEV) {
 }
 
 await game.init(host, {
-  tableName: "Baccarat Classic",
-  currency: "IDR",
-  startingBalance: 10_000_000,
   logLevel: import.meta.env.DEV ? "info" : "warn",
-  timing: { bettingSeconds: 15 },
-  features: { roadmaps: true, sidebets: true, squeezeReveal: true },
 });
 
 // Vite HMR: tear the engine down before the module is replaced, otherwise every

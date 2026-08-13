@@ -39,6 +39,20 @@ function trimZero(value: number): string {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
+/**
+ * Money as the table shows it: symbol, grouped digits, fixed decimals —
+ * `$100,000.00`. Uses the cached `Intl` formatters above.
+ */
+export function formatMoney(
+  value: number,
+  symbol: string,
+  locale = "en-US",
+  decimals = 2,
+): string {
+  const sign = value < 0 ? "-" : "";
+  return `${sign}${symbol}${formatAmount(Math.abs(value), locale, decimals)}`;
+}
+
 export function formatCountdown(seconds: number): string {
   const whole = Math.max(0, Math.ceil(seconds));
   return whole < 10 ? `0${whole}` : String(whole);

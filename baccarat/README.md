@@ -92,9 +92,9 @@ game.on("round:settled", ({ netProfit, commission }) => {
 no-commission), 8-deck shoe with a randomly placed cut card, burn cards on shoe change,
 provably-replayable seeded RNG.
 
-**Betting** — Player, Banker, Tie, Player Pair, Banker Pair, Perfect Pair, Natural. Undo,
-repeat, double, clear. Per-spot limits, optimistic placement with server reconciliation,
-commission preview and potential-win readout.
+**Betting** — Player, Banker and Tie by default; Player Pair, Banker Pair, Perfect Pair and
+Natural switch on with `features.sidebets`. Undo, repeat, double, clear. Per-spot limits,
+optimistic placement with server reconciliation, and a paytable panel built from config.
 
 **Presentation** — shoe with riffle-shuffle and burn, alternating deal, two-half card flips,
 the squeeze on the decisive third card, rotated third-card placement, chip stacks decomposed
@@ -104,20 +104,30 @@ into real denominations, win glow / lose fade, payout counters, particle burst.
 Pig, plus shoe statistics — all derived from one pure engine and unit tested.
 
 **Platform** — landscape and portrait layouts, high-DPI, instant resize with no stretching,
-keyboard shortcuts (`1–9` chips, `U` undo, `R` repeat, `D` double, `C` clear, `M` mute),
-auto-pause when the tab is hidden.
+keyboard shortcuts (`1–9` chips, `U` undo, `R` repeat, `D` double, `C` clear, `M` mute,
+`H` history, `I` paytable, `Space`/`Enter` deal), auto-pause when the tab is hidden.
 
 ---
 
-## Reference video
+## Matching the reference
 
-The task referenced an attached gameplay video; no video file was present in this
-environment, and nothing in the repository or connected storage matched it. The flow,
-timings and layout here follow modern online-casino convention (the fallback the brief
-specifies) rather than a specific reference. Every timing, colour, payout, limit and layout
-constant is in `src/game/Config.ts` and changeable at runtime through `updateConfig()`, so
-matching a specific reference is a config exercise, not a code change — see
-[docs/ASSET_MANIFEST.md](docs/ASSET_MANIFEST.md) and `docs/ARCHITECTURE.md`.
+The layout, flow and copy follow the supplied reference screenshots of a single-player
+Pragmatic-style Baccarat table, in Indonesian:
+
+| Reference detail                      | How it is implemented                                        |
+| ------------------------------------- | ------------------------------------------------------------ |
+| Three arced bands: SERI / BANKER / PEMAIN | `BettingSpot` draws bowed bands; `features.sidebets: false` |
+| `0.95:1` banker odds, no separate commission | `payouts.BANKER = 0.95`, `rules.bankerCommission = 0`  |
+| No countdown — a **BAGI KARTU** button | `roundMode: "manual"`; betting stays open until `DEAL`        |
+| `[−] chip [+]` denomination stepper    | `ChipStepper`                                                 |
+| MIN/MAKS placard, chip float, card shoe | `LimitSign`, `ChipRack`, `CardShoeCase`                      |
+| Numbered 1–20 results list with a close button | `ResultsPanel`                                       |
+| `TUNAI` / `TOTAL TARUHAN` black strip  | `StatusBar`                                                   |
+| Indonesian copy throughout             | `config.strings` — every string is config, none is hard-coded |
+
+Nothing above is hard-coded: `roundMode`, `strings`, `payouts`, `limits`, `chips` and
+`theme` are all config, so the same engine serves a timed live table in English by passing
+a different object to `init()`.
 
 ---
 
@@ -139,8 +149,9 @@ src/
     types.ts                Domain model
     core/                   StateMachine, ObjectPool, ServiceContainer
     scenes/                 Scene base, Boot, Loading, Game
-    objects/                Card, Deck, Chip, ChipStack, BettingSpot, ChipTray,
-                            Timer, RoadMap, ScoreBoard, InfoBar, ResultBanner, Button
+    objects/                Card, Deck, Chip, ChipStack, BettingSpot, ChipStepper,
+                            ActionButton, StatusBar, ResultsPanel, InfoPanel,
+                            TableDressing, Timer, RoadMap, ScoreBoard, ResultBanner
     managers/               Animation, Audio, Bet, Card, Game, History,
                             Input, Resize, Roadmap
     rules/                  BaccaratRules, RoadmapEngine (+ their tests)

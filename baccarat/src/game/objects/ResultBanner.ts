@@ -4,7 +4,7 @@ import { Fonts, POOL_SIZE_PARTICLES, Palette } from "../Constants";
 import type { GameContext } from "../GameContext";
 import { Ease } from "../managers/AnimationManager";
 import { RoundOutcome, type RoundResult } from "../types";
-import { formatAmount, shade } from "../utils/Helpers";
+import { formatMoney, shade } from "../utils/Helpers";
 
 /**
  * The outcome announcement.
@@ -89,25 +89,32 @@ export class ResultBanner extends Container {
           ? theme.banker
           : theme.tie;
 
+    const strings = this.ctx.config.strings;
     this.headline.text =
       result.outcome === RoundOutcome.Tie
-        ? "TIE"
-        : `${result.outcome === RoundOutcome.Player ? "PLAYER" : "BANKER"} WINS`;
+        ? strings.tieWins
+        : result.outcome === RoundOutcome.Player
+          ? strings.playerWins
+          : strings.bankerWins;
     this.headline.tint = shade(color, 0.75);
 
-    const natural = result.natural ? "  NATURAL" : "";
+    const natural = result.natural ? `  ${strings.naturalTag}` : "";
     this.scoreLine.text = `${result.player.total} : ${result.banker.total}${natural}`;
+
+    const { currencySymbol, locale, currencyDecimals } = this.ctx.config;
+    const money = (value: number): string =>
+      formatMoney(value, currencySymbol, locale, currencyDecimals);
 
     if (staked <= 0) {
       this.payout.text = "";
     } else if (netProfit > 0) {
-      this.payout.text = `+${formatAmount(Math.round(netProfit), this.ctx.config.locale)}`;
+      this.payout.text = `+${money(netProfit)}`;
       this.payout.tint = Palette.win;
     } else if (netProfit < 0) {
-      this.payout.text = `-${formatAmount(Math.round(-netProfit), this.ctx.config.locale)}`;
+      this.payout.text = `-${money(-netProfit)}`;
       this.payout.tint = Palette.danger;
     } else {
-      this.payout.text = "PUSH";
+      this.payout.text = strings.push;
       this.payout.tint = Palette.white;
     }
 

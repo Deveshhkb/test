@@ -47,6 +47,8 @@ export enum ClientEvent {
   PlaceBet = "PLACE_BET",
   CancelBet = "CANCEL_BET",
   ConfirmBets = "CONFIRM_BETS",
+  /** Player-driven tables: close betting and deal immediately. */
+  Deal = "DEAL",
   RequestHistory = "REQUEST_HISTORY",
 }
 
@@ -81,6 +83,7 @@ export interface RoundStartPayload {
 
 export interface BettingOpenPayload {
   readonly roundId: string;
+  /** Zero means "no clock" — the player closes betting by dealing. */
   readonly durationSeconds: number;
   readonly serverTime: number;
 }
@@ -190,6 +193,10 @@ export interface JoinTablePayload {
   readonly tableId: string;
 }
 
+export interface DealPayload {
+  readonly roundId: string;
+}
+
 export interface RequestHistoryPayload {
   readonly tableId: string;
   readonly limit: number;
@@ -201,6 +208,7 @@ export interface ClientEventMap {
   [ClientEvent.PlaceBet]: PlaceBetPayload;
   [ClientEvent.CancelBet]: CancelBetPayload;
   [ClientEvent.ConfirmBets]: ConfirmBetsPayload;
+  [ClientEvent.Deal]: DealPayload;
   [ClientEvent.RequestHistory]: RequestHistoryPayload;
 }
 

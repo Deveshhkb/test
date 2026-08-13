@@ -14,9 +14,21 @@ import { shade } from "../utils/Helpers";
  * because a baccarat total updating from 3 to 9 on the third card is the single
  * most dramatic number in the game.
  */
+export interface ScorePlateOptions {
+  /**
+   * Plain plates show only their name until cards are on the table, matching a
+   * printed felt; the badge fades in with the hand.
+   */
+  readonly plain?: boolean;
+  readonly titleColor?: number;
+  readonly label?: string;
+}
+
 export class ScorePlate extends Container {
   private readonly ctx: GameContext;
   private readonly side: HandSide;
+  private readonly options: ScorePlateOptions;
+  private hasHand = false;
   private readonly plate = new Graphics();
   private readonly glow: Sprite;
   private readonly title: BitmapText;
@@ -28,10 +40,11 @@ export class ScorePlate extends Container {
   private height_ = 96;
   private value = 0;
 
-  constructor(ctx: GameContext, side: HandSide) {
+  constructor(ctx: GameContext, side: HandSide, options: ScorePlateOptions = {}) {
     super();
     this.ctx = ctx;
     this.side = side;
+    this.options = options;
 
     const color = side === HandSide.Player ? ctx.config.theme.player : ctx.config.theme.banker;
 
@@ -42,11 +55,11 @@ export class ScorePlate extends Container {
     this.glow.blendMode = "add";
 
     this.title = new BitmapText({
-      text: side === HandSide.Player ? "PLAYER" : "BANKER",
-      style: { fontFamily: Fonts.Label, fontSize: 26 },
+      text: (options.label ?? (side === HandSide.Player ? "PLAYER" : "BANKER")).toUpperCase(),
+      style: { fontFamily: Fonts.Label, fontSize: 40 },
     });
     this.title.anchor.set(0.5);
-    this.title.tint = shade(color, 0.7);
+    this.title.tint = options.titleColor ?? shade(color, 0.7);
 
     this.total = new BitmapText({
       text: "0",
@@ -82,18 +95,24 @@ export class ScorePlate extends Container {
     const color = this.side === HandSide.Player ? this.ctx.config.theme.player : this.ctx.config.theme.banker;
     const w = this.width_;
     const h = this.height_;
+    const plain = this.options.plain ?? false;
+    const showPlate = !plain || this.hasHand;
 
-    this.plate
-      .clear()
-      .roundRect(-w / 2, -h / 2, w, h, 14)
-      .fill({ color: shade(color, -0.7), alpha: 0.85 })
-      .roundRect(-w / 2, -h / 2, w, h, 14)
-      .stroke({ width: 2, color: shade(color, 0.2), alpha: 0.9 });
+    this.plate.clear();
+    if (showPlate) {
+      this.plate
+        .roundRect(-w / 2, -h / 2, w, h, 14)
+        .fill({ color: shade(color, -0.7), alpha: plain ? 0.72 : 0.85 })
+        .roundRect(-w / 2, -h / 2, w, h, 14)
+        .stroke({ width: 2, color: shade(color, 0.2), alpha: 0.9 });
+    }
+    this.total.visible = showPlate;
 
-    this.title.position.set(0, -h * 0.27);
-    this.title.scale.set(Math.min(1, w / 220));
+    const scale = Math.min(1, w / 220);
+    this.title.position.set(0, showPlate ? -h * 0.27 : 0);
+    this.title.scale.set(scale);
     this.total.position.set(0, h * 0.16);
-    this.total.scale.set(Math.min(1, w / 220));
+    this.total.scale.set(scale);
 
     this.glow.width = w * 1.8;
     this.glow.height = h * 2.4;
@@ -104,6 +123,13 @@ export class ScorePlate extends Container {
       .fill({ color: this.ctx.config.theme.pair, alpha: 0.9 });
     this.pairPlate.position.set(w * 0.36, -h * 0.42);
     this.pairBadge.position.set(w * 0.36, -h * 0.42);
+  }
+
+  /** Reveals the badge; a plain plate is just its name until this is set. */
+  setHandPresent(present: boolean): void {
+    if (this.hasHand === present) return;
+    this.hasHand = present;
+    this.redraw();
   }
 
   /** Animates the total to a new value. */
@@ -171,6 +197,7 @@ export class ScorePlate extends Container {
     this.scale.set(1);
     this.value = 0;
     this.total.text = "0";
+    this.hasHand = false;
     this.setPair(false);
     this.redraw();
   }

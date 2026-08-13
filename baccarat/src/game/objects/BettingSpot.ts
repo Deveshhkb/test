@@ -1,18 +1,18 @@
 import { BitmapText, Container, Graphics, Sprite } from "pixi.js";
 
-import { Fonts, Palette } from "../Constants";
+import { CHIP_SIZE, Fonts, Palette } from "../Constants";
 import type { ObjectPool } from "../core/ObjectPool";
 import type { GameContext } from "../GameContext";
 import { Ease } from "../managers/AnimationManager";
 import { BetType } from "../types";
-import { formatCompact, mixColor, shade } from "../utils/Helpers";
 import type { Chip } from "./Chip";
 import { ChipStack } from "./ChipStack";
 
-export type SpotShape = "rect" | "left-trapezoid" | "right-trapezoid" | "hex";
+export type SpotShape = "arc" | "rect" | "hex";
 
 export interface BettingSpotOptions {
   readonly betType: BetType;
+  /** Resolved from `config.strings` by the scene, so the spot stays language-free. */
   readonly label: string;
   readonly color: number;
   readonly shape?: SpotShape;
@@ -23,10 +23,11 @@ export interface BettingSpotOptions {
 /**
  * One clickable wager area.
  *
- * Holds its own geometry, its own chip pile and its own visual state machine
- * (idle / hover / armed / winning / losing / locked). The table just tells it
- * how big to be; everything else it decides for itself, which is what makes
- * adding a new side bet a three-line change.
+ * Drawn as a shallow arc band, the way the felt is printed on a real baccarat
+ * layout: the zones are concentric arcs curving with the table edge rather than
+ * plain rectangles. Each spot owns its geometry, its chip pile and its visual
+ * state machine (idle / hover / armed / winning / losing / locked); the table
+ * only tells it how big to be.
  */
 export class BettingSpot extends Container {
   readonly betType: BetType;
@@ -38,10 +39,10 @@ export class BettingSpot extends Container {
   private readonly glow: Sprite;
   private readonly title: BitmapText;
   private readonly payout: BitmapText;
-  private readonly limits: BitmapText;
 
-  private spotWidth = 200;
-  private spotHeight = 120;
+  private spotWidth = 320;
+  private spotHeight = 96;
+  private bow = 14;
   private hovering = false;
   private locked = false;
   private detach: (() => void) | null = null;
@@ -60,27 +61,21 @@ export class BettingSpot extends Container {
 
     this.title = new BitmapText({
       text: options.label.toUpperCase(),
-      style: { fontFamily: Fonts.Label, fontSize: options.primary ? 40 : 26 },
+      style: { fontFamily: Fonts.Label, fontSize: 44 },
     });
     this.title.anchor.set(0.5);
 
     this.payout = new BitmapText({
       text: this.payoutLabel(),
-      style: { fontFamily: Fonts.Label, fontSize: options.primary ? 26 : 20 },
+      style: { fontFamily: Fonts.Numeric, fontSize: 26 },
     });
     this.payout.anchor.set(0.5);
-    this.payout.alpha = 0.85;
-
-    this.limits = new BitmapText({
-      text: "",
-      style: { fontFamily: Fonts.Numeric, fontSize: 18 },
-    });
-    this.limits.anchor.set(0.5);
-    this.limits.alpha = 0.55;
+    this.payout.alpha = 0.9;
 
     this.stack = new ChipStack(ctx, chipPool);
 
-    this.addChild(this.glow, this.body, this.title, this.payout, this.limits, this.stack);
+    this.label = `spot-${options.betType}`;
+    this.addChild(this.glow, this.body, this.title, this.payout, this.stack);
     this.bindInput();
   }
 
@@ -88,97 +83,96 @@ export class BettingSpot extends Container {
    * Geometry
    * ---------------------------------------------------------------- */
 
-  /** Resizes and redraws. Called on every layout pass. */
-  resizeTo(width: number, height: number): void {
+  /** Resizes and redraws. `bow` is how far the arc dips at its centre. */
+  resizeTo(width: number, height: number, bow = height * 0.16): void {
     this.spotWidth = width;
     this.spotHeight = height;
+    this.bow = bow;
     this.redraw();
 
-    const primary = this.options.primary ?? false;
-    // Labels occupy the top half; the chip pile and its total own the bottom,
-    // so a staked spot never buries its own name.
-    this.title.y = -height * 0.3;
-    this.payout.y = -height * 0.08;
-    this.limits.y = height * 0.34;
-    this.glow.width = width * 1.5;
-    this.glow.height = height * 1.9;
-    this.stack.position.set(0, height * 0.12);
-    this.stack.setBadgeOffset(height * 0.22);
-
-    const scale = Math.min(1, width / (primary ? 260 : 170));
+    const scale = Math.min(1, width / 420, height / 100);
     this.title.scale.set(scale);
     this.payout.scale.set(scale);
-    this.limits.scale.set(scale);
+    this.title.position.set(0, -height * 0.16);
+    this.payout.position.set(0, height * 0.26);
+
+    this.glow.width = width * 1.15;
+    this.glow.height = height * 2.4;
+
+    // The pile sits in the left third of the band so the printed name and odds
+    // stay legible underneath a full stack.
+    this.stack.position.set(-width * 0.31, height * 0.02);
+    this.stack.setChipScale(Math.min(0.72, (height * 0.78) / CHIP_SIZE));
+    this.stack.setBadgeOffset(-height * 0.46);
   }
 
   private redraw(): void {
-    const w = this.spotWidth;
-    const h = this.spotHeight;
-    const color = this.options.color;
     const hasBet = this.stack.amount > 0;
-    const shape = this.options.shape ?? "rect";
+    const gold = this.ctx.config.theme.gold;
 
-    const fillTop = mixColor(color, 0x000000, 0.55);
-    const fillBottom = mixColor(color, 0x000000, 0.78);
-    const borderColor = this.hovering || hasBet ? shade(color, 0.45) : shade(color, 0.05);
+    // The reference layout is printed, not painted: a thin bright outline over
+    // the felt, with colour appearing only once the spot is live.
+    const border = this.locked
+      ? 0x8a8a8a
+      : hasBet
+        ? Palette.goldBright
+        : this.hovering
+          ? gold
+          : 0xd8d2d6;
     const borderWidth = hasBet ? 4 : this.hovering ? 3.5 : 2.5;
+    const fillAlpha = hasBet ? 0.24 : this.hovering ? 0.16 : 0.09;
 
     this.body.clear();
-    this.drawShape(this.body, shape, w, h, 14);
-    this.body.fill({ color: fillBottom, alpha: this.locked ? 0.55 : 0.82 });
+    this.trace(this.body);
+    this.body.fill({ color: hasBet ? this.options.color : 0x000000, alpha: fillAlpha });
+    this.trace(this.body);
+    this.body.stroke({
+      width: borderWidth,
+      color: border,
+      alignment: 0.5,
+      alpha: this.locked ? 0.5 : 0.95,
+    });
 
-    // Second, inset pass for the top-lit gradient band.
-    this.drawShape(this.body, shape, w, h * 0.58, 14, -h * 0.21);
-    this.body.fill({ color: fillTop, alpha: 0.55 });
-
-    this.drawShape(this.body, shape, w, h, 14);
-    this.body.stroke({ width: borderWidth, color: borderColor, alignment: 0.5, alpha: 0.95 });
-
-    this.title.tint = this.locked ? 0x8b8b8b : shade(color, 0.75);
-    this.payout.tint = this.locked ? 0x7a7a7a : Palette.goldBright;
+    this.title.tint = this.locked ? 0x9a9a9a : 0xffffff;
+    this.payout.tint = this.locked ? 0x8a8a8a : 0xe8e2e6;
   }
 
-  private drawShape(
-    g: Graphics,
-    shape: SpotShape,
-    w: number,
-    h: number,
-    radius: number,
-    offsetY = 0,
-  ): void {
-    const hw = w / 2;
-    const hh = h / 2;
-    const y = offsetY;
-    // The angled main-bet shapes are what give a baccarat layout its silhouette.
-    const skew = Math.min(30, w * 0.11);
+  /** Traces the band outline: bowed top and bottom edges, rounded corners. */
+  private trace(g: Graphics): void {
+    const shape = this.options.shape ?? "arc";
+    const hw = this.spotWidth / 2;
+    const hh = this.spotHeight / 2;
 
-    switch (shape) {
-      case "left-trapezoid":
-        g.moveTo(-hw + skew, -hh + y)
-          .lineTo(hw, -hh + y)
-          .lineTo(hw, hh + y)
-          .lineTo(-hw, hh + y)
-          .closePath();
-        break;
-      case "right-trapezoid":
-        g.moveTo(-hw, -hh + y)
-          .lineTo(hw - skew, -hh + y)
-          .lineTo(hw, hh + y)
-          .lineTo(-hw, hh + y)
-          .closePath();
-        break;
-      case "hex":
-        g.moveTo(-hw + skew, -hh + y)
-          .lineTo(hw - skew, -hh + y)
-          .lineTo(hw, y)
-          .lineTo(hw - skew, hh + y)
-          .lineTo(-hw + skew, hh + y)
-          .lineTo(-hw, y)
-          .closePath();
-        break;
-      default:
-        g.roundRect(-hw, -hh + y, w, h, radius);
+    if (shape === "rect") {
+      g.roundRect(-hw, -hh, this.spotWidth, this.spotHeight, Math.min(18, hh));
+      return;
     }
+
+    if (shape === "hex") {
+      const skew = Math.min(30, this.spotWidth * 0.11);
+      g.moveTo(-hw + skew, -hh)
+        .lineTo(hw - skew, -hh)
+        .lineTo(hw, 0)
+        .lineTo(hw - skew, hh)
+        .lineTo(-hw + skew, hh)
+        .lineTo(-hw, 0)
+        .closePath();
+      return;
+    }
+
+    const r = Math.min(20, hh * 0.6);
+    const bow = this.bow;
+
+    g.moveTo(-hw + r, -hh)
+      .quadraticCurveTo(0, -hh + bow * 2, hw - r, -hh)
+      .quadraticCurveTo(hw, -hh, hw, -hh + r)
+      .lineTo(hw, hh - r)
+      .quadraticCurveTo(hw, hh, hw - r, hh)
+      .quadraticCurveTo(0, hh + bow * 2, -hw + r, hh)
+      .quadraticCurveTo(-hw, hh, -hw, hh - r)
+      .lineTo(-hw, -hh + r)
+      .quadraticCurveTo(-hw, -hh, -hw + r, -hh)
+      .closePath();
   }
 
   /** Where chips should fly to, in stage space. */
@@ -191,26 +185,30 @@ export class BettingSpot extends Container {
    * Labels
    * ---------------------------------------------------------------- */
 
+  /**
+   * Odds exactly as the felt prints them: `1:1`, `8:1`, `0.95:1`. When a table
+   * takes commission separately rather than pricing it into the odds, that is
+   * appended instead of being silently dropped.
+   */
   private payoutLabel(): string {
-    const odds = this.ctx.config.payouts[this.betType];
-    if (this.betType === BetType.Banker && !this.ctx.config.rules.noCommission) {
-      const pct = Math.round(this.ctx.config.rules.bankerCommission * 100);
-      return this.ctx.config.features.commissionDisplay ? `1 : 1  -${pct}%` : "1 : 1";
+    const { payouts, rules, features } = this.ctx.config;
+    const odds = payouts[this.betType];
+    const text = `${Number.isInteger(odds) ? odds : odds.toFixed(2)}:1`;
+
+    if (this.betType === BetType.Banker && rules.bankerCommission > 0 && features.commissionDisplay) {
+      return `${text}  -${Math.round(rules.bankerCommission * 100)}%`;
     }
-    return `${odds} : 1`;
+    return text;
+  }
+
+  setLabel(label: string): void {
+    this.title.text = label.toUpperCase();
   }
 
   refreshLabels(): void {
     this.glow.texture = this.ctx.assets.get("fx_glow");
     this.payout.text = this.payoutLabel();
-    const limit = this.ctx.config.limits[this.betType];
-    this.limits.text = `${formatCompact(limit.min)} - ${formatCompact(limit.max)}`;
     this.redraw();
-  }
-
-  /** The table limits give way to the running total once a bet is placed. */
-  private syncLimitsVisibility(): void {
-    this.limits.visible = this.stack.amount === 0;
   }
 
   /* ---------------------------------------------------------------- *
@@ -228,7 +226,7 @@ export class BettingSpot extends Container {
         this.ctx.bets.place(this.betType);
       },
       onPressStart: () => {
-        this.ctx.animation.to(this.scale, { x: 0.97, y: 0.97, duration: 0.08 });
+        this.ctx.animation.to(this.scale, { x: 0.98, y: 0.98, duration: 0.08 });
       },
       onPressEnd: () => {
         this.ctx.animation.to(this.scale, { x: 1, y: 1, duration: 0.18, ease: Ease.uiIn });
@@ -242,7 +240,7 @@ export class BettingSpot extends Container {
     this.hovering = hovering;
     this.redraw();
     this.ctx.animation.to(this.glow, {
-      alpha: hovering ? 0.24 : 0,
+      alpha: hovering ? 0.2 : 0,
       duration: 0.2,
       ease: Ease.glow,
     });
@@ -267,7 +265,6 @@ export class BettingSpot extends Container {
       this.stack.setTotal(amount, delta !== 0);
       if (amount === 0) this.stack.clear(true);
     }
-    this.syncLimitsVisibility();
     this.redraw();
   }
 
@@ -282,7 +279,7 @@ export class BettingSpot extends Container {
       this.glow,
       { alpha: 0.1 },
       {
-        alpha: 0.7,
+        alpha: 0.65,
         duration: this.ctx.config.animation.winGlowDuration * 0.5,
         ease: Ease.glow,
         yoyo: true,
@@ -292,13 +289,13 @@ export class BettingSpot extends Container {
     this.ctx.animation.fromTo(
       this.scale,
       { x: 1, y: 1 },
-      { x: 1.05, y: 1.05, duration: 0.24, ease: Ease.uiIn, yoyo: true, repeat: 1 },
+      { x: 1.04, y: 1.04, duration: 0.24, ease: Ease.uiIn, yoyo: true, repeat: 1 },
     );
   }
 
   playLose(): void {
     this.ctx.animation.to(this.body, {
-      alpha: 0.45,
+      alpha: 0.4,
       duration: this.ctx.config.animation.loseFadeDuration,
       ease: Ease.uiOut,
     });

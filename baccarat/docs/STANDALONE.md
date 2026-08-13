@@ -43,15 +43,19 @@ the viewport and respects iOS safe areas in landscape.
 
 ## Controls
 
-| Input        | Action                     |
-| ------------ | -------------------------- |
-| Click / tap a spot | Place the selected chip |
-| `1` – `9`    | Select a chip denomination |
-| `U`          | Undo the last chip         |
-| `R`          | Repeat the previous stake  |
-| `D`          | Double the current stake   |
-| `C`          | Clear all bets             |
-| `M`          | Mute / unmute              |
+| Input                | Action                          |
+| -------------------- | ------------------------------- |
+| Click / tap a band   | Place the selected chip         |
+| `−` / `+`            | Step the chip denomination      |
+| **BAGI KARTU**       | Close betting and deal          |
+| **HAPUS TARUHAN**    | Clear all bets                  |
+| Clock button         | Toggle the 1–20 results list    |
+| ⓘ button             | Toggle the paytable             |
+| `1` – `9`            | Select a chip denomination      |
+| `Space` / `Enter`    | Deal                            |
+| `U` / `R` / `D` / `C`| Undo / repeat / double / clear   |
+| `H` / `I`            | Results list / paytable         |
+| `M`                  | Mute / unmute                   |
 
 Shortcuts are ignored while an `input`, `textarea` or `select` has focus, so they are safe
 inside a larger page.

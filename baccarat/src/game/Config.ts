@@ -37,6 +37,42 @@ export interface PayoutTable {
   readonly [BetType.PerfectPair]: number;
 }
 
+/**
+ * Every player-visible string. Swapping this object localises the whole game —
+ * no text is hard-coded in a display object.
+ */
+export interface StringsConfig {
+  readonly player: string;
+  readonly banker: string;
+  readonly tie: string;
+  readonly playerPair: string;
+  readonly bankerPair: string;
+  readonly perfectPair: string;
+  readonly natural: string;
+  readonly min: string;
+  readonly max: string;
+  readonly cash: string;
+  readonly totalBet: string;
+  /** Short form used when the status bar is narrow. */
+  readonly totalBetShort: string;
+  readonly clearBet: string;
+  readonly deal: string;
+  readonly history: string;
+  readonly undo: string;
+  readonly repeat: string;
+  readonly double: string;
+  readonly placeYourBets: string;
+  readonly betsClosed: string;
+  readonly dealing: string;
+  readonly playerWins: string;
+  readonly bankerWins: string;
+  readonly tieWins: string;
+  readonly naturalTag: string;
+  readonly push: string;
+  readonly results: string;
+  readonly noBet: string;
+}
+
 export interface RuleConfig {
   /** Commission withheld from a winning banker bet (0.05 = 5%). */
   readonly bankerCommission: number;
@@ -126,6 +162,8 @@ export interface ThemeConfig {
   readonly feltDeep: number;
   readonly feltMid: number;
   readonly feltLight: number;
+  /** Leather rail around the near edge of the table. */
+  readonly rail: number;
   readonly gold: number;
   readonly player: number;
   readonly banker: number;
@@ -163,8 +201,18 @@ export interface GameConfig {
   readonly tableId: string;
   readonly tableName: string;
   readonly currency: string;
+  /** Symbol shown next to money, e.g. `$` or `Rp`. */
+  readonly currencySymbol: string;
+  /** Decimal places for displayed money. */
+  readonly currencyDecimals: number;
   readonly locale: string;
   readonly startingBalance: number;
+  /**
+   * `manual` is the single-player RNG flow: betting stays open until the player
+   * taps Deal. `timed` is the live-table flow driven by a countdown.
+   */
+  readonly roundMode: "manual" | "timed";
+  readonly strings: StringsConfig;
   readonly chips: readonly ChipDefinition[];
   readonly limits: Readonly<Record<BetType, BetLimit>>;
   readonly payouts: PayoutTable;
@@ -190,35 +238,68 @@ export interface GameConfig {
 
 export const DEFAULT_CONFIG: GameConfig = {
   tableId: "BAC-01",
-  tableName: "Baccarat Classic",
-  currency: "IDR",
+  tableName: "Baccarat",
+  currency: "USD",
+  currencySymbol: "$",
+  currencyDecimals: 2,
   locale: "en-US",
-  startingBalance: 10_000_000,
+  startingBalance: 100_000,
+  roundMode: "manual",
+
+  strings: {
+    player: "PEMAIN",
+    banker: "BANKER",
+    tie: "SERI",
+    playerPair: "PEMAIN PAIR",
+    bankerPair: "BANKER PAIR",
+    perfectPair: "PERFECT PAIR",
+    natural: "NATURAL",
+    min: "MIN",
+    max: "MAKS",
+    cash: "TUNAI",
+    totalBet: "TOTAL TARUHAN",
+    totalBetShort: "TARUHAN",
+    clearBet: "HAPUS TARUHAN",
+    deal: "BAGI KARTU",
+    history: "RIWAYAT",
+    undo: "URUNGKAN",
+    repeat: "ULANGI",
+    double: "GANDAKAN",
+    placeYourBets: "PASANG TARUHAN ANDA",
+    betsClosed: "TARUHAN DITUTUP",
+    dealing: "MEMBAGIKAN KARTU",
+    playerWins: "PEMAIN MENANG",
+    bankerWins: "BANKER MENANG",
+    tieWins: "SERI",
+    naturalTag: "NATURAL",
+    push: "SERI",
+    results: "HASIL",
+    noBet: "PASANG TARUHAN DULU",
+  },
 
   chips: [
-    { value: 100, label: "100", color: 0xf2f2f2, accent: 0x9aa0a6 },
-    { value: 500, label: "500", color: 0xe0413f, accent: 0x7c1b1a },
-    { value: 10_000, label: "10K", color: 0x2f7fe0, accent: 0x123a6b },
-    { value: 25_000, label: "25K", color: 0x2eb872, accent: 0x114a2c },
-    { value: 100_000, label: "100K", color: 0x1f1f24, accent: 0x000000 },
-    { value: 500_000, label: "500K", color: 0x8a4ad8, accent: 0x3d1a6b },
-    { value: 1_000_000, label: "1M", color: 0xd9b45b, accent: 0x7a5c17 },
-    { value: 2_500_000, label: "2.5M", color: 0x00c2d1, accent: 0x02525a },
+    { value: 1, label: "1", color: 0xf5c542, accent: 0xb8860b },
+    { value: 5, label: "5", color: 0xe0413f, accent: 0x7c1b1a },
+    { value: 10, label: "10", color: 0x2f7fe0, accent: 0x123a6b },
+    { value: 25, label: "25", color: 0x2eb872, accent: 0x114a2c },
+    { value: 50, label: "50", color: 0x8a4ad8, accent: 0x3d1a6b },
+    { value: 100, label: "100", color: 0x1f1f24, accent: 0x000000 },
   ],
 
   limits: {
-    [BetType.Player]: { min: 100, max: 5_000_000 },
-    [BetType.Banker]: { min: 100, max: 5_000_000 },
-    [BetType.Tie]: { min: 100, max: 500_000 },
-    [BetType.PlayerPair]: { min: 100, max: 500_000 },
-    [BetType.BankerPair]: { min: 100, max: 500_000 },
-    [BetType.Natural]: { min: 100, max: 250_000 },
-    [BetType.PerfectPair]: { min: 100, max: 250_000 },
+    [BetType.Player]: { min: 1, max: 100 },
+    [BetType.Banker]: { min: 1, max: 100 },
+    [BetType.Tie]: { min: 1, max: 100 },
+    [BetType.PlayerPair]: { min: 1, max: 50 },
+    [BetType.BankerPair]: { min: 1, max: 50 },
+    [BetType.Natural]: { min: 1, max: 50 },
+    [BetType.PerfectPair]: { min: 1, max: 25 },
   },
 
   payouts: {
     [BetType.Player]: 1,
-    [BetType.Banker]: 1,
+    // Commission is folded into the odds, exactly as the table sign shows it.
+    [BetType.Banker]: 0.95,
     [BetType.Tie]: 8,
     [BetType.PlayerPair]: 11,
     [BetType.BankerPair]: 11,
@@ -227,7 +308,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   },
 
   rules: {
-    bankerCommission: 0.05,
+    // Zero: the 5% is already priced into the 0.95:1 banker payout above.
+    bankerCommission: 0,
     noCommission: false,
     noCommissionSixPayout: 0.5,
     pushOnTie: true,
@@ -292,6 +374,7 @@ export const DEFAULT_CONFIG: GameConfig = {
     feltDeep: Palette.feltDeep,
     feltMid: Palette.feltMid,
     feltLight: Palette.feltLight,
+    rail: Palette.rail,
     gold: Palette.gold,
     player: Palette.player,
     banker: Palette.banker,
@@ -305,8 +388,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   features: {
     roadmaps: true,
     beadPlate: true,
-    sidebets: true,
-    commissionDisplay: true,
+    sidebets: false,
+    commissionDisplay: false,
     squeezeReveal: true,
     burnCard: true,
     autoRepeatBet: false,

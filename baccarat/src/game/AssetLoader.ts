@@ -96,7 +96,7 @@ export class AssetLoader {
     BitmapFont.install({
       name: Fonts.Numeric,
       style: { fontFamily: family, fontSize: 44, fontWeight: "700", fill: 0xffffff },
-      chars: [["0", "9"], ".,+-% ", "KMB"],
+      chars: [["0", "9"], ".,+-%: ", "KMB$\u20ac\u00a3\u00a5"],
       resolution: 2,
       padding: 4,
     });
@@ -124,7 +124,7 @@ export class AssetLoader {
         ["a", "z"],
         ["A", "Z"],
         ["0", "9"],
-        " .,:%/×+-'",
+        " .,:%/×+-'$()",
       ],
       resolution: 2,
       padding: 4,

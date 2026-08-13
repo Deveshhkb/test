@@ -158,9 +158,13 @@ The two boot costs happen behind the loading screen, which is why the loading sc
 
 ## Verified in this environment
 
-The unit suite, typecheck, lint and an automated browser run (boot → bet → deal → draw →
-result → payout → resize to portrait → pause/resume → `updateConfig` → `reset` → `destroy`)
-all pass with zero console errors, and `destroy()` leaves no canvas behind. Frame-rate
-numbers were **not** validated here: the available browser runs on a software rasteriser
-(SwiftShader), so any FPS figure it produces reflects the CPU renderer, not the GPU path
-this guide describes. Measure on target hardware before quoting a number.
+The unit suite, typecheck and type-aware lint pass clean. An automated browser run drives
+every on-screen control with **real pointer clicks on the canvas** — chip stepper, all three
+wager bands, undo / double / clear, the results list, the paytable, mute, the Deal button,
+and the lifecycle API — and asserts the resulting state, including that the balance after a
+coup equals stake plus settlement to the cent. All 18 checks pass with zero console errors,
+and `destroy()` leaves no canvas behind.
+
+Frame-rate numbers were **not** validated here: the available browser runs on a software
+rasteriser (SwiftShader), so any FPS figure it produces reflects the CPU renderer, not the
+GPU path this guide describes. Measure on target hardware before quoting a number.

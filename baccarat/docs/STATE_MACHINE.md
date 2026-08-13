@@ -104,6 +104,23 @@ Any of `ROUND_START`, `reset()` or `destroy()` bumps the token, so an in-flight 
 stops at its next checkpoint. `abandonInFlightRound()` then clears the felt — without it,
 the next coup would deal a fourth card into a hand that still held three.
 
+## Manual vs timed tables
+
+`config.roundMode` selects who closes the betting window:
+
+| Mode              | `BETTING_OPEN` ends when…                       | UI                          |
+| ----------------- | ----------------------------------------------- | --------------------------- |
+| `manual` (default)| the player sends `DEAL`                         | Deal button, no countdown   |
+| `timed`           | the countdown reaches zero                      | Countdown ring, no Deal     |
+
+In manual mode the adapter reports `durationSeconds: 0` on `BETTING_OPEN`, the timer stays
+hidden, and `bettingEndsAt` is infinite so wagers are accepted indefinitely. A `DEAL` with
+nothing staked is refused — a table does not deal a coup nobody has bet on — and the client
+shows the refusal on the status line rather than silently ignoring the tap.
+
+Everything after `BETTING_CLOSED` is identical in both modes, which is why the same state
+machine, rules and presentation serve a solo RNG table and a live dealer feed.
+
 ## Pausing
 
 `pause()` stops the Pixi ticker, pauses every tracked GSAP animation, suspends the

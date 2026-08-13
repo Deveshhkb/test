@@ -157,13 +157,35 @@ describe("settlement", () => {
     expect(settlement?.returned).toBe(2000);
   });
 
-  it("withholds 5% commission on a banker win", () => {
+  /**
+   * Two ways to charge the banker's 5%, and the engine supports both. The
+   * default table prices it into the odds (0.95:1, as the felt prints it); a
+   * commission table pays 1:1 and withholds separately. Either way the player
+   * receives the same 950.
+   */
+  it("pays 0.95:1 when commission is priced into the odds", () => {
     const result = makeResult(
       [card(Rank.Two), card(Rank.King)],
       [card(Rank.Nine), card(Rank.King)],
     );
     const bets: BetMap = { [BetType.Banker]: 1000 };
     const [settlement] = BaccaratRules.settle(bets, result, config);
+    expect(settlement?.won).toBe(true);
+    expect(settlement?.commission).toBe(0);
+    expect(settlement?.profit).toBe(950);
+    expect(settlement?.returned).toBe(1950);
+  });
+
+  it("withholds 5% separately on a commission table", () => {
+    const commissionTable = createConfig({
+      payouts: { [BetType.Banker]: 1 },
+      rules: { bankerCommission: 0.05 },
+    });
+    const result = makeResult(
+      [card(Rank.Two), card(Rank.King)],
+      [card(Rank.Nine), card(Rank.King)],
+    );
+    const [settlement] = BaccaratRules.settle({ [BetType.Banker]: 1000 }, result, commissionTable);
     expect(settlement?.won).toBe(true);
     expect(settlement?.commission).toBe(50);
     expect(settlement?.profit).toBe(950);

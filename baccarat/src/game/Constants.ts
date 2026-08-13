@@ -33,9 +33,12 @@ export enum Depth {
 
 /** Brand palette. Overridable through `config.theme`. */
 export const Palette = {
-  feltDeep: 0x04120c,
-  feltMid: 0x0b3b26,
-  feltLight: 0x14603d,
+  /** Crimson baccarat felt, lit from above. */
+  feltDeep: 0x2a0710,
+  feltMid: 0x7d1730,
+  feltLight: 0xa02a48,
+  /** Tan leather rail along the player's edge. */
+  rail: 0x7a4a24,
   gold: 0xd9b45b,
   goldBright: 0xf6e2a0,
   player: 0x2f7fe0,

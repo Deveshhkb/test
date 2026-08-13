@@ -43,6 +43,11 @@ export class Deck extends Container {
     }
   }
 
+  /** Hides the built-in housing when the scene draws its own shoe. */
+  setHousingVisible(visible: boolean): void {
+    this.shoeBody.visible = visible;
+  }
+
   /** Re-resolves textures after an atlas rebuild. */
   refreshTextures(): void {
     const back = this.ctx.assets.get("card_back");
