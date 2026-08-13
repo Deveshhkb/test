@@ -10,16 +10,59 @@ import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001' ||'http://127.0.0.1:3000,http://127.0.0.1:3001')
-  .split(',')
-  .map((o) => o.trim());
+// Origins allowed to call this API with credentials. Production domains come
+// from CORS_ORIGINS; local dev hosts are always permitted so a developer
+// hitting 127.0.0.1 instead of localhost isn't rejected.
+const DEV_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+];
 
-app.use(helmet());
+const allowedOrigins = [
+  ...new Set(
+    (process.env.CORS_ORIGINS || '')
+      .split(',')
+      .map((o) => o.trim().replace(/\/$/, '')) // tolerate trailing slashes
+      .filter(Boolean)
+      .concat(process.env.NODE_ENV === 'production' ? [] : DEV_ORIGINS)
+  ),
+];
+
+if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+  console.warn(
+    '[cors] CORS_ORIGINS is not set — every browser request will be blocked.\n' +
+      '       Set it to your site origin(s), e.g.\n' +
+      '       CORS_ORIGINS=https://clothinary.cloudpunch.in,https://admin.clothinary.cloudpunch.in'
+  );
+}
+
+const rejectedOrigins = new Set();
+
+app.use(helmet({
+  // The API is served from a different subdomain than the storefront, so the
+  // default same-origin resource policy would block it.
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error('Not allowed by CORS'));
+      // No Origin header = same-origin, curl, or a server-side call.
+      if (!origin) return cb(null, true);
+      if (allowedOrigins.includes(origin.replace(/\/$/, ''))) return cb(null, true);
+
+      // Reject WITHOUT throwing. Passing an Error here would surface as a
+      // confusing 500 on the CORS preflight; returning false simply omits the
+      // CORS headers so the browser reports a proper CORS error instead.
+      if (!rejectedOrigins.has(origin)) {
+        rejectedOrigins.add(origin);
+        console.warn(
+          `[cors] Blocked origin "${origin}". Add it to CORS_ORIGINS to allow it. ` +
+            `Currently allowed: ${allowedOrigins.join(', ') || '(none)'}`
+        );
+      }
+      return cb(null, false);
     },
     credentials: true,
   })

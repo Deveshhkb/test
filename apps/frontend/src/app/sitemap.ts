@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { safeApi } from '@/lib/api';
 import type { Product } from '@/lib/types';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000' || 'http://127.0.0.1:3000';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = ['', '/men', '/women', '/footwear', '/accessories', '/collections/new-arrivals', '/collections/best-sellers', '/collections/trending'].map(

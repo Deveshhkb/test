@@ -49,6 +49,10 @@ interface NavItem {
   specials?: Special[];
 }
 
+// Admin panel lives on its own host in production; falls back to the local
+// dev port when NEXT_PUBLIC_ADMIN_URL isn't set.
+const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001';
+
 // Build a category page link with an optional sub-category query.
 const sub = (base: string, q: string): MegaLink => ({
   label: q,
@@ -324,7 +328,7 @@ export default function Header() {
                         <MenuLink href="/account/wishlist">{t('common.wishlist')}</MenuLink>
                         <MenuLink href="/account/addresses">{t('common.addresses')}</MenuLink>
                         {user.role === 'admin' && (
-                          <MenuLink href="http://localhost:3001">{t('common.adminPanel')}</MenuLink>
+                          <MenuLink href={ADMIN_URL}>{t('common.adminPanel')}</MenuLink>
                         )}
                         <button
                           onClick={() => {
