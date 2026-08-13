@@ -1,5 +1,5 @@
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://api.clothinary.cloudpunch.in/api';
+  process.env.NEXT_PUBLIC_API_URL || 'https://api.clothinary.cloudpunch.in/api';
 
 /**
  * URL used for server-side (SSR/ISR) fetches. In containerized deploys the
