@@ -88,8 +88,10 @@ app.use(helmet({
 }));
 app.use(
   cors((req, done) => {
-    const derived = allowedOrigins.length ? [] : siblingOrigins(req);
-    const permitted = allowedOrigins.concat(derived);
+    // Sibling origins are always included: they are the same site as this API
+    // by construction, so a deploy works even if CORS_ORIGINS was left at its
+    // placeholder value.
+    const permitted = allowedOrigins.concat(siblingOrigins(req));
 
     done(null, {
       credentials: true,
@@ -139,7 +141,7 @@ app.get('/', (req, res) => res.json({ name: 'Clothinary API', version: '1.0.0' }
  */
 app.get('/api/cors-check', (req, res) => {
   const origin = req.headers.origin || null;
-  const derived = allowedOrigins.length ? [] : siblingOrigins(req);
+  const derived = siblingOrigins(req);
   const permitted = allowedOrigins.concat(derived);
   res.json({
     success: true,

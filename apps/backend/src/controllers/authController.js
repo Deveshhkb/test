@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import User from '../models/User.js';
 import { asyncHandler, ApiError } from '../utils/asyncHandler.js';
-import { sendAuthToken } from '../utils/token.js';
+import { sendAuthToken, authCookieOptions } from '../utils/token.js';
 
 // POST /api/auth/register
 export const register = asyncHandler(async (req, res) => {
@@ -29,7 +29,10 @@ export const login = asyncHandler(async (req, res) => {
 
 // POST /api/auth/logout
 export const logout = asyncHandler(async (req, res) => {
-  res.clearCookie('token');
+  // Flags must match those used when setting the cookie, or the browser
+  // keeps it and the user stays logged in.
+  const { maxAge, ...flags } = authCookieOptions(req);
+  res.clearCookie('token', flags);
   res.json({ success: true, message: 'Logged out.' });
 });
 
