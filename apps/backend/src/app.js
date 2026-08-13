@@ -20,15 +20,33 @@ const DEV_ORIGINS = [
   'http://127.0.0.1:3001',
 ];
 
+const parseOrigins = (value) =>
+  (value || '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, '')) // tolerate trailing slashes
+    .filter(Boolean);
+
+// Fall back to FRONTEND_URL so a deploy that only sets that variable still
+// works, rather than silently blocking every browser request.
+const configuredOrigins = parseOrigins(process.env.CORS_ORIGINS);
+const fallbackOrigins = configuredOrigins.length
+  ? []
+  : parseOrigins(process.env.FRONTEND_URL);
+
 const allowedOrigins = [
   ...new Set(
-    (process.env.CORS_ORIGINS || '')
-      .split(',')
-      .map((o) => o.trim().replace(/\/$/, '')) // tolerate trailing slashes
-      .filter(Boolean)
+    configuredOrigins
+      .concat(fallbackOrigins)
       .concat(process.env.NODE_ENV === 'production' ? [] : DEV_ORIGINS)
   ),
 ];
+
+if (fallbackOrigins.length) {
+  console.warn(
+    `[cors] CORS_ORIGINS is not set — falling back to FRONTEND_URL (${fallbackOrigins.join(', ')}). ` +
+      'Set CORS_ORIGINS explicitly to list every site that calls this API.'
+  );
+}
 
 if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
   console.warn(
@@ -84,6 +102,25 @@ app.use(
 );
 
 app.get('/', (req, res) => res.json({ name: 'Clothinary API', version: '1.0.0' }));
+
+/**
+ * Deployment self-check. Reports whether the caller's Origin is allowed, so a
+ * CORS misconfiguration can be diagnosed from the browser without server logs.
+ * Only echoes the operator's own site origins — nothing secret.
+ */
+app.get('/api/cors-check', (req, res) => {
+  const origin = req.headers.origin || null;
+  res.json({
+    success: true,
+    yourOrigin: origin,
+    allowed: origin ? allowedOrigins.includes(origin.replace(/\/$/, '')) : null,
+    allowedOrigins,
+    nodeEnv: process.env.NODE_ENV || '(unset)',
+    hint:
+      'If "allowed" is false, add "yourOrigin" to the CORS_ORIGINS environment variable and restart the server.',
+  });
+});
+
 app.use('/api', routes);
 
 app.use(notFound);
