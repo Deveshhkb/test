@@ -9,6 +9,7 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatPrice, cn } from '@/lib/utils';
 import { loadRazorpay } from '@/lib/razorpay';
+import { validateAddress, hasErrors, type AddressErrors } from '@/lib/validateAddress';
 import type { Address } from '@/lib/types';
 
 const EMPTY_ADDR = {
@@ -35,6 +36,8 @@ export default function CheckoutPage() {
   const [payment, setPayment] = useState<'razorpay' | 'cod'>('razorpay');
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<AddressErrors>({});
+  const [savingAddress, setSavingAddress] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login?redirect=/checkout');
@@ -51,15 +54,31 @@ export default function CheckoutPage() {
       .catch(() => setShowForm(true));
   }, []);
 
-  const saveAddress = async () => {
-    const d = await api<{ address: Address }>('/addresses', {
-      method: 'POST',
-      body: JSON.stringify({ ...form, isDefault: addresses.length === 0 }),
-    });
-    setAddresses((prev) => [...prev, d.address]);
-    setSelected(d.address._id);
-    setShowForm(false);
-    setForm(EMPTY_ADDR);
+  const saveAddress = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setError('');
+
+    const errors = validateAddress(form);
+    setFieldErrors(errors);
+    if (hasErrors(errors)) return;
+
+    setSavingAddress(true);
+    try {
+      const d = await api<{ address: Address }>('/addresses', {
+        method: 'POST',
+        body: JSON.stringify({ ...form, isDefault: addresses.length === 0 }),
+      });
+      setAddresses((prev) => [...prev, d.address]);
+      setSelected(d.address._id);
+      setShowForm(false);
+      setForm(EMPTY_ADDR);
+      setFieldErrors({});
+    } catch (err) {
+      // Previously unhandled, which surfaced as an uncaught promise rejection.
+      setError(err instanceof Error ? err.message : 'Could not save the address.');
+    } finally {
+      setSavingAddress(false);
+    }
   };
 
   const placeOrder = async () => {
@@ -182,20 +201,20 @@ export default function CheckoutPage() {
               ))}
 
               {showForm ? (
-                <div className="grid gap-3 rounded-xl border border-ink/15 p-4 sm:grid-cols-2">
-                  <Input label="Full Name" v={form.fullName} on={(v) => setForm({ ...form, fullName: v })} />
-                  <Input label="Phone" v={form.phone} on={(v) => setForm({ ...form, phone: v })} />
-                  <Input label="Address Line 1" v={form.line1} on={(v) => setForm({ ...form, line1: v })} full />
+                <form noValidate onSubmit={saveAddress} className="grid gap-3 rounded-xl border border-ink/15 p-4 sm:grid-cols-2">
+                  <Input label="Full Name" v={form.fullName} on={(v) => setForm({ ...form, fullName: v })} err={fieldErrors.fullName} />
+                  <Input label="Phone" v={form.phone} on={(v) => setForm({ ...form, phone: v })} err={fieldErrors.phone} inputMode="tel" />
+                  <Input label="Address Line 1" v={form.line1} on={(v) => setForm({ ...form, line1: v })} err={fieldErrors.line1} full />
                   <Input label="Address Line 2 (optional)" v={form.line2} on={(v) => setForm({ ...form, line2: v })} full />
-                  <Input label="City" v={form.city} on={(v) => setForm({ ...form, city: v })} />
-                  <Input label="State" v={form.state} on={(v) => setForm({ ...form, state: v })} />
-                  <Input label="Pincode" v={form.pincode} on={(v) => setForm({ ...form, pincode: v })} />
+                  <Input label="City" v={form.city} on={(v) => setForm({ ...form, city: v })} err={fieldErrors.city} />
+                  <Input label="State" v={form.state} on={(v) => setForm({ ...form, state: v })} err={fieldErrors.state} />
+                  <Input label="Pincode" v={form.pincode} on={(v) => setForm({ ...form, pincode: v })} err={fieldErrors.pincode} inputMode="numeric" />
                   <div className="sm:col-span-2">
-                    <button onClick={saveAddress} className="btn-primary !py-2.5">
-                      Save Address
+                    <button type="submit" disabled={savingAddress} className="btn-primary !py-2.5">
+                      {savingAddress ? 'Saving…' : 'Save Address'}
                     </button>
                   </div>
-                </div>
+                </form>
               ) : (
                 <button onClick={() => setShowForm(true)} className="text-sm font-semibold text-nova-600">
                   + Add a new address
@@ -322,11 +341,32 @@ function Choice({ active, onClick, icon, title, desc }: { active: boolean; onCli
   );
 }
 
-function Input({ label, v, on, full }: { label: string; v: string; on: (v: string) => void; full?: boolean }) {
+function Input({
+  label,
+  v,
+  on,
+  full,
+  err,
+  inputMode,
+}: {
+  label: string;
+  v: string;
+  on: (v: string) => void;
+  full?: boolean;
+  err?: string;
+  inputMode?: 'tel' | 'numeric' | 'text';
+}) {
   return (
     <div className={full ? 'sm:col-span-2' : ''}>
       <label className="mb-1 block text-xs font-medium text-ink/60">{label}</label>
-      <input value={v} onChange={(e) => on(e.target.value)} className="input !py-2.5" />
+      <input
+        value={v}
+        onChange={(e) => on(e.target.value)}
+        inputMode={inputMode}
+        aria-invalid={Boolean(err)}
+        className={cn('input !py-2.5', err && 'border-accent focus:border-accent')}
+      />
+      {err && <p className="mt-1 text-xs text-accent">{err}</p>}
     </div>
   );
 }

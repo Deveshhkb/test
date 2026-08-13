@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Trash2, MapPin, Plus } from 'lucide-react';
 import { api } from '@/lib/api';
+import { validateAddress, hasErrors, type AddressErrors } from '@/lib/validateAddress';
+import { cn } from '@/lib/utils';
 import type { Address } from '@/lib/types';
 
 const EMPTY = { fullName: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '', country: 'India' };
@@ -11,6 +13,9 @@ export default function AddressesPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [form, setForm] = useState(EMPTY);
   const [showForm, setShowForm] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<AddressErrors>({});
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const load = () =>
     api<{ addresses: Address[] }>('/addresses')
@@ -23,10 +28,24 @@ export default function AddressesPage() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    await api('/addresses', { method: 'POST', body: JSON.stringify({ ...form, isDefault: addresses.length === 0 }) });
-    setForm(EMPTY);
-    setShowForm(false);
-    load();
+    setError('');
+
+    const errors = validateAddress(form);
+    setFieldErrors(errors);
+    if (hasErrors(errors)) return;
+
+    setSaving(true);
+    try {
+      await api('/addresses', { method: 'POST', body: JSON.stringify({ ...form, isDefault: addresses.length === 0 }) });
+      setForm(EMPTY);
+      setFieldErrors({});
+      setShowForm(false);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save the address.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const remove = async (id: string) => {
@@ -49,16 +68,19 @@ export default function AddressesPage() {
       </div>
 
       {showForm && (
-        <form onSubmit={save} className="mt-5 grid gap-3 rounded-2xl border border-ink/10 p-5 sm:grid-cols-2">
-          <Field label="Full Name" v={form.fullName} on={(v) => setForm({ ...form, fullName: v })} />
-          <Field label="Phone" v={form.phone} on={(v) => setForm({ ...form, phone: v })} />
-          <Field label="Address Line 1" v={form.line1} on={(v) => setForm({ ...form, line1: v })} full />
+        <form noValidate onSubmit={save} className="mt-5 grid gap-3 rounded-2xl border border-ink/10 p-5 sm:grid-cols-2">
+          <Field label="Full Name" v={form.fullName} on={(v) => setForm({ ...form, fullName: v })} err={fieldErrors.fullName} />
+          <Field label="Phone" v={form.phone} on={(v) => setForm({ ...form, phone: v })} err={fieldErrors.phone} inputMode="tel" />
+          <Field label="Address Line 1" v={form.line1} on={(v) => setForm({ ...form, line1: v })} err={fieldErrors.line1} full />
           <Field label="Address Line 2" v={form.line2} on={(v) => setForm({ ...form, line2: v })} full />
-          <Field label="City" v={form.city} on={(v) => setForm({ ...form, city: v })} />
-          <Field label="State" v={form.state} on={(v) => setForm({ ...form, state: v })} />
-          <Field label="Pincode" v={form.pincode} on={(v) => setForm({ ...form, pincode: v })} />
+          <Field label="City" v={form.city} on={(v) => setForm({ ...form, city: v })} err={fieldErrors.city} />
+          <Field label="State" v={form.state} on={(v) => setForm({ ...form, state: v })} err={fieldErrors.state} />
+          <Field label="Pincode" v={form.pincode} on={(v) => setForm({ ...form, pincode: v })} err={fieldErrors.pincode} inputMode="numeric" />
+          {error && <p className="sm:col-span-2 text-sm text-accent">{error}</p>}
           <div className="sm:col-span-2">
-            <button className="btn-primary !py-2.5">Save Address</button>
+            <button disabled={saving} className="btn-primary !py-2.5">
+              {saving ? 'Saving…' : 'Save Address'}
+            </button>
           </div>
         </form>
       )}
@@ -98,11 +120,32 @@ export default function AddressesPage() {
   );
 }
 
-function Field({ label, v, on, full }: { label: string; v: string; on: (v: string) => void; full?: boolean }) {
+function Field({
+  label,
+  v,
+  on,
+  full,
+  err,
+  inputMode,
+}: {
+  label: string;
+  v: string;
+  on: (v: string) => void;
+  full?: boolean;
+  err?: string;
+  inputMode?: 'tel' | 'numeric' | 'text';
+}) {
   return (
     <div className={full ? 'sm:col-span-2' : ''}>
       <label className="mb-1 block text-xs font-medium text-ink/60">{label}</label>
-      <input required value={v} onChange={(e) => on(e.target.value)} className="input !py-2.5" />
+      <input
+        value={v}
+        onChange={(e) => on(e.target.value)}
+        inputMode={inputMode}
+        aria-invalid={Boolean(err)}
+        className={cn('input !py-2.5', err && 'border-accent focus:border-accent')}
+      />
+      {err && <p className="mt-1 text-xs text-accent">{err}</p>}
     </div>
   );
 }
