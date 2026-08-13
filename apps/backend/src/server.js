@@ -8,7 +8,7 @@ const start = async () => {
   try {
     await connectDB();
     app.listen(PORT, () => {
-      console.log(`🚀 Clothinary API running on http://localhost:${PORT}`);
+      // console.log(`🚀 Clothinary API running on http://localhost:${PORT}`);
     });
   } catch (err) {
     console.error('\n❌ Failed to start the Clothinary API.');
