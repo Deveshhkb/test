@@ -78,6 +78,17 @@ export class WheelManager {
   /** Ball angle relative to its destination pocket - driven during the drop. */
   private readonly dropMotion = { offset: 0, progress: 0 };
   private ballRadius: number = WHEEL_GEOMETRY.BALL_TRACK;
+  /** Accumulated roll of the ball about its own centre. */
+  private ballRoll = 0;
+  /**
+   * Per-spin randomisation.
+   *
+   * Re-drawn at every launch so no two spins are frame-identical. Without this
+   * the rim phase is the same arc every round, which is the clearest tell that
+   * an animation is canned - players notice the repetition long before they can
+   * say what it is they are noticing.
+   */
+  private variation = { launchScale: 1, wobblePhase: 0, wobbleRate: 3, scatterPhase: 0 };
 
   /** Pocket the current spin is committed to. */
   private targetPocket?: Pocket;
@@ -137,11 +148,29 @@ export class WheelManager {
     // The wheel head never stops - a live wheel turns between rounds too.
     this.wheelAngle += this.wheelMotion.speed * TAU * deltaSeconds;
 
+    // Roll without slipping: arc length travelled divided by the ball's radius.
+    // Both are fractions of the wheel radius, so it cancels to a pure ratio and
+    // holds at any wheel size.
+    if (this.phase === SpinPhase.TRACK || this.phase === SpinPhase.DROP) {
+      const arc = this.ballMotion.speed * TAU * deltaSeconds * this.ballRadius;
+      this.ballRoll += arc / WHEEL_GEOMETRY.BALL;
+    }
+
     switch (this.phase) {
-      case SpinPhase.TRACK:
+      case SpinPhase.TRACK: {
         // Free integration: no constraint, no target.
         this.ballAngle += this.ballMotion.speed * TAU * deltaSeconds;
+
+        // The rim is not a perfect circle and the ball is not perfectly round.
+        // A shallow radial oscillation, decaying as the ball loses speed, stops
+        // the track phase looking like a point on a mathematical circle.
+        const energy = clamp(Math.abs(this.ballMotion.speed) / this.config.ballSpeed, 0, 1);
+        this.variation.wobblePhase += deltaSeconds * this.variation.wobbleRate;
+        this.ballRadius =
+          WHEEL_GEOMETRY.BALL_TRACK +
+          Math.sin(this.variation.wobblePhase) * 0.006 * energy;
         break;
+      }
 
       case SpinPhase.DROP:
         this.applyDropMotion();
@@ -178,9 +207,12 @@ export class WheelManager {
 
     // Angular scatter as the ball clatters off deflectors and frets. Amplitude
     // is roughly one pocket width and decays quadratically to nothing.
+    // Scatter as the ball clatters off deflectors and frets. The phase offset
+    // is re-drawn per spin, so the bounce pattern differs every round instead
+    // of replaying the same symmetric wobble.
     const scatterAmplitude = this.wheel.getPocketStep() * 1.6;
     const scatter =
-      Math.sin(progress * this.config.ballBounces * Math.PI) *
+      Math.sin(this.variation.scatterPhase + progress * this.config.ballBounces * Math.PI) *
       scatterAmplitude *
       (1 - progress) *
       (1 - progress);
@@ -205,6 +237,7 @@ export class WheelManager {
     this.wheel.setRotation(this.wheelAngle);
     this.wheel.setMotionBlur(this.wheelMotion.speed);
     this.ball.setPolar(this.ballAngle, this.ballRadius);
+    this.ball.setRoll(this.ballRoll);
 
     // Trail intensity tracks ball speed, and dies as it settles.
     const speed = Math.abs(this.ballMotion.speed);
@@ -277,14 +310,30 @@ export class WheelManager {
   private runTrack(token: number): Promise<void> {
     this.phase = SpinPhase.TRACK;
 
+    // Fresh randomisation for this spin.
+    this.variation = {
+      // +/-12% on the launch, so the ball does not complete the same number of
+      // laps every round.
+      launchScale: randomRange(this.random, 0.88, 1.12),
+      wobblePhase: randomRange(this.random, 0, TAU),
+      wobbleRate: randomRange(this.random, 2.2, 4.1),
+      scatterPhase: randomRange(this.random, 0, Math.PI),
+    };
+
     // Ball runs against the wheel, as it must.
     const direction = this.config.wheelSpinSpeed >= 0 ? -1 : 1;
-    this.ballMotion.speed = this.config.ballSpeed * direction;
+    this.ballMotion.speed = this.config.ballSpeed * this.variation.launchScale * direction;
     this.ballAngle = this.wheelAngle + randomRange(this.random, 0, TAU);
     this.ballRadius = WHEEL_GEOMETRY.BALL_TRACK;
+    this.ballRoll = randomRange(this.random, 0, TAU);
 
     this.ball.show();
-    this.ball.setTrailEnabled(true);
+    // Trail deliberately off. It was tuned when the ball was twice this size;
+    // at the reference's actual scale the tail segments stop reading as motion
+    // blur and start reading as dirt on the wheel. The roll rotation carries
+    // the sense of speed instead. `Ball.setTrailEnabled(true)` re-enables it
+    // for a deployment that wants a larger ball.
+    this.ball.setTrailEnabled(false);
     this.audio.playLoop(SoundId.BALL_ROLL, 0.55);
 
     return new Promise((resolve) => {
@@ -292,8 +341,14 @@ export class WheelManager {
         // The ball still carries real speed when it leaves the track - it falls
         // because it drops below the speed the rim can hold it at, not because
         // it stopped.
-        speed: this.config.ballSpeed * direction * 0.38,
-        duration: this.config.ballTrackDuration,
+        // Still carrying real speed when it leaves the rim - it falls because it
+        // drops below the speed the track can hold it at, not because it stopped.
+        // Varied per spin so the hand-off to the drop is never identical.
+        speed:
+          this.config.ballSpeed *
+          direction *
+          randomRange(this.random, 0.32, 0.46),
+        duration: this.config.ballTrackDuration * randomRange(this.random, 0.9, 1.12),
         ease: AnimationManager.EASE_BALL_TRACK,
         onUpdate: () => {
           // Pitch and level of the rolling bed follow the ball's speed.
@@ -473,6 +528,7 @@ export class WheelManager {
     this.wheelMotion.speed = this.config.wheelSpeed;
     this.ballMotion.speed = 0;
     this.ballRadius = WHEEL_GEOMETRY.BALL_TRACK;
+    this.ballRoll = 0;
     this.dropMotion.offset = 0;
     this.dropMotion.progress = 0;
 

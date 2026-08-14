@@ -95,6 +95,18 @@ export class Ball extends Container {
     return this.radiusFraction;
   }
 
+  /**
+   * Spin the ball about its own centre.
+   *
+   * A roulette ball rolls, it does not slide, and the artwork carries a
+   * specular highlight - so rotating the sprite is what turns a dot sliding
+   * round a circle into a ball travelling round a track. Cheap, and it is the
+   * single detail that most improves how the rim phase reads.
+   */
+  public setRoll(rotation: number): void {
+    this.sprite.rotation = rotation;
+  }
+
   private applyPosition(): void {
     const distance = this.wheelRadius * this.radiusFraction;
     // Screen space: +x right, +y down. Angle 0 must point up.

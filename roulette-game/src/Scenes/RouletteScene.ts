@@ -201,7 +201,14 @@ export class RouletteScene extends Scene {
     );
 
     /* ----- Assembly ----- */
+    // Every layer needs an explicit zIndex. `sortableChildren` sorts by it, and
+    // anything left at the default 0 sinks below the board - which is exactly
+    // how the dim scrim ended up painting *behind* the felt it was meant to
+    // darken, leaving the layout legible straight through the wheel overlay.
+    this.background.zIndex = LAYER.BACKGROUND;
+    this.feltLayer.zIndex = LAYER.FELT;
     this.tableLayer.zIndex = LAYER.TABLE;
+    this.dimLayer.zIndex = LAYER.DIM;
     this.wheelLayer.zIndex = LAYER.WHEEL;
     this.hudLayer.zIndex = LAYER.HUD;
     this.container.sortableChildren = true;
@@ -218,6 +225,8 @@ export class RouletteScene extends Scene {
     // overlay when the spin starts and shrinks away afterwards.
     this.wheelLayer.visible = false;
     this.wheelLayer.alpha = 0;
+    this.dimLayer.visible = false;
+    this.dimLayer.alpha = 0;
     this.dimLayer.eventMode = 'none';
   }
 
@@ -471,6 +480,12 @@ export class RouletteScene extends Scene {
     this.wheelLayer.visible = true;
     this.dimLayer.visible = true;
 
+    // The chip stepper and the action cluster have nothing to offer mid-spin,
+    // and at the size the wheel comes in at they would sit on top of it. The
+    // reference hides both and keeps only the two status bars.
+    this.context.animations.fadeOut(this.chipStepper, 0.25);
+    this.context.animations.fadeOut(this.actions, 0.25);
+
     this.context.animations.to(this.dimLayer, {
       alpha: 1,
       duration: 0.4,
@@ -490,6 +505,9 @@ export class RouletteScene extends Scene {
   }
 
   private hideWheelOverlay(): void {
+    this.context.animations.fadeIn(this.chipStepper, 0.3);
+    this.context.animations.fadeIn(this.actions, 0.3);
+
     if (!this.wheelLayer.visible) return;
 
     this.context.animations.to(this.dimLayer, {
@@ -528,15 +546,52 @@ export class RouletteScene extends Scene {
 
     const metrics = this.metrics;
     if (metrics) {
-      // Card sits to the right of the wheel overlay, as in the reference.
-      const local = this.hudLayer.toLocal({
-        x: metrics.width * 0.82,
-        y: metrics.height * 0.46,
-      });
-      this.marker.showBanner(local.x, local.y, number, this.colorLabel(color));
+      this.marker.showBanner(
+        ...this.bannerAnchor(metrics),
+        number,
+        this.colorLabel(color),
+      );
     }
 
     this.context.audio.play(SoundId.BALL_DROP, 0.5);
+  }
+
+  /**
+   * Where the result card goes.
+   *
+   * It has to clear the wheel *and* stay on screen, and on a narrow viewport
+   * those two demands conflict - so the card slots into whichever side gap is
+   * wider, and falls back to centred-below when neither gap can hold it. Fixing
+   * it at a percentage of the width, which is what it did first, puts it
+   * straight over the wheel on anything but the reference's aspect ratio.
+   */
+  private bannerAnchor(metrics: LayoutMetrics): [number, number] {
+    const card = this.marker.getBannerSize();
+    const wheelCentre = this.wheelLayer.position;
+    const wheelRadius = this.wheel.getRadius();
+    const margin = 16 * metrics.scale;
+
+    const rightGap = metrics.width - (wheelCentre.x + wheelRadius);
+    const leftGap = wheelCentre.x - wheelRadius;
+
+    let x: number;
+    let y = wheelCentre.y;
+
+    if (rightGap >= card.width + margin * 2) {
+      x = metrics.width - card.width / 2 - margin;
+    } else if (leftGap >= card.width + margin * 2) {
+      x = card.width / 2 + margin;
+    } else {
+      // No room either side: sit it below the wheel, centred.
+      x = metrics.width / 2;
+      y = Math.min(
+        metrics.height - card.height / 2 - margin,
+        wheelCentre.y + wheelRadius + card.height / 2 + margin,
+      );
+    }
+
+    const local = this.hudLayer.toLocal({ x, y });
+    return [local.x, local.y];
   }
 
   private colorLabel(color: PocketColor): string {
@@ -665,7 +720,15 @@ export class RouletteScene extends Scene {
         width: width * (portrait ? 0.55 : 0.5) - pad,
         height: controlsHeight,
       },
-      wheel: { x: left, y: bodyTop, width, height: bodyHeight },
+      // The overlay wheel is measured against the *whole* viewport rather than
+      // the felt's slot: it is a takeover, and in the reference it fills the
+      // screen vertically between the two bars.
+      wheel: {
+        x: left,
+        y: top + topBarHeight,
+        width,
+        height: height - topBarHeight - bottomBarHeight,
+      },
     };
   }
 
@@ -691,11 +754,16 @@ export class RouletteScene extends Scene {
     const cell = this.board.getCellSize();
     this.chips.setChipSize(cell * 0.62);
     this.marker.setScale(cell);
+    // Card sized against the viewport, not the felt - see `setCardScale`.
+    this.marker.setCardScale(Math.min(metrics.width, metrics.height) * 0.075);
     this.chips.syncStacks(this.bets.getBets(), (spotId) => this.board.getSpotPosition(spotId));
 
     /* ----- Wheel overlay: as large as the body allows ----- */
     const wheelRect = regions.wheel;
-    const radius = Math.max(60, Math.min(wheelRect.width, wheelRect.height) * 0.47);
+    // 0.52 rather than 0.47: the reference wheel slightly overruns its box,
+    // which is what makes it read as sitting *over* the table rather than in a
+    // panel cut out of it.
+    const radius = Math.max(60, Math.min(wheelRect.width, wheelRect.height) * 0.52);
     this.wheel.setRadius(radius);
     this.ball.setWheelRadius(radius);
     this.wheelLayer.position.set(

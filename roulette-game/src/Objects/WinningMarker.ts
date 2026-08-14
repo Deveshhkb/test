@@ -28,7 +28,17 @@ export class WinningMarker extends Container {
   private readonly colorText: BitmapText;
 
   private currentNumber: RouletteNumber = 0;
+  /** Drives the dolly - a board cell, because the dolly marks a cell. */
   private scaleUnit = 1;
+  /**
+   * Drives the card, and deliberately *not* the board cell.
+   *
+   * The card is screen furniture sitting beside the wheel, so it has to be
+   * sized against the viewport. Scaling it off the cell made it 40% of the
+   * screen width on a wide monitor - large enough that it could not fit in the
+   * gap beside the wheel and ended up covering the thing it was announcing.
+   */
+  private cardUnit = 1;
 
   public constructor(
     textures: TextureFactory,
@@ -79,6 +89,22 @@ export class WinningMarker extends Container {
     return this.banner;
   }
 
+  /** Card footprint at the current scale, so the scene can place it clear of the wheel. */
+  public getBannerSize(): { width: number; height: number } {
+    return { width: this.cardUnit * CARD.WIDTH, height: this.cardUnit * CARD.HEIGHT };
+  }
+
+  /**
+   * Size the result card.
+   * @param unit viewport-derived reference size, typically `min(w, h) * 0.075`.
+   */
+  public setCardScale(unit: number): void {
+    this.cardUnit = unit;
+    this.numberText.style.fontSize = unit * CARD.NUMBER_SIZE;
+    this.colorText.style.fontSize = unit * CARD.LABEL_SIZE;
+    this.drawBanner();
+  }
+
   public setTheme(theme: Theme): void {
     this.theme = theme;
     this.drawBanner();
@@ -97,8 +123,6 @@ export class WinningMarker extends Container {
     const source = this.dolly.texture.height || 1;
     this.dolly.scale.set(dollyHeight / source);
 
-    this.numberText.style.fontSize = unit * 2.05;
-    this.colorText.style.fontSize = unit * 0.55;
     this.drawBanner();
   }
 
@@ -204,24 +228,47 @@ export class WinningMarker extends Container {
   }
 
   private drawBanner(): void {
-    const unit = this.scaleUnit;
-    const width = unit * 5.6;
-    const height = unit * 3.6;
+    const unit = this.cardUnit;
+    const width = unit * CARD.WIDTH;
+    const height = unit * CARD.HEIGHT;
+
+    // The card takes the winning number's own colour - a red card for a red
+    // number - with a gold rim. Reading the result should not require reading
+    // the caption.
+    const color = getNumberColor(this.currentNumber);
+    const body =
+      color === PocketColor.RED
+        ? this.theme.red
+        : color === PocketColor.GREEN
+          ? this.theme.green
+          : this.theme.black;
 
     this.bannerBackground.clear();
     this.bannerBackground
       .roundRect(-width / 2, -height / 2, width, height, unit * 0.4)
-      .fill({ color: this.theme.panel, alpha: 0.94 })
-      .stroke({ width: Math.max(2, unit * 0.09), color: this.tintFor(this.currentNumber) });
+      .fill({ color: body, alpha: 0.97 })
+      .stroke({ width: Math.max(2, unit * 0.09), color: this.theme.gold });
 
     this.bannerGlow.width = width * 1.7;
     this.bannerGlow.height = height * 2.1;
     this.bannerGlow.tint = this.tintFor(this.currentNumber);
 
-    this.numberText.position.set(0, -unit * 0.32);
+    // Number sits high in the card, caption along the bottom - the reference's
+    // arrangement, and it leaves the number readable at a glance.
+    //
+    // Two-digit results are far wider than single digits at the same point
+    // size, so the glyph is shrunk to fit rather than the card being widened -
+    // a card that changes width between rounds is far more distracting than a
+    // slightly smaller "36".
+    this.numberText.scale.set(1);
+    const maxNumberWidth = width * 0.82;
+    if (this.numberText.width > maxNumberWidth) {
+      this.numberText.scale.set(maxNumberWidth / this.numberText.width);
+    }
+    this.numberText.position.set(0, -height * 0.08);
     this.numberText.tint = this.theme.text;
-    this.colorText.position.set(0, unit * 1.24);
-    this.colorText.tint = this.tintFor(this.currentNumber);
+    this.colorText.position.set(0, height * 0.34);
+    this.colorText.tint = this.theme.gold;
   }
 
   private tintFor(number: RouletteNumber): number {
@@ -266,3 +313,16 @@ export class WinningMarker extends Container {
     super.destroy({ children: true, texture: false });
   }
 }
+
+/**
+ * Result-card proportions, as multiples of the card unit.
+ *
+ * Portrait, matching the reference: the number dominates and the colour caption
+ * runs along the bottom.
+ */
+const CARD = {
+  WIDTH: 4.2,
+  HEIGHT: 6.4,
+  NUMBER_SIZE: 3.4,
+  LABEL_SIZE: 0.86,
+} as const;

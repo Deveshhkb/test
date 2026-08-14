@@ -142,8 +142,15 @@ export const WHEEL_GEOMETRY = {
   CONE_INNER: 0.12,
   /** Central spindle cross. */
   SPINDLE: 0.274,
-  /** Ball radius (the artwork's ball is 0.121 of the wheel diameter). */
-  BALL: 0.06,
+  /**
+   * Ball radius as a fraction of the wheel radius.
+   *
+   * Measured off the reference footage: the ball is ~25px across on a ~940px
+   * wheel, i.e. 0.053 of the radius in diameter. It is a small object - sizing
+   * it by the artwork's own bounding box (which includes a drop shadow) makes
+   * it roughly twice too big and instantly reads as a toy.
+   */
+  BALL: 0.027,
   /** Number of deflectors on the bowl. */
   DEFLECTOR_COUNT: 8,
 } as const;
@@ -170,9 +177,12 @@ export const DESIGN = {
 /** z-order of the scene layers. Kept in one place so nothing fights for depth. */
 export const LAYER = {
   BACKGROUND: 0,
+  FELT: 5,
   TABLE: 10,
   BOARD_FX: 20,
   CHIPS: 30,
+  /** Scrim that darkens the table while the wheel overlay is up. */
+  DIM: 35,
   WHEEL: 40,
   MARKER: 50,
   HUD: 60,
