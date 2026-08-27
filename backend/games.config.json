@@ -1,5 +1,5 @@
 {
-  "_comment": "Per-game settings. Any field here overrides the game module's default: enabled, matchId, name, betSeconds, roundGap, minStake, maxStake, rates {...}. Remove a field to use the default.",
+  "_comment": "Per-game settings. Any field overrides the game module default: enabled, matchId, name, betSeconds, roundGap, minStake, maxStake, rates {...}, layRates {...}, groups {...}. Card ranks in 'groups' are 1=Ace, 11=J, 12=Q, 13=K. Restart the server after editing.",
 
   "dt20": {
     "enabled": true,
@@ -18,40 +18,121 @@
     }
   },
 
-  "lucky7": {
+  "dtl20": {
     "enabled": true,
-    "matchId": 27,
-    "betSeconds": 30,
+    "matchId": 31,
+    "betSeconds": 45,
     "minStake": 100,
     "maxStake": 100000,
     "rates": {
-      "lowHigh": 2,
-      "even": 2.1,
-      "odd": 1.79,
-      "color": 1.95,
+      "winner": 2.9,
+      "color": 1.97,
+      "even": 2.12,
+      "odd": 1.83,
       "card": 12
     }
   },
 
-  "teen20": {
+  "t20": {
     "enabled": true,
-    "matchId": 21,
-    "betSeconds": 30,
+    "matchId": 15,
+    "betSeconds": 45,
+    "minStake": 100,
+    "maxStake": 100000,
+    "rates": { "main": 1.98 }
+  },
+
+  "otp": {
+    "enabled": true,
+    "matchId": 24,
+    "betSeconds": 60,
+    "minStake": 100,
+    "maxStake": 100000,
+    "rates": { "main": 8.5 }
+  },
+
+  "lucky7A": {
+    "enabled": true,
+    "matchId": 12,
+    "betSeconds": 45,
     "minStake": 100,
     "maxStake": 100000,
     "rates": {
-      "main": 1.98
+      "lowHigh": 1.98,
+      "even": 2.12,
+      "odd": 1.83,
+      "color": 1.97
+    }
+  },
+
+  "aaa": {
+    "enabled": true,
+    "matchId": 20,
+    "betSeconds": 45,
+    "minStake": 100,
+    "maxStake": 100000,
+    "rates": {
+      "amar": 3.35,
+      "akbar": 2.65,
+      "anthony": 3.35,
+      "even": 2.12,
+      "odd": 1.83,
+      "color": 1.97,
+      "underOver": 2.0,
+      "card": 12
+    },
+    "layRates": { "amar": 3.45, "akbar": 2.75, "anthony": 3.45 },
+    "groups": {
+      "amar": [1, 2, 3, 4],
+      "akbar": [5, 6, 7, 8, 9],
+      "anthony": [10, 11, 12, 13]
+    }
+  },
+
+  "bwdtbl": {
+    "enabled": true,
+    "matchId": 13,
+    "betSeconds": 45,
+    "minStake": 100,
+    "maxStake": 100000,
+    "rates": {
+      "don": 6.5,
+      "aaa": 4.3,
+      "sbg": 4.3,
+      "dharamVeer": 6.5,
+      "kkpk": 4.3,
+      "ghulam": 3.9,
+      "odd": 1.83,
+      "dulhaDulhan": 5.8,
+      "baratiJA": 5.8,
+      "color": 1.97,
+      "card": 12
+    },
+    "layRates": {
+      "don": 6.7,
+      "aaa": 4.4,
+      "sbg": 4.4,
+      "dharamVeer": 6.7,
+      "kkpk": 4.4,
+      "ghulam": 4.0,
+      "odd": 1.93
+    },
+    "groups": {
+      "don": [1, 2],
+      "amar akbar anthony": [3, 4, 5],
+      "sahib bibi aur ghulam": [6, 7, 8],
+      "dharam veer": [9, 10],
+      "kis kisko pyaar karoon": [11, 12, 13]
     }
   },
 
   "ab20": {
-    "enabled": true,
+    "_note": "Andar Bahar works over the API but has no frontend in this repo yet.",
+    "enabled": false,
     "matchId": 26,
     "betSeconds": 30,
     "minStake": 100,
     "maxStake": 100000,
-    "rates": {
-      "main": 1.97
-    }
+    "rates": { "main": 1.97 }
   }
 }

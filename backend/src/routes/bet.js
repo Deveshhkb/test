@@ -10,12 +10,17 @@ const router = express.Router();
 router.use(requireAuth);
 
 router.post("/place-bet", (req, res) => {
-  const { selectionId, stake, marketId, matchId } = req.body || {};
+  const { selectionId, stake, marketId, matchId, isBack } = req.body || {};
   const engine =
     (matchId != null && manager.byMatchId(matchId)) || manager.byMid(marketId);
   if (!engine)
     return res.status(400).json({ status: false, message: "Unknown game" });
-  const result = engine.placeBet(req.username, { selectionId, stake, marketId });
+  const result = engine.placeBet(req.username, {
+    selectionId,
+    stake,
+    marketId,
+    isBack,
+  });
   res.status(result.status ? 200 : 400).json(result);
 });
 

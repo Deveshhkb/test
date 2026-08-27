@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casino Lobby</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; padding: 24px 16px 48px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #2b0f0f 0%, #120505 65%);
+      color: #f5e6c8;
+    }
+    header {
+      max-width: 1000px; margin: 0 auto 26px; display: flex;
+      align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    h1 { font-size: 28px; color: #e9c46a; letter-spacing: 1px; }
+    .who { font-size: 14px; color: #cbb27f; text-align: right; }
+    .who b { color: #f5e6c8; }
+    .who a { color: #cbb27f; font-size: 13px; }
+    .grid {
+      max-width: 1000px; margin: 0 auto;
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+    .game {
+      background: rgba(0,0,0,.5); border: 1px solid #a2792f; border-radius: 12px;
+      padding: 18px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .game h2 { font-size: 19px; color: #e9c46a; }
+    .meta { font-size: 12px; color: #a99566; display: flex; gap: 10px; align-items: center; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .open { background: #4ade80; } .closed { background: #f87171; }
+    .links { display: flex; gap: 8px; margin-top: auto; }
+    .links a {
+      flex: 1; text-align: center; padding: 9px 6px; border-radius: 7px;
+      text-decoration: none; font-size: 14px; font-weight: 600;
+      background: linear-gradient(180deg, #e9c46a, #b8892f); color: #241303;
+    }
+    .links a.alt { background: none; border: 1px solid #6b5220; color: #cbb27f; font-weight: 400; }
+    .empty { max-width: 1000px; margin: 40px auto; text-align: center; color: #cbb27f; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CASINO LOBBY</h1>
+    <div class="who" id="who"></div>
+  </header>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">Loading games…</div>
+
+  <script>
+    // token: from the URL if we just logged in, else from storage
+    const qs = new URLSearchParams(location.search);
+    let token = qs.get("id");
+    let user = qs.get("username");
+    try {
+      if (token) { localStorage.setItem("casinoToken", token); localStorage.setItem("casinoUser", user || ""); }
+      else { token = localStorage.getItem("casinoToken"); user = localStorage.getItem("casinoUser"); }
+    } catch (_) {}
+
+    if (!token) location.replace("/login.html");
+
+    const el = (id) => document.getElementById(id);
+
+    async function loadBalance() {
+      try {
+        const res = await fetch("/admin-new-apis/enduser/get-user-balance", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+          body: "{}",
+        });
+        if (res.status === 401) {
+          try { localStorage.removeItem("casinoToken"); } catch (_) {}
+          return location.replace("/login.html");
+        }
+        const data = await res.json();
+        el("who").innerHTML =
+          "<b>" + (user || "player") + "</b> &nbsp; Balance: <b>" + data.data.balance + "</b>" +
+          '<br><a href="#" id="out">Log out</a>';
+        el("out").onclick = (e) => {
+          e.preventDefault();
+          try { localStorage.removeItem("casinoToken"); localStorage.removeItem("casinoUser"); } catch (_) {}
+          location.replace("/login.html");
+        };
+      } catch (_) {}
+    }
+
+    async function loadGames() {
+      const { data } = await fetch("/api/lobby").then((r) => r.json());
+      if (!data.length) {
+        el("empty").textContent = "No games are running.";
+        el("empty").style.display = "block";
+        return;
+      }
+      el("empty").style.display = "none";
+      const q = "?id=" + encodeURIComponent(token) + "&username=" + encodeURIComponent(user || "");
+      el("grid").innerHTML = data.map((g) => `
+        <div class="game">
+          <h2>${g.title}</h2>
+          <div class="meta">
+            <span class="dot ${g.bettingOpen ? "open" : "closed"}"></span>
+            ${g.bettingOpen ? "Betting open · " + g.autotime + "s" : "Betting closed"}
+            <span style="margin-left:auto">${g.gtype}</span>
+          </div>
+          <div class="links">
+            ${g.links.web ? `<a href="${g.links.web}${q}">Play</a>` : ""}
+            ${g.links.mobile ? `<a class="alt" href="${g.links.mobile}${q}">Mobile</a>` : ""}
+          </div>
+        </div>`).join("");
+    }
+
+    loadBalance();
+    loadGames();
+    setInterval(loadGames, 3000);
+    setInterval(loadBalance, 5000);
+  </script>
+</body>
+</html>

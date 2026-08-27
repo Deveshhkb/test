@@ -4,11 +4,12 @@
 //   gtype, name, matchId            identity
 //   betSeconds, reveals[], resultAt, roundGap   timing (seconds)
 //   minStake, maxStake
-//   selections: [{ sid, nat, rate }]
-//   deal() -> outcome               { cards: [...], winner: "1"|"2"|"3", ... }
-//   payout(sid, outcome) -> stake multiplier (0 = lost, rate = won,
-//                                    0.5 = half refund, 1 = push)
-//   detail(outcome) -> extra fields for GameResultById (dragonDetail, ...)
+//   selections: [{ sid, nat, rate, layrate? }]
+//   deal() -> outcome               { cards: [...], winner: "1"|"2"|..., ... }
+//   payout(sid, outcome) -> stake multiplier for a BACK bet
+//                           0 = lost, >1 = won, 1 = push, 0.5 = half refund
+//   detail(outcome) -> extra fields for GameResultById
+//   joinCards (optional)            emit every card in C1 as "a,b,c" (otp)
 //
 // The engine owns the round lifecycle: betting window -> timed card reveals
 // -> result published + bets settled -> gap -> next round.
@@ -60,14 +61,22 @@ class RoundEngine {
     return Math.max(0, Math.min(this.game.betSeconds, left));
   }
 
-  visibleCards() {
+  // cards visible right now; `final` ignores the reveal schedule
+  cardFields(final = false) {
     const t = this.sinceClose();
-    const cards = {};
+    const all = this.state.outcome.cards;
+
+    if (this.game.joinCards) {
+      const shown = final || t >= this.game.reveals[0];
+      return { C1: shown ? all.map((c) => c.code).join(",") : "" };
+    }
+
+    const out = {};
     this.game.reveals.forEach((revealAt, i) => {
-      const card = this.state.outcome.cards[i];
-      cards[`C${i + 1}`] = t >= revealAt && card ? card.code : "";
+      const card = all[i];
+      out[`C${i + 1}`] = (final || t >= revealAt) && card ? card.code : "";
     });
-    return cards;
+    return out;
   }
 
   getT1() {
@@ -79,7 +88,7 @@ class RoundEngine {
         min: this.game.minStake,
         max: this.game.maxStake,
         remark: "",
-        ...this.visibleCards(),
+        ...this.cardFields(),
       },
     ];
   }
@@ -90,6 +99,7 @@ class RoundEngine {
       sid: s.sid,
       nat: s.nat,
       rate: s.rate,
+      ...(s.layrate ? { layrate: s.layrate } : {}),
       gstatus,
       mid: this.state.mid,
       min: this.game.minStake,
@@ -97,7 +107,7 @@ class RoundEngine {
     }));
   }
 
-  placeBet(username, { selectionId, stake, marketId }) {
+  placeBet(username, { selectionId, stake, marketId, isBack }) {
     const sel = this.bySid.get(Number(selectionId));
     if (!sel) return { status: false, message: "Invalid selection" };
     if (String(marketId) !== String(this.state.mid))
@@ -105,18 +115,27 @@ class RoundEngine {
     if (!this.isBettingOpen())
       return { status: false, message: "Betting is closed" };
 
+    const back = isBack !== false;
+    if (!back && !sel.layrate)
+      return { status: false, message: "This market cannot be laid" };
+
     const amount = Number(stake);
     if (!Number.isFinite(amount) || amount < this.game.minStake)
       return { status: false, message: `Minimum bet is ${this.game.minStake}` };
     if (amount > this.game.maxStake)
       return { status: false, message: `Maximum bet is ${this.game.maxStake}` };
 
+    // odds always come from the server, never from the client
+    const odds = back ? sel.rate : sel.layrate;
+    // a back bet risks the stake; a lay bet risks stake x (odds - 1)
+    const risk = Math.round((back ? amount : amount * (odds - 1)) * 100) / 100;
+
     const user = db.getUser(username);
     if (!user) return { status: false, message: "User not found" };
-    if (user.balance < amount)
+    if (user.balance < risk)
       return { status: false, message: "Insufficient balance" };
 
-    db.adjustBalance(username, -amount);
+    db.adjustBalance(username, -risk);
     db.addBet({
       id: crypto.randomUUID(),
       username,
@@ -124,8 +143,10 @@ class RoundEngine {
       mid: this.state.mid,
       sid: sel.sid,
       nat: sel.nat,
-      rate: sel.rate,
+      rate: odds,
+      isBack: back,
       stake: amount,
+      risk,
       status: "open",
       pnl: 0,
       createdAt: Date.now(),
@@ -140,28 +161,37 @@ class RoundEngine {
 
     for (const bet of db.openBets(this.state.mid)) {
       const mult = this.game.payout(bet.sid, outcome);
-      if (mult > 0) db.adjustBalance(bet.username, bet.stake * mult);
-      bet.pnl = Math.round(bet.stake * (mult - 1) * 100) / 100;
-      bet.status = mult > 1 ? "won" : mult === 1 ? "void" : "lost";
+      let credit;
+      if (bet.isBack === false) {
+        // lay: the selection winning (mult > 1) costs the risk; otherwise the
+        // lay side collects the backer's stake, scaled for a push or
+        // half-refund result.
+        credit = mult > 1 ? 0 : bet.risk + bet.stake * (1 - mult);
+      } else {
+        credit = bet.stake * mult;
+      }
+      credit = Math.round(credit * 100) / 100;
+      if (credit > 0) db.adjustBalance(bet.username, credit);
+      bet.pnl = Math.round((credit - bet.risk) * 100) / 100;
+      bet.status = bet.pnl > 0 ? "won" : bet.pnl < 0 ? "lost" : "void";
     }
+
+    // Several pages read a single `detail` string split on " || ".
+    const detailObj = this.game.detail(outcome);
+    const parts = this.game.detailParts
+      ? this.game.detailParts(outcome)
+      : Object.values(detailObj);
 
     db.addResult({
       gtype: this.game.gtype,
       mid: this.state.mid,
       winner: outcome.winner,
-      ...this.visibleCardsFinal(),
-      ...this.game.detail(outcome),
+      ...this.cardFields(true),
+      ...detailObj,
+      detail: parts.join(" || "),
       createdAt: Date.now(),
     });
     db.save();
-  }
-
-  visibleCardsFinal() {
-    const cards = {};
-    this.game.reveals.forEach((_, i) => {
-      cards[`C${i + 1}`] = this.state.outcome.cards[i]?.code || "";
-    });
-    return cards;
   }
 
   liabilityFor(username, roundId) {
@@ -172,7 +202,11 @@ class RoundEngine {
     return this.game.selections.map((s) => {
       const potential = bets
         .filter((b) => b.sid === s.sid)
-        .reduce((sum, b) => sum + b.stake * (b.rate - 1), 0);
+        .reduce(
+          (sum, b) =>
+            sum + (b.isBack === false ? b.stake : b.stake * (b.rate - 1)),
+          0
+        );
       return { sid: s.sid, liability: Math.round(potential * 100) / 100 };
     });
   }
@@ -181,7 +215,7 @@ class RoundEngine {
     return db
       .betsForRound(username, this.state.mid)
       .filter((b) => b.status === "open")
-      .reduce((sum, b) => sum + b.stake, 0);
+      .reduce((sum, b) => sum + (b.risk ?? b.stake), 0);
   }
 
   tick() {

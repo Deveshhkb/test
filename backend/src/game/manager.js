@@ -8,10 +8,14 @@ const path = require("path");
 const { RoundEngine } = require("./engine");
 
 const MODULES = {
-  dt20: require("./games/dt20"),
-  lucky7: require("./games/lucky7"),
-  teen20: require("./games/teen20"),
-  ab20: require("./games/ab20"),
+  dt20: require("./games/dt20"), // Dragon Tiger
+  dtl20: require("./games/dtl20"), // Dragon Tiger Lion
+  t20: require("./games/t20"), // 20-20 Teen Patti
+  otp: require("./games/otp"), // Open Teen Patti
+  lucky7A: require("./games/lucky7A"), // Lucky 7-A
+  aaa: require("./games/aaa"), // Amar Akbar Anthony
+  bwdtbl: require("./games/bwdtbl"), // Bollywood Casino
+  ab20: require("./games/ab20"), // Andar Bahar (no frontend yet)
 };
 
 const CONFIG_FILE =

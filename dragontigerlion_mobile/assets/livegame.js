@@ -19,13 +19,24 @@ const coinschange = (str) => {
 $(document).ready(function () {
   userCreatorDiv();
 
-  var API_URL = "http://52.220.88.240:8080/";
-  let Bet_URL = "http://13.250.53.81/VirtualCasinoBetPlacer/vc/";
-  var API_Img = "http://admin.kalyanexch.com/";
-  let API_Admin = "http://23.106.234.25:8192/admin-new-apis/enduser/";
-  let API_Edup = "https://oddsapi.247idhub.com/";
+  // All services are served by the local backend (backend/src/server.js)
+  var BACKEND = window.location.origin + "/";
+  var API_URL = BACKEND;
+  let Bet_URL = BACKEND + "VirtualCasinoBetPlacer/vc/";
+  var API_Img = BACKEND;
+  let API_Admin = BACKEND + "admin-new-apis/enduser/";
+  let API_Edup = BACKEND;
   let API_TOKEN = new URLSearchParams(window.location.search).get("id");
   let User_name = new URLSearchParams(window.location.search).get("username");
+
+  // not logged in -> go get a token first, then come back here
+  if (!API_TOKEN) {
+    window.location.replace(
+      "/login.html?next=" + encodeURIComponent(window.location.pathname)
+    );
+    return;
+  }
+
   let isbet = false;
 
   var isMuted = false;
@@ -116,8 +127,10 @@ $(document).ready(function () {
       .then((res) => {
         const libData = res.data.data;
         for (i = 1; i < 55; i++) {
-          let sidLocal = liveOddsDataObj[i].sid;
-          let libLocal = libData.find((i) => i.sid == sidLocal).liability;
+          let sidLocal = liveOddsDataObj[i]?.sid;
+          if (sidLocal === undefined) continue;
+          let libLocal = libData.find((i) => i.sid == sidLocal)?.liability;
+          if (libLocal === undefined) continue;
           if (libLocal < 0) {
             $("#liabilityData_" + i).css("color", "red");
           } else if (libLocal > 0) {

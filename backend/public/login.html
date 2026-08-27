@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dragon Tiger — Login</title>
+  <title>Casino — Login</title>
   <link rel="icon" type="image/x-icon" href="/assets/images/desktopimg/icon.png" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,7 +37,7 @@
 </head>
 <body>
   <div class="card">
-    <h1>DRAGON &nbsp;TIGER</h1>
+    <h1>CASINO LOBBY</h1>
     <p class="sub">Sign in to play</p>
     <label for="username">Username</label>
     <input id="username" autocomplete="username" />
@@ -63,9 +63,16 @@
         });
         const data = await res.json();
         if (!data.status) return msg(data.message || "Failed");
-        window.location.href =
-          "index.html?id=" + encodeURIComponent(data.data.token) +
+        try {
+          localStorage.setItem("casinoToken", data.data.token);
+          localStorage.setItem("casinoUser", data.data.username);
+        } catch (_) {}
+        // come back to whichever game asked for a login, else the lobby
+        const next = new URLSearchParams(location.search).get("next");
+        const q =
+          "?id=" + encodeURIComponent(data.data.token) +
           "&username=" + encodeURIComponent(data.data.username);
+        window.location.href = (next || "/lobby.html") + q;
       } catch (e) {
         msg("Cannot reach server");
       }

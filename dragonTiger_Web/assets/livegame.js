@@ -31,9 +31,11 @@ $(document).ready(function () {
 
   let User_name = new URLSearchParams(window.location.search).get("username");
 
-  // not logged in -> go get a token first
+  // not logged in -> go get a token first, then come back here
   if (!API_TOKEN) {
-    window.location.replace("login.html");
+    window.location.replace(
+      "/login.html?next=" + encodeURIComponent(window.location.pathname)
+    );
     return;
   }
 
@@ -86,8 +88,10 @@ $(document).ready(function () {
       .then((res) => {
         const libData = res.data.data;
         for (i = 1; i < 39; i++) {
-          let sidLocal = liveOddsDataObj[i].sid;
-          let libLocal = libData.find((i) => i.sid == sidLocal).liability;
+          let sidLocal = liveOddsDataObj[i]?.sid;
+          if (sidLocal === undefined) continue;
+          let libLocal = libData.find((i) => i.sid == sidLocal)?.liability;
+          if (libLocal === undefined) continue;
           if (libLocal < 0) {
             $("#liabilityData_" + i).css("color", "red");
           } else if (libLocal > 0) {
