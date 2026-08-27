@@ -1,0 +1,256 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap");
+.bettingbtnbot {
+  margin-top: 976px;
+  width: 1920px;
+  height: 597px;
+  background-image: url("/assets/images/desktopimg/betbtnbg.png");
+  background-size: cover;
+  /* justify-content: space-around; */
+}
+
+.tableStyle {
+  padding-top: 84px;
+  display: flex;
+  width: 100%;
+  height: 30px;
+  justify-content: space-around;
+}
+
+.innerDataStyle {
+  margin-left: 12px;
+  margin-right: 12px;
+  padding-top: 21px;
+  font-size: 24px;
+  text-align: center;
+  color: #ffffff;
+  font-family: Inter;
+  width: 69px;
+  height: 70px;
+  border-radius: 10px;
+  cursor: pointer;
+  transform: scale(1, 1);
+  outline: none;
+  overflow: hidden;
+}
+
+.innerDataStyle:hover {
+  transform: scale(0.9, 0.9);
+}
+
+#betinnerdata_1 {
+  background-color: #0071a5;
+}
+
+#betinnerdata_2 {
+  background-color: #faa9ba;
+}
+#betinnerdata_3 {
+  background-color: #0071a5;
+}
+
+#betinnerdata_4 {
+  background-color: #faa9ba;
+}
+#betinnerdata_5 {
+  background-color: #0071a5;
+}
+
+#betinnerdata_6 {
+  background-color: #faa9ba;
+}
+
+.tblStyle {
+  width: 597px;
+  height: 91px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#betDatabg_1 {
+  background-image: url("../assets/images/desktopimg/amar.png");
+  background-size: cover;
+}
+#betDatabg_2 {
+  background-image: url("../assets/images/desktopimg/akbar.png");
+  background-size: cover;
+}
+#betDatabg_3 {
+  background-image: url("../assets/images/desktopimg/anthony.png");
+  background-size: cover;
+}
+
+#midbetDataKeyAct {
+  margin-top: 140px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.midtxtstyle {
+  width: 277px;
+  height: 88px;
+  font-size: 24px;
+  padding: 32px 20px 0 0;
+  text-align: right;
+  color: #ffffff;
+  font-family: Inter;
+  border-radius: 10px;
+  cursor: pointer;
+  transform: scale(1, 1);
+  outline: none;
+  overflow: hidden;
+  z-index: 1;
+  background-size: cover;
+}
+
+.midtxtstyle:hover {
+  padding: 32px 29px 0 0;
+  background-size: 90%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#betinnerdata_7 {
+  background-image: url("/assets/images/desktopimg/evenbtn.png");
+}
+#betinnerdata_8 {
+  background-image: url("/assets/images/desktopimg/oddbtn.png");
+}
+#betinnerdata_9 {
+  background-image: url("/assets/images/desktopimg/blackbtn.png");
+}
+#betinnerdata_10 {
+  background-image: url("/assets/images/desktopimg/redbtn.png");
+}
+#betinnerdata_11 {
+  background-image: url("/assets/images/desktopimg/under7.png");
+}
+#betinnerdata_12 {
+  background-image: url("/assets/images/desktopimg/over7.png");
+}
+
+#bottombetDataKeyAct {
+  margin-top: 104px;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.botomtxtstyle {
+  width: 97px;
+  height: 122px;
+  background-size: cover;
+  cursor: pointer;
+  transform: scale(1, 1);
+  outline: none;
+  overflow: hidden;
+  z-index: 1;
+  background-size: cover;
+}
+
+.botomtxtstyle:hover {
+  background-size: 90%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#betinnerdata_13 {
+  background-image: url("/assets/images/1_card.png");
+}
+#betinnerdata_14 {
+  background-image: url("/assets/images/2_card.png");
+}
+#betinnerdata_15 {
+  background-image: url("/assets/images/3_card.png");
+}
+#betinnerdata_16 {
+  background-image: url("/assets/images/4_card.png");
+}
+#betinnerdata_17 {
+  background-image: url("/assets/images/5_card.png");
+}
+#betinnerdata_18 {
+  background-image: url("/assets/images/6_card.png");
+}
+#betinnerdata_19 {
+  background-image: url("/assets/images/7_card.png");
+}
+#betinnerdata_20 {
+  background-image: url("/assets/images/8_card.png");
+}
+#betinnerdata_21 {
+  background-image: url("/assets/images/9_card.png");
+}
+#betinnerdata_22 {
+  background-image: url("/assets/images/10_card.png");
+}
+#betinnerdata_23 {
+  background-image: url("/assets/images/11_card.png");
+}
+#betinnerdata_24 {
+  background-image: url("/assets/images/12_card.png");
+}
+#betinnerdata_25 {
+  background-image: url("/assets/images/13_card.png");
+}
+
+.allcartRateStyle {
+  position: absolute;
+  margin: 366px 0 0 924px;
+  font-size: 28px;
+  color: #fff;
+  font-family: Inter;
+}
+#libinnerdata_1 {
+  left: 32px;
+}
+#libinnerdata_2 {
+  left: 536px;
+}
+#libinnerdata_3 {
+  left: 670px;
+}
+#libinnerdata_4 {
+  left: 1183px;
+}
+#libinnerdata_5 {
+  left: 1312px;
+}
+#libinnerdata_6 {
+  left: 1820px;
+}
+.libinnerdata {
+  position: absolute;
+  top: 1307px;
+  font-size: 15px;
+  text-align: center;
+  color: #ffffff;
+  font-family: Inter;
+  width: 70px;
+}
+.libinnerdatam {
+  width: 277px;
+  font-size: 18px;
+  text-align: center;
+  color: #205211;
+  font-family: Inter;
+}
+#libdataprn {
+  display: flex;
+  justify-content: space-around;
+}
+.libicard {
+  width: 97px;
+  font-size: 18px;
+  text-align: center;
+  color: #205211;
+  font-family: Inter;
+}
+#libicard_data {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-evenly;
+}
+._box {
+  width: 100px;
+  white-space: nowrap;
+  text-align: center;
+}

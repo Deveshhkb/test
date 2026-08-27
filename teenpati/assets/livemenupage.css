@@ -1,0 +1,1281 @@
+#topmenu {
+  position: absolute;
+  top: 0px;
+  width: 1920px;
+  height: 162px;
+  background-image: url("../assets/images/topbg.png");
+  background-size: cover;
+}
+div#coinamountfield_1 {
+  position: relative;
+  z-index: 1;
+}
+#historypg {
+  position: absolute;
+  top: 0px;
+  width: 1920px;
+  height: 1089px;
+  z-index: 999999;
+  background-color: #092c4d;
+  background-size: cover;
+  display: none;
+}
+
+.totalcurrSign1 {
+  font-size: 34px;
+  color: #fff;
+  margin-left: 200px;
+  text-align: left;
+  margin-top: -39px;
+  width: 279px;
+  padding-left: 0px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: "Bebas Neue";
+  z-index: 1;
+}
+.totalcurrSign1:hover {
+  overflow: inherit !important;
+  text-overflow: inherit !important;
+}
+.blstxt {
+  font-size: 36px;
+  color: #c8c8c8;
+  margin: -4px 5px 0px 0px;
+  padding: 60px 0 0 50px;
+  z-index: 1;
+}
+.tophiscoinimg {
+  position: absolute;
+  top: 57px;
+  padding-left: 146px;
+}
+#sliderbar {
+  position: absolute;
+  top: 36px;
+  left: 638px;
+  width: 660px;
+  height: 78px;
+  border-radius: 8px;
+  background-color: #fff;
+  z-index: 1;
+}
+#slider-btn-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  padding: 2px;
+}
+.sliderleft {
+  position: absolute;
+  left: 3px;
+  /* transition: left 2s; */
+}
+.sliderRight {
+  /* transition: right 2s; */
+  left: 49.5%;
+  right: 2px;
+}
+.sliderfnt {
+  position: absolute;
+  width: 50%;
+  height: 96%;
+  font-size: 23px;
+  cursor: pointer;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  transition: all 0.5s ease;
+  /* transition: right 2s, left 2s; */
+  padding: 5px 0px 0px 0px;
+  background-color: #32a4f0;
+}
+.activesliderbar {
+  height: 32px;
+  background-color: #32a4f0;
+  border-radius: 6px;
+  text-align: center;
+  padding: 3px 0 0 0;
+}
+
+#activebtn {
+  width: 50%;
+  margin: 2px;
+  color: #fff;
+  font-size: 45px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 11px 0px 0px 0px;
+  cursor: pointer;
+  z-index: 1;
+  display: none;
+}
+#histbtn {
+  position: absolute;
+  z-index: 1;
+  width: 296px;
+  height: 88px;
+  color: #fff;
+  /* cursor: pointer; */
+  font-size: 80px;
+  border-radius: 10px;
+  text-align: center;
+  text-transform: uppercase;
+  margin: -59px 0 0 850px;
+  padding: 0px 0px 0px 0px;
+  border: 3px solid #dfe81dfc;
+  background-color: #32a4f0;
+}
+
+#changeprofile_btn {
+  position: absolute;
+  margin: 5px 0 0 171px;
+  z-index: 1;
+  width: 65px;
+  height: 24px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 31px;
+  background-image: url("../assets/images/desktopimg/proedit.png");
+  background-size: cover;
+}
+.changeprofilebgmain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999;
+  background-color: #00000048;
+  display: none;
+}
+.changeprofilebg {
+  position: absolute;
+  top: 177px;
+  left: 183px;
+  width: 1568px;
+  height: 830px;
+  /* display: none; */
+  background-image: url("../assets/images/desktopimg/profilebg.png");
+  background-size: cover;
+}
+#profile_data {
+  margin: 252px 0 0 1220px;
+}
+#profile_img {
+  margin: 66px 0 0 124px;
+  width: 1320px;
+  height: 231px;
+  display: flex;
+  justify-content: space-around;
+  background-image: url("../assets/images/desktopimg/avatarbg.png");
+  background-size: cover;
+}
+.avatar_prt {
+  display: none;
+}
+.player_img {
+  margin: 51px 0 0 2px;
+  cursor: pointer;
+}
+#profile_dp img {
+  position: absolute;
+  top: 197px;
+  width: 126px;
+  margin: 0px 0 0 144px;
+}
+#profile_win {
+  position: absolute;
+  top: 330px;
+  width: 104px;
+  text-align: center;
+  margin-left: 743px;
+  font-size: 31px;
+}
+.changeavatarbtn_style {
+  position: absolute;
+  top: 375px;
+  font-size: 30px;
+  color: #fff;
+  left: 148px;
+  cursor: pointer;
+}
+.user_name_style {
+  position: absolute;
+  top: 215px;
+  margin-left: -908px;
+  color: #fff;
+  font-size: 45px;
+}
+.user_wallet_style {
+  position: absolute;
+  top: 294px;
+  margin-left: -908px;
+  color: #fff;
+  font-size: 40px;
+}
+.wllimg {
+  width: 30px;
+  height: 30px;
+}
+
+.closebtn_prf {
+  position: absolute;
+  top: 12px;
+  right: 13px;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.game_played {
+  font-size: 34px;
+  color: #fff;
+  margin: 8px;
+}
+.player_img img {
+  width: 140px;
+}
+#backbtn {
+  position: absolute;
+  top: 3%;
+  right: 60px;
+  width: 100px;
+  height: 100px;
+  background-image: url("../assets/images/desktopimg/closebtn.png");
+  background-size: cover;
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* start friend invite style */
+
+.invitebgmain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999;
+  background-color: #00000048;
+  display: none;
+}
+.invitebgmainbg {
+  position: absolute;
+  top: 177px;
+  left: 183px;
+  width: 1568px;
+  height: 830px;
+  background-image: url("../assets/images/desktopimg/invitefriends.png");
+  background-size: cover;
+}
+
+.closebtn_int {
+  position: absolute;
+  top: 12px;
+  right: 13px;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.freeamount_style {
+  font-size: 40px;
+  color: #ffa501;
+  margin: 257px 0 0 1066px;
+}
+/* .referralCodeTxt_style {
+  position: absolute;
+  font-size: 30px;
+  color: #2b82fd;
+  margin: 682px 0 0 745px;
+  border: 4px solid #50abff;
+  padding: 17px;
+  border-style: dashed;
+} */
+.invitebtn_style {
+  width: 382px;
+  height: 79px;
+  margin: 166px 0 0 904px;
+  cursor: pointer;
+  background-image: url("../assets/images/desktopimg/invitebtn.png");
+  background-size: cover;
+  transform: scale(1, 1);
+  outline: none;
+  overflow: hidden;
+}
+
+.invitebtn_style:hover {
+  background-size: 90%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.reffcodesty {
+  color: #2b82fd;
+}
+#sharebtn {
+  position: absolute;
+  left: 867px;
+  top: 570px;
+}
+.share-fb {
+  color: rgb(66, 103, 178);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.share-tw {
+  color: rgb(0, 172, 238);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.share-wh {
+  color: rgb(30, 125, 52);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.share-ln {
+  color: rgb(0, 114, 177);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.share-em {
+  color: rgb(85, 34, 164);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.copyicon {
+  width: 43px;
+  height: 43px;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* End friend invite  */
+
+/* spin wheel start */
+.spinbgmain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999;
+  background-color: #00000048;
+  display: none;
+}
+.spinbgmainbg {
+  position: absolute;
+  top: 236px;
+  left: 365px;
+  width: 1128px;
+  height: 778px;
+  background-color: #0a2d4d;
+  box-shadow: 0px 4px 20px rgba(140, 199, 253, 0.28);
+  border-radius: 10px;
+}
+
+.closebtnspin_int {
+  position: absolute;
+  top: -24px;
+  right: -29px;
+  width: 70px;
+  height: 70px;
+  cursor: pointer;
+  border-radius: 50%;
+  background-image: url("../assets/images/desktopimg/closewhbtn.png");
+  background-size: cover;
+}
+.spintxt_style {
+  position: absolute;
+  top: 0px;
+  left: 440px;
+  width: 295px;
+  height: 103px;
+  background-image: url("../assets/images/desktopimg/spinwheel.png");
+  background-size: cover;
+}
+.freeamount_style {
+  font-size: 40px;
+  color: #ffa501;
+  margin: 257px 0 0 1066px;
+}
+.referralCodeTxt_style {
+  position: absolute;
+  font-size: 30px;
+  color: #2b82fd;
+  margin: 703px 0 0 672px;
+  border: 4px solid #50abff;
+  padding: 7px;
+  border-style: dashed;
+}
+.invitebtn_style {
+  width: 382px;
+  height: 79px;
+  margin: 166px 0 0 904px;
+  cursor: pointer;
+  background-image: url("../assets/images/desktopimg/invitebtn.png");
+  background-size: cover;
+  transform: scale(1, 1);
+  outline: none;
+  overflow: hidden;
+}
+
+.invitebtn_style:hover {
+  background-size: 90%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.reffcodesty {
+  color: #2b82fd;
+}
+#sharebtn {
+  position: absolute;
+  left: 857px;
+  top: 579px;
+  width: 476px;
+  height: 93px;
+  padding: 8px;
+  background-color: #fff;
+  border-radius: 11px;
+}
+.share-fb {
+  color: rgb(66, 103, 178);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.share-tw {
+  color: rgb(0, 172, 238);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.share-wh {
+  color: rgb(30, 125, 52);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.share-ln {
+  color: rgb(0, 114, 177);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.share-em {
+  color: rgb(85, 34, 164);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+.copyicon {
+  width: 43px;
+  height: 43px;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+/* spin wheel end */
+#activeuserhis {
+  position: relative;
+  top: 57px;
+  height: 1008px;
+  width: 100%;
+  padding-top: 20px;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  display: none;
+}
+#historyuserhis {
+  position: relative;
+  top: 57px;
+  height: 915px;
+  width: 100%;
+  padding-top: 20px;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+.activeuserhis_child_style {
+  width: 95.6%;
+  height: 173px;
+  margin: 14px 0 0 50px;
+  border-radius: 10px;
+}
+
+.active_first_div {
+  width: 100%;
+  height: 61px;
+  border-radius: 6px 6px 0 0;
+  background-color: #0a6eaa;
+  display: flex;
+  gap: 829px;
+  color: #fff;
+  font-size: 30px;
+}
+.active_second_div {
+  width: 100%;
+  height: 109px;
+  border-radius: 0px 0px 6px 6px;
+  background-color: #0b6097;
+  display: flex;
+  color: #fff;
+  gap: 336px;
+  font-size: 30px;
+}
+.active_betnum {
+  text-align: center;
+}
+.active_id {
+  margin: 11px 0 0 22px;
+  /* text-align: center; */
+}
+.active_date {
+  margin: 13px 0 0 0;
+  /* text-align: center; */
+}
+.active_betamt {
+  margin: 11px 0 0 22px;
+  text-align: center;
+}
+
+img.theImg {
+  width: 30px;
+  height: 30px;
+}
+
+img.fstImg {
+  width: 30px;
+  height: 30px;
+}
+
+img.inpgs {
+  width: 164px;
+  height: 43px;
+  margin-left: 108px;
+  margin-top: 37px;
+}
+.historyuserhis_child_style {
+  width: 95.6%;
+  /* height: 173px; */
+  margin: 14px 0 0 50px;
+  border-radius: 10px;
+}
+
+.history_first_div {
+  width: 100%;
+  height: 61px;
+  border-radius: 6px 6px 0 0;
+  background-color: #00629d;
+  display: flex;
+  gap: 716px;
+  color: #fff;
+  font-size: 30px;
+}
+.history_second_div {
+  width: 100%;
+  border-radius: 0px 0px 6px 6px;
+  background-color: #004470;
+  display: flex;
+  color: #fff;
+  font-size: 30px;
+  justify-content: space-around;
+}
+.history_id {
+  margin: 11px 0 0 22px;
+  text-align: center;
+  color: #c8c8c8;
+}
+.history_date {
+  margin: 13px 0 0 0;
+  text-align: center;
+  color: #c8c8c8;
+}
+.history_betamt {
+  margin: 11px 0 0 22px;
+  text-align: center;
+  color: #c8c8c8;
+}
+.history_betnum {
+  margin: 11px 0 0 0px;
+  text-align: center;
+  color: #c8c8c8;
+}
+.history_poswin {
+  margin: 11px 0 0 0px;
+  text-align: center;
+  color: #c8c8c8;
+}
+.history_winnum {
+  margin: 11px 0 0 0px;
+  text-align: center;
+  color: #c8c8c8;
+}
+
+img.thessImg {
+  width: 25px;
+  height: 25px;
+  margin: 13px 0 0 -5px;
+}
+.poswintxt {
+  text-align: center;
+  width: 150px;
+  margin-top: 10px;
+  color: #fff;
+}
+.htbetnum_style {
+  text-align: center;
+  max-width: 600px;
+  margin-top: 24px;
+  color: #fff;
+  margin-bottom: 19px;
+}
+.payoutamt {
+  margin-top: 12px;
+  color: #fff;
+  font-size: 35px;
+}
+.payoutamttxt {
+  margin: 11px 0 0 0px;
+  text-align: center;
+  color: #c8c8c8;
+}
+
+img.fstssImg {
+  width: 25px;
+  height: 25px;
+  margin: 13px 0 0 -5px;
+}
+
+img.inwin {
+  width: 91px;
+  height: 43px;
+  margin-top: 40px;
+  margin-left: -7px;
+}
+
+.hisimgtxtspan {
+  padding-left: 8px;
+}
+
+/* franch keybord style */
+.Jeuzero_bgtbl_style {
+  position: absolute;
+  top: 312px;
+  left: 59px;
+  width: 1150px;
+  height: 263px;
+  background-image: url("../assets/images/frenchtbl.png");
+  background-size: cover;
+}
+
+#tiersbtn {
+  position: absolute;
+  right: 6%;
+  top: 25%;
+  border: 0;
+  width: 319px;
+  height: 134px;
+  font-size: 18px;
+  color: #fff;
+  border-radius: 0px 78px 79px 0px;
+  background: transparent;
+  text-align: center;
+  cursor: pointer;
+}
+#orphelinsbtn {
+  position: absolute;
+  right: 29%;
+  top: 25%;
+  font-size: 18px;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  border-bottom: 132px solid transparent;
+  border-left: 56px solid transparent;
+  border-right: 59px solid transparent;
+  height: 0;
+  width: 299px;
+  z-index: 2;
+  line-height: 34px;
+}
+#voisinsbtn {
+  position: absolute;
+  left: 21%;
+  border: 0;
+  color: #fff;
+  top: 25%;
+  width: 304px;
+  height: 132px;
+  font-size: 18px;
+  background: transparent;
+  transform: skew(-25deg) translateX(-5px);
+  text-align: center;
+  cursor: pointer;
+  z-index: 1;
+}
+#jeuzerobtn {
+  position: absolute;
+  left: 6%;
+  top: 25%;
+  border: 0;
+  width: 194px;
+  height: 132px;
+  font-size: 18px;
+  color: #fff;
+  border-radius: 78px 0px 0px 79px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.chipositiontopbottominzero {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  top: -20px;
+  left: 9px;
+  background-size: cover;
+}
+.chipositiontopbottominvoi {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  top: -14px;
+  left: -15px;
+  background-size: cover;
+}
+.settingprnt {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  height: 1080px;
+  background-color: #0102023a;
+  z-index: 999999;
+  display: none;
+}
+.settingpage {
+  position: absolute;
+  width: 1628px;
+  height: 865px;
+  top: 127px;
+  left: 189px;
+  background-image: url("../assets/images/settingbg.png");
+  background-size: cover;
+}
+.closebtn {
+  position: absolute;
+  /* color: #fff; */
+  right: 20px;
+  top: 19px;
+  /* font-size: 49px; */
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  background-image: url("../assets/images/closebtn.png");
+  background-size: cover;
+}
+
+.settinginsidetxt {
+  margin: 207px 0 0 106px;
+  width: 832px;
+  height: 576px;
+}
+
+.insidetxtfunction123 {
+  display: flex;
+  justify-content: space-between;
+  color: #fff;
+  font-size: 40px;
+  margin: 16px;
+}
+
+/* toggel switch css */
+
+.toggle {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.toggle-switch {
+  display: inline-block;
+  background: #ccc;
+  border-radius: 16px;
+  width: 58px;
+  height: 32px;
+  position: relative;
+  vertical-align: middle;
+  transition: background 0.25s;
+}
+.toggle-switch:before,
+.toggle-switch:after {
+  content: "";
+}
+.toggle-switch:before {
+  display: block;
+  background: linear-gradient(to bottom, #fff 0%, #eee 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  transition: left 0.25s;
+}
+.toggle:hover .toggle-switch:before {
+  background: linear-gradient(to bottom, #fff 0%, #fff 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+.toggle-checkbox:checked + .toggle-switch {
+  background: #13547b;
+}
+.toggle-checkbox:checked + .toggle-switch:before {
+  left: 30px;
+}
+
+.toggle-checkbox {
+  position: absolute;
+  visibility: hidden;
+}
+
+.logoutGame {
+  color: red;
+  cursor: pointer;
+}
+
+.upperhandle {
+  position: absolute;
+  top: 169px;
+  left: 163px;
+  width: 240px;
+  height: 240px;
+  z-index: 2;
+  background-image: url("../assets/images/desktopimg/wheelholder.png");
+  background-size: cover;
+}
+
+.mutebtnmusic {
+  background-image: url("../assets/");
+}
+.underconstructionpr {
+  position: absolute;
+  width: 100%;
+  z-index: 4;
+  background-color: rgba(0, 0, 0, 0.178);
+  display: none;
+}
+.underconstruction {
+  margin: 0 0 0 133px;
+  width: 1649px;
+  height: 930px;
+  background-image: url("../assets/images/uncsst.png");
+  background-size: cover;
+}
+
+.history_winamount {
+  margin: 11px 0 0 0px;
+  text-align: center;
+  color: #c8c8c8;
+}
+.titleSpin {
+  position: absolute;
+  top: -6px;
+  left: 447px;
+  width: 239px;
+  height: 75px;
+  background-image: url("../assets/images/desktopimg/spinwheel.png");
+  background-size: cover;
+}
+.spinwheelstyle {
+  position: absolute;
+  top: 97px;
+  right: 220px;
+  height: 208px;
+  transform-origin: 47% 100%;
+}
+.spinwheelmainstyle {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  left: 254px;
+  top: 77px;
+}
+
+.spinwheeltxtstyle {
+  width: 150px;
+  height: 45px;
+  display: block;
+  /* border: 0.2px solid black; */
+  text-align: center;
+  padding-top: 0px;
+  font-size: 44px;
+  color: #fff;
+  margin: 0px;
+  transform: rotate(90deg);
+  letter-spacing: 0.3px;
+  border-left: 0px solid #000;
+  border-right: 0px solid #000;
+  border-top: 0px solid #00f;
+  /* border-bottom: 45px solid rgba(0, 0, 0, 0.599); */
+}
+
+.spinwheelbgstyle {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background-image: url("../assets/images/desktopimg/spinwlbg.gif");
+  background-size: cover;
+}
+.spinbtnstyle {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  top: 211px;
+  left: 207px;
+  z-index: 1;
+  cursor: pointer;
+  border-radius: 50%;
+  /* background-image: url("../assets/images/desktopimg/spinbtnn.png"); */
+  /* background-size: cover; */
+}
+.targetbtnstyle {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background-image: url("../assets/images/desktopimg/targetsp.png");
+  background-size: cover;
+  margin: -15px 0 0 -4px;
+}
+.outerspinprstyle {
+  position: absolute;
+  top: 82px;
+  left: 262px;
+}
+
+#spinbtntxt {
+  font-size: 79px;
+  color: #fff;
+  padding: 47px 0 0 33px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(var(--wheelRotation));
+  }
+}
+
+.spinWheelanim {
+  animation: spin 5s ease;
+  animation-fill-mode: forwards;
+}
+
+#waitingTimer {
+  position: absolute;
+  top: 693px;
+  left: 266px;
+  width: 563px;
+  height: 75px;
+}
+.waitingtimerBgstyle {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    #2a007c 8.33%,
+    #3c00a1 53.65%,
+    #5f00d4 80.73%,
+    #5c01d2 99.99%
+  );
+  border-radius: 17px;
+}
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+
+.waitingtimerBgtxtstyle {
+  color: #fff;
+  font-size: 50px;
+  text-align: center;
+  padding: 7px 0 0 0px;
+  font-family: "Poppins", sans-serif;
+  font-weight: bold;
+}
+
+.wincoinbgstyle {
+  position: absolute;
+}
+
+#winningResultShow {
+  position: absolute;
+  top: 6px;
+  left: 183px;
+  width: 764px;
+  height: 562px;
+  z-index: 4;
+}
+.wincoinbgstyle {
+  width: 100%;
+  height: 100%;
+  background-image: url("../assets/images/desktopimg/coinswonbg.png");
+  background-size: cover;
+}
+
+.coinamontwinstyle {
+  font-size: 67px;
+  color: #fff;
+  padding: 324px 0 0 0px;
+  text-align: center;
+  font-family: "Poppins";
+  font-weight: bold;
+}
+.stopspinstyle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 6;
+  display: none;
+}
+
+.congtatulationgif {
+  position: absolute;
+  top: -349px;
+  left: -326px;
+  width: 1460px;
+  height: 1460px;
+  z-index: 6;
+  background-image: url("../assets/images/desktopimg/congt.gif");
+  background-size: cover;
+  display: none;
+}
+
+.dailyspinmain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999;
+  background-color: #00000048;
+  display: none;
+}
+
+.dailyspinmainbg {
+  position: absolute;
+  top: 194px;
+  left: 123px;
+  width: 1665px;
+  height: 852px;
+  background-image: url("../assets/images/desktopimg/dailybonusbg.png");
+  background-size: cover;
+}
+
+.closebtn_dly {
+  position: absolute;
+  top: -24px;
+  right: -29px;
+  width: 70px;
+  height: 70px;
+  cursor: pointer;
+  border-radius: 50%;
+  background-image: url("../assets/images/desktopimg/closewhbtn.png");
+  background-size: cover;
+}
+
+.dailyspcoinstyle {
+  width: 312px;
+  height: 478px;
+  /* display: inline-block; */
+
+  background-image: url("../assets/images/desktopimg/dailycoinbg.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-inline: 10px;
+}
+
+#dailyspincoinbg {
+  display: flex;
+  /* display: inline-block; */
+  width: max-content;
+}
+.spindaynumstyle {
+  color: #fff;
+  font-size: 50px;
+  margin-top: 25px;
+  text-align: center;
+}
+.spinvaluestyle {
+  color: #fff;
+  font-size: 40px;
+  text-align: center;
+  margin-top: 231px;
+}
+.spintextstyle {
+  margin-left: 8px;
+}
+.spinactionstyle {
+  width: 270px;
+  height: 79px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin: 22px 0 0 22px;
+}
+
+.yesspinactionstyle {
+  background-image: url("../assets/images/desktopimg/claimbtn.png");
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.timeleftbtn {
+  background-image: url("../assets/images/desktopimg/claimbtn.png");
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nospinactionstyle {
+  background-image: url("../assets/images/desktopimg/noclaimbtn.png");
+}
+.activeclaimbtn {
+  margin: 0 0 0 0;
+}
+
+.getcoingif {
+  position: absolute;
+  top: -46px;
+  left: 301px;
+  width: 300px;
+  height: 138px;
+  z-index: 6;
+  background-image: url("../assets/images/desktopimg/coingif.gif");
+  background-size: cover;
+  display: none;
+}
+
+#frenchKeyActionPositionMove {
+  position: relative;
+}
+
+.frenchKeyPlaceStyle {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+}
+.frenchKeyPlaceStyle_0 {
+  position: absolute;
+  top: 25px;
+  left: -20px;
+  width: 205px;
+  height: 80px;
+  border-radius: 75%;
+  transform: rotate(142deg);
+  clip-path: polygon(26% 4%, 68% 17%, 91% 100%, 0% 95%);
+  cursor: pointer;
+}
+.frenchKeyPlaceStyle_1 {
+  position: absolute;
+  top: 90px;
+  left: 1px;
+  width: 80px;
+  height: 74px;
+  border-radius: 13px;
+  transform: rotate(86deg);
+  clip-path: polygon(30% 0%, 86% 4%, 103% 100%, 5% 100%);
+  cursor: pointer;
+}
+.frenchKeyPlaceStyle_2 {
+  position: absolute;
+  top: 150px;
+  left: 17px;
+  width: 87px;
+  height: 71px;
+  transform: rotate(51deg);
+  clip-path: polygon(34% 0%, 84% 0%, 100% 100%, 0% 100%);
+  cursor: pointer;
+}
+.frenchKeyPlaceStyle_3 {
+  position: absolute;
+  top: 184px;
+  left: 81px;
+  width: 71px;
+  height: 71px;
+  transform: rotate(23deg);
+  clip-path: polygon(22% 19%, 76% 13%, 100% 100%, -2% 100%);
+  cursor: pointer;
+}
+.frenchKeyPlaceStyle_4 {
+  position: absolute;
+  top: 6px;
+  left: 996px;
+  width: 81px;
+  height: 80px;
+  transform: rotate(194deg);
+  clip-path: polygon(28% 18%, 79% 22%, 100% 100%, -8% 100%);
+  cursor: pointer;
+}
+.frenchKeyPlaceStyle_5 {
+  position: absolute;
+  top: 35px;
+  left: 1039px;
+  width: 85px;
+  height: 98px;
+  transform: rotate(231deg);
+  clip-path: polygon(33% 27%, 81% 21%, 100% 100%, 0% 100%);
+  cursor: pointer;
+}
+.frenchKeyPlaceStyle_6 {
+  position: absolute;
+  top: 85px;
+  left: 1059px;
+  width: 79px;
+  height: 98px;
+  transform: rotate(267deg);
+  clip-path: polygon(27% 21%, 79% 25%, 100% 100%, -1% 100%);
+  cursor: pointer;
+}
+.frenchKeyPlaceStyle_7 {
+  position: absolute;
+  top: 139px;
+  left: 1039px;
+  width: 85px;
+  height: 98px;
+  transform: rotate(298deg);
+  clip-path: polygon(29% 21%, 83% 24%, 99% 98%, 1% 82%);
+  cursor: pointer;
+}
+.frenchKeyPlaceStyle_8 {
+  position: absolute;
+  top: 173px;
+  left: 986px;
+  width: 86px;
+  height: 87px;
+  transform: rotate(334deg);
+  clip-path: polygon(37% 22%, 81% 30%, 103% 104%, 1% 89%);
+  cursor: pointer;
+}
+
+.frenchprntcolorchange {
+  background-color: #d5cccc78 !important;
+}

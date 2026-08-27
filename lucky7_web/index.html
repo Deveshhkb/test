@@ -1,0 +1,287 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta
+		content='width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui, width = device-width'
+		name='viewport' />
+	<title>Lucky7</title>
+	<link rel="icon" type="image/x-icon" href="/assets/images/desktopimg/icon.webp">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+		integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A=="
+		crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<link rel="stylesheet" type="text/css" href="assets/jquery/animate.min.css" />
+	<link rel="stylesheet" type="text/css" href="assets/livegame.css" />
+	<link rel="stylesheet" type="text/css" href="assets/animstyle.css" />
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=League+Gothic&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@100;300&family=Poppins&display=swap"
+		rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+
+
+
+
+</head>
+
+<body>
+	<!--Preloader-->
+	<div class="row">
+		<div id="html5Loader" class="col-sm-12">
+			<div id="DvLoaderCont">
+				<div id="DvLoaderProgress"></div>
+				<div id="DvLoaderProgresspercentage"></div>
+			</div>
+		</div>
+	</div>
+
+	<div id="wrapper">
+
+
+		<div id="load_images" style="width:0px;height:0px;opacity: 0;">
+
+		</div>
+
+		<div class="game_wrapper">
+			<div id="game_scroll">
+				<div id="mainScreensize">
+					<div id="mainScreenGame">
+						<div id="dealerImg"></div>
+						<div id="gamemenu_container">
+							<div id="mainprntData"></div>
+							<div id="topbgwheel" class="topbgwheel">
+								<div id="roundidtxt" class="roundidtxtstyle"></div>
+							</div>
+
+							<div id="numberhistorybox" class="numberhistorybox">
+
+								<div id="numberhistory" class="numberhistory">
+								</div>
+								<div id="menuicon" class="menuicon"></div>
+
+							</div>
+							<div class="bottombg"></div>
+							<div id="playerOnline" class="playerOnlineStyle">
+								<div id="playernotxt" class="playernotxt"></div>
+							</div>
+
+						</div>
+
+
+						<div id="gamehead_container">
+							<div class="timer fill"></div>
+							<div id="timerpopupshow" class="timerpopupshow"></div>
+							<div class="messageEnoughBox"></div>
+
+							<div id="gameTimerOut">
+								<div id='progressbar1'>
+								</div>
+								<div id="clockimg">
+									<div class="clockcolor">
+										<div class="progress_bar_inner"></div>
+									</div>
+									<div class="timeclsprn">
+										<div class="stclss">Starting in</div>
+										<div id="timercount"></div>
+										<div class="secstyle">s</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="settingprnt">
+
+								<div id="settingpage" class="settingpage">
+									<div class="closebtn" id="settingcls"></div>
+									<div id="settinginsidetxt" class="settinginsidetxt">
+										<div id="toptitleinfo" class="toptitleinfoStyle">
+											<div id="toptxt">Amount</div>
+										</div>
+										<div class="insidetxtfunction123">
+											<div class="valueStyleDec"> _ </div>
+											<input type="number" id="betAmountData" class="betAmountDataStyle"
+												maxlength="5">
+											<div class="valueStyleInc"> + </div>
+										</div>
+										<div class="textInfo"> Are you sure you want to continue? </div>
+
+										<div id="btnsty"> <button id="betplacebtn">SUBMIT</button>
+										</div>
+
+
+									</div>
+								</div>
+							</div>
+
+							<div id="stopbettxt"></div>
+							<!-- <div id="waitfornext"></div> -->
+							<div id="gamestart"></div>
+
+							<div class="resultShowBox " id="resultShowBox">
+								<div id="resultShowBoxText"></div>
+							</div>
+							<div class="winalertbar" id="winalertbar"></div>
+							<div id="gameUserId" class="gameUserId">
+								<div class="gameUserBox">
+
+									<div class="gameUserImg" id="gameUserImg">
+									</div>
+									<div class="gameUserIdtxt" id="gameUserIdtxt">
+
+									</div>
+								</div>
+							</div>
+							<div id="rulePopup">
+								<div id="outerborderpopup"></div>
+								<div id="rulePopupText" class="rulePopupText">
+									<div class="closepop"></div>
+								</div>
+							</div>
+							<div id="resultPopup">
+								<div id="outerresultborder"></div>
+								<div id="resultPopupText" class="resultrulePopupText">
+									<div class="resultclosepop"></div>
+									<div id="gameRId" class="gameRIdStyle"></div>
+								</div>
+							</div>
+
+							<div id="betPopup">
+								<div id="outerbetpopup"></div>
+								<div id="betText" class="betTextStyle">
+									<div class="betclosepop"></div>
+									<div id="mybetdetalis" class="mybetdetalisstyle"></div>
+								</div>
+							</div>
+
+							<div id="neterrorprnt">
+								<div id="internet_error">
+									Connection lost. Trying to reconnect
+
+									<div class="snippet" data-title="dot-flashing">
+										<div class="stage">
+											<div class="dot-flashing"></div>
+										</div>
+									</div>
+
+								</div>
+							</div>
+						</div>
+
+						<div id="gamebody_container">
+							<div id="expImg" class="expImgStyle">
+								<div id="expBlsTxt"></div>
+							</div>
+
+							<div id="activeUser_container"></div>
+							<div id="bettingTable_container"></div>
+							<div id="bettingTable_container_secondRow"></div>
+
+							<div id="resultDisplay">
+								<div id="resultprt" class="resultBg"></div>
+							</div>
+
+
+							<div id='progressbar1'></div>
+
+							<div id="coinchipselection">
+								<div id="chip_1" class='chipValue'>
+									<img src='assets/images/1_chip.webp' />
+									<div id="chiptxt_1" class="chiptxtStyle"></div>
+								</div>
+								<div id="chip_2" class=' chipValue'>
+									<img src='assets/images/2_chip.webp' />
+									<div id="chiptxt_2" class="chiptxtStyle"></div>
+
+								</div>
+								<div id="chip_3" class=' chipValue'>
+									<img src='assets/images/3_chip.webp' />
+									<div id="chiptxt_3" class="chiptxtStyle"></div>
+
+								</div>
+								<div id="chip_4" class=' chipValue'>
+									<img src='assets/images/4_chip.webp' />
+									<div id="chiptxt_4" class="chiptxtStyle"></div>
+
+								</div>
+								<div id="chip_5" class=' chipValue'>
+									<img src='assets/images/5_chip.webp' />
+									<div id="chiptxt_5" class="chiptxtStyle"></div>
+
+								</div>
+								<div id="chip_6" class=' chipValue'>
+									<img src='assets/images/6_chip.webp' />
+									<div id="chiptxt_6" class="chiptxtStyle"></div>
+
+								</div>
+
+							</div>
+
+							<div id="moneybutton" class="moneybutton">
+								<div id="mybetsection" class="mybetsectionstyle"></div>
+
+								<div id="coinamountfield" class="coinamountfield">
+								</div>
+								<div id="betamountfield" class="betamountfield">
+								</div>
+							</div>
+
+							<div id="bettingbtnbot" class="bettingbtnbot"></div>
+
+						</div>
+
+					</div>
+
+				</div>
+
+
+			</div>
+		</div>
+	</div>
+
+	<audio id="closebetsound" src="assets/audio/dealerBetClosed.mp3" type="audio/mpeg"></audio>
+	<audio id="openbetsound" src="assets/audio/dealerPlaceBets.mp3" type="audio/mpeg"></audio>
+	<audio id="winMusic" src="assets/audio/WinRoulette.wav" type="audio/wav"></audio>
+	<audio id="bgm" src="assets/audio/bgm.mp3" type="audio/mpeg"></audio>
+
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+	<!-- Loader socket start -->
+
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+	<!-- loader socket end -->
+
+	<script type="text/javascript" src="assets/jquery/jquery.js"></script>
+
+	<script type="text/javascript" src="assets/jquery/jquery.min.js"></script>
+	<script type="text/javascript" src="assets/jquery/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="assets/jquery/jquery.ui.touch-punch.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+
+
+	<!-- Loader Libraries Starts -->
+	<script type="text/javascript" src="assets/preloader/jquery.html5Loader.min.js"></script>
+	<script type="text/javascript" src="assets/preloader/animation/jquery.big-counter.js"></script>
+	<script type="text/javascript" src="assets/preloader/Main.class.js"></script>
+	<script type="text/javascript" src="assets/preloader/configPreload.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+
+
+	<!--Loader Libraries Ends -->
+
+
+
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/randomcolor/0.5.2/randomColor.js'></script>
+	<script src='https://bundle.run/css-scroll-snap-polyfill@0.1.2'></script>
+
+
+	<script type="text/javascript" src="assets/livegame.js"></script>
+	<script type="text/javascript" src="assets/helperjs/userdivcreator.js"></script>
+
+</body>
+
+</html>

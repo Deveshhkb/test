@@ -11,7 +11,8 @@ module.exports = {
   DB_FILE: process.env.DB_FILE || path.join(__dirname, "..", "data", "db.json"),
   FRONTEND_DIR:
     process.env.FRONTEND_DIR ||
-    path.join(__dirname, "..", "..", "dragonTiger_Web"),
+    path.join(__dirname, "..", "..", "lucky7_web"),
+    // path.join(__dirname, "..", "..", "dragonTiger_Web"),
 
   STAKE_BUTTONS: [100, 500, 1000, 5000, 10000, 25000],
   STARTING_BALANCE: 100000,

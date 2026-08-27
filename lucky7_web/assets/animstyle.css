@@ -1,0 +1,773 @@
+.stotscreen {
+  top: -300px;
+}
+
+.upslideScreen {
+  position: relative;
+  -webkit-animation: upslidescn 0.2s linear;
+  -moz-animation: upslidescn 0.2s linear;
+  animation: upslidescn 0.2s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes upslidescn {
+  0% {
+    top: 0px;
+  }
+
+  100% {
+    top: -300px;
+  }
+}
+
+@-webkit-keyframes upslidescn {
+  0% {
+    top: 0px;
+  }
+
+  100% {
+    top: -300px;
+  }
+}
+
+@keyframes upslidescn {
+  0% {
+    top: 0px;
+  }
+
+  100% {
+    top: -300px;
+  }
+}
+.downslideScreen {
+  position: relative;
+  -webkit-animation: dwnslidescn 0.2s linear;
+  -moz-animation: dwnslidescn 0.2s linear;
+  animation: dwnslidescn 0.2s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes dwnslidescn {
+  0% {
+    top: -300px;
+  }
+
+  100% {
+    top: 0px;
+  }
+}
+
+@-webkit-keyframes dwnslidescn {
+  0% {
+    top: -300px;
+  }
+
+  100% {
+    top: 0px;
+  }
+}
+
+@keyframes dwnslidescn {
+  0% {
+    top: -300px;
+  }
+
+  100% {
+    top: 0px;
+  }
+}
+
+.firstusershake {
+  -webkit-animation: chipanimbet 1s linear;
+  -moz-animation: chipanimbet 1s linear;
+  animation: chipanimbet 1s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes chipanimbet {
+  0% {
+    left: 20%;
+  }
+
+  25% {
+    left: 21%;
+  }
+  50% {
+    left: 20%;
+  }
+  50% {
+    left: 19%;
+  }
+
+  100% {
+    left: 20%;
+  }
+}
+
+@-webkit-keyframes chipanimbet {
+  0% {
+    left: 20%;
+  }
+
+  25% {
+    left: 21%;
+  }
+  50% {
+    left: 20%;
+  }
+  50% {
+    left: 19%;
+  }
+
+  100% {
+    left: 20%;
+  }
+}
+
+@keyframes chipanimbet {
+  0% {
+    left: 20%;
+  }
+
+  25% {
+    left: 21%;
+  }
+  50% {
+    left: 20%;
+  }
+  50% {
+    left: 19%;
+  }
+
+  100% {
+    left: 20%;
+  }
+}
+.secondUserShake {
+  -webkit-animation: secSheke 1s linear;
+  -moz-animation: secSheke 1s linear;
+  animation: secSheke 1s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes secSheke {
+  0% {
+    left: 1482px;
+  }
+
+  25% {
+    left: 1472px;
+  }
+  50% {
+    left: 1482px;
+  }
+  75% {
+    left: 1492px;
+  }
+
+  100% {
+    left: 1482px;
+  }
+}
+
+@-webkit-keyframes secSheke {
+  0% {
+    left: 1482px;
+  }
+
+  25% {
+    left: 1472px;
+  }
+  50% {
+    left: 1482px;
+  }
+  75% {
+    left: 1492px;
+  }
+
+  100% {
+    left: 1482px;
+  }
+}
+
+@keyframes secSheke {
+  0% {
+    left: 1482px;
+  }
+
+  25% {
+    left: 1472px;
+  }
+  50% {
+    left: 1482px;
+  }
+  75% {
+    left: 1492px;
+  }
+
+  100% {
+    left: 1482px;
+  }
+}
+
+.betanimationchip_1 {
+  -webkit-animation: betShekecurrentfsttbl 0.5s linear;
+  -moz-animation: betShekecurrentfsttbl 0.5s linear;
+  animation: betShekecurrentfsttbl 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes betShekecurrentfsttbl {
+  0% {
+    top: 508%;
+    left: 206%;
+  }
+}
+
+@-moz-keyframes betShekecurrentfsttbl {
+  0% {
+    top: 508%;
+    left: 206%;
+  }
+}
+
+@-webkit-keyframes betShekecurrentfsttbl {
+  0% {
+    top: 508%;
+    left: 206%;
+  }
+}
+.betanimationchip_2 {
+  -webkit-animation: betShekecurrentscndtbl 0.5s linear;
+  -moz-animation: betShekecurrentscndtbl 0.5s linear;
+  animation: betShekecurrentscndtbl 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes betShekecurrentscndtbl {
+  0% {
+    top: 507%;
+    left: -80%;
+  }
+}
+
+@-moz-keyframes betShekecurrentscndtbl {
+  0% {
+    top: 507%;
+    left: -80%;
+  }
+}
+
+@-webkit-keyframes betShekecurrentscndtbl {
+  0% {
+    top: 507%;
+    left: -80%;
+  }
+}
+.betanimationchip_3 {
+  -webkit-animation: betShekecurrenteventbl 0.5s linear;
+  -moz-animation: betShekecurrenteventbl 0.5s linear;
+  animation: betShekecurrenteventbl 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes betShekecurrenteventbl {
+  0% {
+    top: 311%;
+    left: 365%;
+  }
+}
+
+@-moz-keyframes betShekecurrenteventbl {
+  0% {
+    top: 311%;
+    left: 365%;
+  }
+}
+
+@-webkit-keyframes betShekecurrenteventbl {
+  0% {
+    top: 311%;
+    left: 365%;
+  }
+}
+.betanimationchip_4 {
+  -webkit-animation: betShekecurrentoddtbl 0.5s linear;
+  -moz-animation: betShekecurrentoddtbl 0.5s linear;
+  animation: betShekecurrentoddtbl 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes betShekecurrentoddtbl {
+  0% {
+    top: 310%;
+    left: 173%;
+  }
+}
+
+@-moz-keyframes betShekecurrentoddtbl {
+  0% {
+    top: 310%;
+    left: 173%;
+  }
+}
+
+@-webkit-keyframes betShekecurrentoddtbl {
+  0% {
+    top: 310%;
+    left: 173%;
+  }
+}
+.betanimationchip_5 {
+  -webkit-animation: betShekecurrentblacktbl 0.5s linear;
+  -moz-animation: betShekecurrentblacktbl 0.5s linear;
+  animation: betShekecurrentblacktbl 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes betShekecurrentblacktbl {
+  0% {
+    top: 309%;
+    left: -17%;
+  }
+}
+
+@-moz-keyframes betShekecurrentblacktbl {
+  0% {
+    top: 309%;
+    left: -17%;
+  }
+}
+
+@-webkit-keyframes betShekecurrentblacktbl {
+  0% {
+    top: 309%;
+    left: -17%;
+  }
+}
+.betanimationchip_6 {
+  -webkit-animation: betShekecurrentredtbl 0.5s linear;
+  -moz-animation: betShekecurrentredtbl 0.5s linear;
+  animation: betShekecurrentredtbl 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes betShekecurrentredtbl {
+  0% {
+    top: 308%;
+    left: -207%;
+  }
+}
+
+@-moz-keyframes betShekecurrentredtbl {
+  0% {
+    top: 308%;
+    left: -207%;
+  }
+}
+
+@-webkit-keyframes betShekecurrentredtbl {
+  0% {
+    top: 308%;
+    left: -207%;
+  }
+}
+
+/* .betChipsAnimationSecusertable1 {
+  -webkit-animation: betfirstuserchip 0.5s linear;
+  -moz-animation: betfirstuserchip 0.5s linear;
+  animation: betfirstuserchip 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes betfirstuserchip {
+  0% {
+    top: 55%;
+    left: 323%;
+  }
+}
+
+@-moz-keyframes betfirstuserchip {
+  0% {
+    top: 55%;
+    left: 323%;
+  }
+}
+
+@-webkit-keyframes betfirstuserchip {
+  0% {
+    top: 55%;
+    left: 323%;
+  }
+} */
+
+/* dummy first user betplace style Start */
+
+.dummyuser_table1 {
+  -webkit-animation: dummyFirstUser1 0.5s linear;
+  -moz-animation: dummyFirstUser1 0.5s linear;
+  animation: dummyFirstUser1 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstUser1 {
+  0% {
+    top: -45%;
+    left: -99%;
+  }
+}
+
+@-moz-keyframes dummyFirstUser1 {
+  0% {
+    top: -45%;
+    left: -99%;
+  }
+}
+
+@-webkit-keyframes dummyFirstUser1 {
+  0% {
+    top: -45%;
+    left: -99%;
+  }
+}
+.dummyuser_table2 {
+  -webkit-animation: dummyFirstUser2 0.5s linear;
+  -moz-animation: dummyFirstUser2 0.5s linear;
+  animation: dummyFirstUser2 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstUser2 {
+  0% {
+    top: -43%;
+    left: -385%;
+  }
+}
+
+@-moz-keyframes dummyFirstUser2 {
+  0% {
+    top: -43%;
+    left: -385%;
+  }
+}
+
+@-webkit-keyframes dummyFirstUser2 {
+  0% {
+    top: -43%;
+    left: -385%;
+  }
+}
+.dummyuser_table3 {
+  -webkit-animation: dummyFirstUser3 0.5s linear;
+  -moz-animation: dummyFirstUser3 0.5s linear;
+  animation: dummyFirstUser3 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstUser3 {
+  0% {
+    top: -399%;
+    left: -170%;
+  }
+}
+
+@-moz-keyframes dummyFirstUser3 {
+  0% {
+    top: -399%;
+    left: -170%;
+  }
+}
+
+@-webkit-keyframes dummyFirstUser3 {
+  0% {
+    top: -399%;
+    left: -170%;
+  }
+}
+.dummyuser_table4 {
+  -webkit-animation: dummyFirstUser4 0.5s linear;
+  -moz-animation: dummyFirstUser4 0.5s linear;
+  animation: dummyFirstUser4 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstUser4 {
+  0% {
+    top: -391%;
+    left: -358%;
+  }
+}
+
+@-moz-keyframes dummyFirstUser4 {
+  0% {
+    top: -391%;
+    left: -358%;
+  }
+}
+
+@-webkit-keyframes dummyFirstUser4 {
+  0% {
+    top: -391%;
+    left: -358%;
+  }
+}
+.dummyuser_table5 {
+  -webkit-animation: dummyFirstUser5 0.5s linear;
+  -moz-animation: dummyFirstUser5 0.5s linear;
+  animation: dummyFirstUser5 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstUser5 {
+  0% {
+    top: -395%;
+    left: -548%;
+  }
+}
+
+@-moz-keyframes dummyFirstUser5 {
+  0% {
+    top: -395%;
+    left: -548%;
+  }
+}
+
+@-webkit-keyframes dummyFirstUser5 {
+  0% {
+    top: -395%;
+    left: -548%;
+  }
+}
+.dummyuser_table6 {
+  -webkit-animation: dummyFirstUser6 0.5s linear;
+  -moz-animation: dummyFirstUser6 0.5s linear;
+  animation: dummyFirstUser6 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstUser6 {
+  0% {
+    top: -398%;
+    left: -741%;
+  }
+}
+
+@-moz-keyframes dummyFirstUser6 {
+  0% {
+    top: -398%;
+    left: -741%;
+  }
+}
+
+@-webkit-keyframes dummyFirstUser6 {
+  0% {
+    top: -398%;
+    left: -741%;
+  }
+}
+
+/* dummy first user betplace style End */
+
+/* dummy second user betplace style Start */
+
+.dummyuser2_table1 {
+  -webkit-animation: dummySecondUser1 0.5s linear;
+  -moz-animation: dummySecondUser1 0.5s linear;
+  animation: dummySecondUser1 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondUser1 {
+  0% {
+    top: -50%;
+    left: 511%;
+  }
+}
+
+@-moz-keyframes dummySecondUser1 {
+  0% {
+    top: -50%;
+    left: 511%;
+  }
+}
+
+@-webkit-keyframes dummySecondUser1 {
+  0% {
+    top: -50%;
+    left: 511%;
+  }
+}
+.dummyuser2_table2 {
+  -webkit-animation: dummySecondUser2 0.5s linear;
+  -moz-animation: dummySecondUser2 0.5s linear;
+  animation: dummySecondUser2 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondUser2 {
+  0% {
+    top: -47%;
+    left: 225%;
+  }
+}
+
+@-moz-keyframes dummySecondUser2 {
+  0% {
+    top: -47%;
+    left: 225%;
+  }
+}
+
+@-webkit-keyframes dummySecondUser2 {
+  0% {
+    top: -47%;
+    left: 225%;
+  }
+}
+.dummyuser2_table3 {
+  -webkit-animation: dummySecondUser3 0.5s linear;
+  -moz-animation: dummySecondUser3 0.5s linear;
+  animation: dummySecondUser3 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondUser3 {
+  0% {
+    top: -400%;
+    left: 900%;
+  }
+}
+
+@-moz-keyframes dummySecondUser3 {
+  0% {
+    top: -400%;
+    left: 900%;
+  }
+}
+
+@-webkit-keyframes dummySecondUser3 {
+  0% {
+    top: -400%;
+    left: 900%;
+  }
+}
+.dummyuser2_table4 {
+  -webkit-animation: dummySecondUser4 0.5s linear;
+  -moz-animation: dummySecondUser4 0.5s linear;
+  animation: dummySecondUser4 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondUser4 {
+  0% {
+    top: -402%;
+    left: 708%;
+  }
+}
+
+@-moz-keyframes dummySecondUser4 {
+  0% {
+    top: -402%;
+    left: 708%;
+  }
+}
+
+@-webkit-keyframes dummySecondUser4 {
+  0% {
+    top: -402%;
+    left: 708%;
+  }
+}
+.dummyuser2_table5 {
+  -webkit-animation: dummySecondUser5 0.5s linear;
+  -moz-animation: dummySecondUser5 0.5s linear;
+  animation: dummySecondUser5 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondUser5 {
+  0% {
+    top: -402%;
+    left: 520%;
+  }
+}
+
+@-moz-keyframes dummySecondUser5 {
+  0% {
+    top: -402%;
+    left: 520%;
+  }
+}
+
+@-webkit-keyframes dummySecondUser5 {
+  0% {
+    top: -402%;
+    left: 520%;
+  }
+}
+.dummyuser2_table6 {
+  -webkit-animation: dummySecondUser6 0.5s linear;
+  -moz-animation: dummySecondUser6 0.5s linear;
+  animation: dummySecondUser6 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondUser6 {
+  0% {
+    top: -401%;
+    left: 329%;
+  }
+}
+
+@-moz-keyframes dummySecondUser6 {
+  0% {
+    top: -401%;
+    left: 329%;
+  }
+}
+
+@-webkit-keyframes dummySecondUser6 {
+  0% {
+    top: -401%;
+    left: 329%;
+  }
+}
+
+/* dummy secomnd user betplace style End */
+
+.roundidtxtstyle {
+  animation: 2.5s anim-popoutin ease infinite;
+}
+
+@keyframes anim-popoutin {
+  0% {
+    color: #028ba9;
+    transform: scale(0);
+    opacity: 0;
+    text-shadow: 0 0 0 rgba(243, 70, 70, 0);
+  }
+  25% {
+    color: #b9bb44c0;
+    transform: scale(1.5);
+    opacity: 1;
+    text-shadow: 3px 10px 5px rgba(32, 12, 12, 0.5);
+  }
+  50% {
+    color: #028ba9;
+    transform: scale(1);
+    opacity: 1;
+    text-shadow: 1px 0 0 rgba(243, 70, 70, 0);
+  }
+  100% {
+    /* animate nothing to add pause at the end of animation */
+    transform: scale(1);
+    opacity: 1;
+    text-shadow: 1px 0 0 rgba(248, 65, 65, 0);
+  }
+}
+
+._box {
+  width: 100px;
+  white-space: nowrap;
+  text-align: center;
+}

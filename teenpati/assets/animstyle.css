@@ -1,0 +1,327 @@
+.firstusershake {
+  -webkit-animation: chipanimbet 1s linear;
+  -moz-animation: chipanimbet 1s linear;
+  animation: chipanimbet 1s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes chipanimbet {
+  0% {
+    left: 345px;
+  }
+
+  25% {
+    left: 350px;
+  }
+  50% {
+    left: 345px;
+  }
+  75% {
+    left: 340px;
+  }
+
+  100% {
+    left: 345px;
+  }
+}
+
+@-webkit-keyframes chipanimbet {
+  0% {
+    left: 345px;
+  }
+
+  25% {
+    left: 350px;
+  }
+  50% {
+    left: 345px;
+  }
+  75% {
+    left: 340px;
+  }
+
+  100% {
+    left: 345px;
+  }
+}
+
+@keyframes chipanimbet {
+  0% {
+    left: 345px;
+  }
+
+  25% {
+    left: 350px;
+  }
+  50% {
+    left: 345px;
+  }
+  75% {
+    left: 340px;
+  }
+
+  100% {
+    left: 345px;
+  }
+}
+.secondUserShake {
+  -webkit-animation: secSheke 1s linear;
+  -moz-animation: secSheke 1s linear;
+  animation: secSheke 1s linear;
+  animation-iteration-count: 1;
+}
+
+@-moz-keyframes secSheke {
+  0% {
+    left: 1509px;
+  }
+
+  25% {
+    left: 1507px;
+  }
+  50% {
+    left: 1509px;
+  }
+  75% {
+    left: 1511px;
+  }
+
+  100% {
+    left: 1509px;
+  }
+}
+
+@-webkit-keyframes secSheke {
+  0% {
+    left: 1509px;
+  }
+
+  25% {
+    left: 1507px;
+  }
+  50% {
+    left: 1509px;
+  }
+  75% {
+    left: 1511px;
+  }
+
+  100% {
+    left: 1509px;
+  }
+}
+
+@keyframes secSheke {
+  0% {
+    left: 1509px;
+  }
+
+  25% {
+    left: 1507px;
+  }
+  50% {
+    left: 1509px;
+  }
+  75% {
+    left: 1511px;
+  }
+
+  100% {
+    left: 1509px;
+  }
+}
+
+.betChipAnimFirstDummy {
+  -webkit-animation: dummyFirstur 0.5s linear;
+  -moz-animation: dummyFirstur 0.5s linear;
+  animation: dummyFirstur 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstur {
+  0% {
+    top: 70%;
+    left: -168%;
+  }
+}
+
+@-moz-keyframes dummyFirstur {
+  0% {
+    top: 70%;
+    left: -168%;
+  }
+}
+
+@-webkit-keyframes dummyFirstur {
+  0% {
+    top: 70%;
+    left: -168%;
+  }
+}
+.betChipAnimFirstDummy2 {
+  -webkit-animation: dummyFirstur2 0.5s linear;
+  -moz-animation: dummyFirstur2 0.5s linear;
+  animation: dummyFirstur2 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummyFirstur2 {
+  0% {
+    top: 67%;
+    left: -312%;
+  }
+}
+
+@-moz-keyframes dummyFirstur2 {
+  0% {
+    top: 67%;
+    left: -312%;
+  }
+}
+
+@-webkit-keyframes dummyFirstur2 {
+  0% {
+    top: 67%;
+    left: -312%;
+  }
+}
+.betChipAnimSecondDummy {
+  -webkit-animation: dummySecondtur 0.5s linear;
+  -moz-animation: dummySecondtur 0.5s linear;
+  animation: dummySecondtur 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondtur {
+  0% {
+    top: 55%;
+    left: 414%;
+  }
+}
+
+@-moz-keyframes dummySecondtur {
+  0% {
+    top: 55%;
+    left: 414%;
+  }
+}
+
+@-webkit-keyframes dummySecondtur {
+  0% {
+    top: 55%;
+    left: 414%;
+  }
+}
+.betChipAnimSecondDummy2 {
+  -webkit-animation: dummySecondtur2 0.5s linear;
+  -moz-animation: dummySecondtur2 0.5s linear;
+  animation: dummySecondtur2 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes dummySecondtur2 {
+  0% {
+    top: 55%;
+    left: 271%;
+  }
+}
+
+@-moz-keyframes dummySecondtur2 {
+  0% {
+    top: 55%;
+    left: 271%;
+  }
+}
+
+@-webkit-keyframes dummySecondtur2 {
+  0% {
+    top: 55%;
+    left: 271%;
+  }
+}
+
+.betChipsMainUser {
+  -webkit-animation: mainUserBet 0.5s linear;
+  -moz-animation: mainUserBet 0.5s linear;
+  animation: mainUserBet 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes mainUserBet {
+  0% {
+    top: 224%;
+    left: 124%;
+  }
+}
+
+@-moz-keyframes mainUserBet {
+  0% {
+    top: 224%;
+    left: 124%;
+  }
+}
+
+@-webkit-keyframes mainUserBet {
+  0% {
+    top: 224%;
+    left: 124%;
+  }
+}
+.betChipsMainUser2 {
+  -webkit-animation: mainUserBet2 0.5s linear;
+  -moz-animation: mainUserBet2 0.5s linear;
+  animation: mainUserBet2 0.5s linear;
+  animation-iteration-count: 1;
+}
+
+@keyframes mainUserBet2 {
+  0% {
+    top: 225%;
+    left: -19%;
+  }
+}
+
+@-moz-keyframes mainUserBet2 {
+  0% {
+    top: 225%;
+    left: -19%;
+  }
+}
+
+@-webkit-keyframes mainUserBet2 {
+  0% {
+    top: 225%;
+    left: -19%;
+  }
+}
+
+.roundidtxtstyle {
+  animation: 2.5s anim-popoutin ease infinite;
+}
+
+@keyframes anim-popoutin {
+  0% {
+    color: #028ba9;
+    transform: scale(0);
+    opacity: 0;
+    text-shadow: 0 0 0 rgba(243, 70, 70, 0);
+  }
+  25% {
+    color: #b9bb44c0;
+    transform: scale(1.5);
+    opacity: 1;
+    text-shadow: 3px 10px 5px rgba(32, 12, 12, 0.5);
+  }
+  50% {
+    color: #028ba9;
+    transform: scale(1);
+    opacity: 1;
+    text-shadow: 1px 0 0 rgba(243, 70, 70, 0);
+  }
+  100% {
+    /* animate nothing to add pause at the end of animation */
+    transform: scale(1);
+    opacity: 1;
+    text-shadow: 1px 0 0 rgba(248, 65, 65, 0);
+  }
+}
