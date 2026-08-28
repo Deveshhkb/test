@@ -488,7 +488,6 @@ $(document).ready(function () {
         timeLeftGame = data.autotime;
         totalCoins = data.max;
         autoTime = timeLeftGame;
-        console.log(autoTime);
         let progress_bar_left = (timeLeftGame / time_period) * 100;
         progress_bar_inner.style.width = `${100 - progress_bar_left}%`;
         if (timeLeftGame?.toString().length < 2)
