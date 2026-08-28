@@ -3,7 +3,7 @@
   margin-top: 976px;
   width: 1920px;
   height: 597px;
-  background-image: url("/assets/images/desktopimg/betbtnbg.png");
+  background-image: url("../assets/images/desktopimg/betbtnbg.png");
   background-size: cover;
   /* justify-content: space-around; */
 }
@@ -111,22 +111,22 @@
 }
 
 #betinnerdata_7 {
-  background-image: url("/assets/images/desktopimg/evenbtn.png");
+  background-image: url("../assets/images/desktopimg/evenbtn.png");
 }
 #betinnerdata_8 {
-  background-image: url("/assets/images/desktopimg/oddbtn.png");
+  background-image: url("../assets/images/desktopimg/oddbtn.png");
 }
 #betinnerdata_9 {
-  background-image: url("/assets/images/desktopimg/blackbtn.png");
+  background-image: url("../assets/images/desktopimg/blackbtn.png");
 }
 #betinnerdata_10 {
-  background-image: url("/assets/images/desktopimg/redbtn.png");
+  background-image: url("../assets/images/desktopimg/redbtn.png");
 }
 #betinnerdata_11 {
-  background-image: url("/assets/images/desktopimg/under7.png");
+  background-image: url("../assets/images/desktopimg/under7.png");
 }
 #betinnerdata_12 {
-  background-image: url("/assets/images/desktopimg/over7.png");
+  background-image: url("../assets/images/desktopimg/over7.png");
 }
 
 #bottombetDataKeyAct {
@@ -153,43 +153,43 @@
   background-repeat: no-repeat;
 }
 #betinnerdata_13 {
-  background-image: url("/assets/images/1_card.png");
+  background-image: url("../assets/images/1_card.png");
 }
 #betinnerdata_14 {
-  background-image: url("/assets/images/2_card.png");
+  background-image: url("../assets/images/2_card.png");
 }
 #betinnerdata_15 {
-  background-image: url("/assets/images/3_card.png");
+  background-image: url("../assets/images/3_card.png");
 }
 #betinnerdata_16 {
-  background-image: url("/assets/images/4_card.png");
+  background-image: url("../assets/images/4_card.png");
 }
 #betinnerdata_17 {
-  background-image: url("/assets/images/5_card.png");
+  background-image: url("../assets/images/5_card.png");
 }
 #betinnerdata_18 {
-  background-image: url("/assets/images/6_card.png");
+  background-image: url("../assets/images/6_card.png");
 }
 #betinnerdata_19 {
-  background-image: url("/assets/images/7_card.png");
+  background-image: url("../assets/images/7_card.png");
 }
 #betinnerdata_20 {
-  background-image: url("/assets/images/8_card.png");
+  background-image: url("../assets/images/8_card.png");
 }
 #betinnerdata_21 {
-  background-image: url("/assets/images/9_card.png");
+  background-image: url("../assets/images/9_card.png");
 }
 #betinnerdata_22 {
-  background-image: url("/assets/images/10_card.png");
+  background-image: url("../assets/images/10_card.png");
 }
 #betinnerdata_23 {
-  background-image: url("/assets/images/11_card.png");
+  background-image: url("../assets/images/11_card.png");
 }
 #betinnerdata_24 {
-  background-image: url("/assets/images/12_card.png");
+  background-image: url("../assets/images/12_card.png");
 }
 #betinnerdata_25 {
-  background-image: url("/assets/images/13_card.png");
+  background-image: url("../assets/images/13_card.png");
 }
 
 .allcartRateStyle {

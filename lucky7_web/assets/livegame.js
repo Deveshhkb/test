@@ -678,7 +678,7 @@ $(document).ready(function () {
     $("<div/>", {
       id: clickqut + "chip-id",
       class: "betchipimgbgposition",
-      style: `background-image: url(../assets/images/${j}_chip.webp); top:${
+      style: `background-image: url(/games/lucky7_web/assets/images/${j}_chip.webp); top:${
         Math.random() * 100 + "%"
       } ; left:${Math.random() * 100 + "%"}`,
     }).appendTo(tableId);
@@ -689,7 +689,7 @@ $(document).ready(function () {
     $("<div/>", {
       id: clickqut + "chip-id",
       class: "betchipimgbgposition",
-      style: `background-image: url(../assets/images/${
+      style: `background-image: url(/games/lucky7_web/assets/images/${
         chipAmount.indexOf(+amount) + 1
       }_chip.webp); top:${Math.random() * 100 + "%"} ; left:${
         Math.random() * 100 + "%"
@@ -927,43 +927,43 @@ $(document).ready(function () {
 
   function closebetsound() {
     var audio = $("<audio>");
-    audio.attr("src", "/assets/audio/stopbetting.mp3");
+    audio.attr("src", "/games/lucky7_web/assets/audio/stopbetting.mp3");
     audio.on("ended", removebg);
     if (!isMuted) {
-      audio[0].play();
+      audio[0].play().catch(() => {});
     }
   }
   function openbetsound() {
     var audio = $("<audio>");
-    audio.attr("src", "/assets/audio/startbetting.mp3");
+    audio.attr("src", "/games/lucky7_web/assets/audio/startbetting.mp3");
     audio.on("ended", removebg);
     if (!isMuted) {
-      audio[0].play();
+      audio[0].play().catch(() => {});
     }
   }
 
   function coinsSound() {
     var audio = $("<audio>");
-    audio.attr("src", "/assets/audio/coinsound.wav");
+    audio.attr("src", "/games/lucky7_web/assets/audio/coinsound.wav");
     audio.on("ended", removebg);
     if (!isMuted) {
-      audio[0].play();
+      audio[0].play().catch(() => {});
     }
   }
   function cardflip() {
     var audio = $("<audio>");
-    audio.attr("src", "/assets/audio/flipcard.mp3");
+    audio.attr("src", "/games/lucky7_web/assets/audio/flipcard.mp3");
     audio.on("ended", removebg);
     if (!isMuted) {
-      audio[0].play();
+      audio[0].play().catch(() => {});
     }
   }
   function wincupsound() {
     var audio = $("<audio>");
-    audio.attr("src", "/assets/audio/winsong.mp3");
+    audio.attr("src", "/games/lucky7_web/assets/audio/winsong.mp3");
     audio.on("ended", removebg);
     if (!isMuted) {
-      audio[0].play();
+      audio[0].play().catch(() => {});
     }
   }
 
@@ -992,7 +992,7 @@ $(document).ready(function () {
   $("#play_audio").bind("click", playbgm);
   $("#pause_audio").bind("click", pausebgm);
   var objPlayPauseMusic = document.createElement("audio");
-  objPlayPauseMusic.src = "/assets/audio/bgm.mp3";
+  objPlayPauseMusic.src = "/games/lucky7_web/assets/audio/bgm.mp3";
   objPlayPauseMusic.addEventListener("ended", playbgm);
 
   const elem = document.querySelectorAll(".moneyUpdateTxt");

@@ -364,7 +364,7 @@
   top: 412px;
   width: 713px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/stopbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/stopbettingtxt.png");
   background-size: cover;
 }
 
@@ -424,7 +424,7 @@
   top: 412px;
   width: 713px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/startbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/startbettingtxt.png");
   background-size: cover;
 }
 .betStart {
@@ -482,7 +482,7 @@
   top: 412px;
   width: 709px;
   height: 64px;
-  background-image: url("/assets/images/desktopimg/waitingtxt.png");
+  background-image: url("../assets/images/desktopimg/waitingtxt.png");
   background-size: cover;
 }
 

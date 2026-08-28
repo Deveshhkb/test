@@ -3,7 +3,7 @@
   width: 1920px;
   height: 1147px;
   display: flex;
-  background-image: url("/assets/images/desktopimg/betbtnbg.png");
+  background-image: url("../assets/images/desktopimg/betbtnbg.png");
   background-size: cover;
   /* justify-content: space-around; */
 }

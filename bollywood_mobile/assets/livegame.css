@@ -105,7 +105,7 @@ body {
   padding-left: 13px;
   padding-top: 10px;
   border-radius: 8px;
-  background-image: url("/assets/images/desktopimg/topbg.png");
+  background-image: url("../assets/images/desktopimg/topbg.png");
   background-size: cover;
 }
 
@@ -1837,7 +1837,7 @@ input[type="number"] {
   left: 1%;
   width: 381px;
   height: 316px;
-  background-image: url("/assets/images/desktopimg/userhistBg.png");
+  background-image: url("../assets/images/desktopimg/userhistBg.png");
   background-size: cover;
 }
 .resultptrStyle {
@@ -1920,7 +1920,7 @@ input[type="number"] {
   left: 248px;
   top: 70px;
   cursor: pointer;
-  background-image: url("/assets/images/desktopimg/mybetbtn.png");
+  background-image: url("../assets/images/desktopimg/mybetbtn.png");
   background-size: cover;
 }
 
@@ -2008,7 +2008,7 @@ input[type="number"] {
 .mainScreenGame {
   width: 395px;
   height: 1110px;
-  background-image: url("/assets/images/desktopimg/background.png");
+  background-image: url("../assets/images/desktopimg/background.png");
   background-size: cover;
 }
 .historyuserhis_child_style {
@@ -2063,7 +2063,7 @@ input[type="number"] {
   left: 15px;
   width: 141px;
   height: 42px;
-  background-image: url("/assets/images/desktopimg/expbg.png");
+  background-image: url("../assets/images/desktopimg/expbg.png");
   background-size: cover;
 }
 #expBlsTxt {
@@ -2176,49 +2176,49 @@ input[type="number"] {
   justify-content: center;
 }
 #betKeymn_1 {
-  background-image: url("/assets/images/desktopimg/donbtn.png");
+  background-image: url("../assets/images/desktopimg/donbtn.png");
 }
 #betKeymn_2 {
-  background-image: url("/assets/images/desktopimg/aaabtn.png");
+  background-image: url("../assets/images/desktopimg/aaabtn.png");
 }
 #betKeymn_3 {
-  background-image: url("/assets/images/desktopimg/sahibbibibtn.png");
+  background-image: url("../assets/images/desktopimg/sahibbibibtn.png");
 }
 #betKeymn_4 {
-  background-image: url("/assets/images/desktopimg/dharam.png");
+  background-image: url("../assets/images/desktopimg/dharam.png");
 }
 #betKeymn_5 {
-  background-image: url("/assets/images/desktopimg/kiskisko.png");
+  background-image: url("../assets/images/desktopimg/kiskisko.png");
 }
 #betKeymn_6 {
-  background-image: url("/assets/images/desktopimg/ghulam.png");
+  background-image: url("../assets/images/desktopimg/ghulam.png");
 }
 #betKeymn_7 {
-  background-image: url("/assets/images/desktopimg/oddbtn.png");
+  background-image: url("../assets/images/desktopimg/oddbtn.png");
 }
 #betKeyAction_15 {
-  background-image: url("/assets/images/desktopimg/dulhabtn.png");
+  background-image: url("../assets/images/desktopimg/dulhabtn.png");
 }
 #betKeyAction_16 {
-  background-image: url("/assets/images/desktopimg/baratibtn.png");
+  background-image: url("../assets/images/desktopimg/baratibtn.png");
 }
 #betKeyAction_17 {
-  background-image: url("/assets/images/desktopimg/blackbtn.png");
+  background-image: url("../assets/images/desktopimg/blackbtn.png");
 }
 #betKeyAction_18 {
-  background-image: url("/assets/images/desktopimg/redbtn.png");
+  background-image: url("../assets/images/desktopimg/redbtn.png");
 }
 #betKeyAction_19 {
-  background-image: url("/assets/images/11_card.png");
+  background-image: url("../assets/images/11_card.png");
 }
 #betKeyAction_20 {
-  background-image: url("/assets/images/12_card.png");
+  background-image: url("../assets/images/12_card.png");
 }
 #betKeyAction_21 {
-  background-image: url("/assets/images/13_card.png");
+  background-image: url("../assets/images/13_card.png");
 }
 #betKeyAction_22 {
-  background-image: url("/assets/images/1_card.png");
+  background-image: url("../assets/images/1_card.png");
 }
 
 #libdataprn {
@@ -2298,7 +2298,7 @@ input[type="number"] {
   left: 127px;
   width: 144px;
   height: 163px;
-  background-image: url("/assets/images/desktopimg/dealerBg.png");
+  background-image: url("../assets/images/desktopimg/dealerBg.png");
   background-size: cover;
 }
 .menuStyle {
@@ -2307,7 +2307,7 @@ input[type="number"] {
   left: 302px;
   width: 32px;
   height: 32px;
-  background-image: url("/assets/images/desktopimg/menubtn.png");
+  background-image: url("../assets/images/desktopimg/menubtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2346,7 +2346,7 @@ input[type="number"] {
   top: 379px;
   width: 307px;
   height: 54px;
-  background-image: url("/assets/images/desktopimg/stopbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/stopbettingtxt.png");
   background-size: cover;
 }
 
@@ -2406,7 +2406,7 @@ input[type="number"] {
   top: 379px;
   width: 351px;
   height: 60px;
-  background-image: url("/assets/images/desktopimg/startbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/startbettingtxt.png");
   background-size: cover;
 }
 .betStart {
@@ -2464,7 +2464,7 @@ input[type="number"] {
   top: 475px;
   width: 332px;
   height: 31px;
-  background-image: url("/assets/images/desktopimg/waitingtxt.png");
+  background-image: url("../assets/images/desktopimg/waitingtxt.png");
   background-size: cover;
 }
 

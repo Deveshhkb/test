@@ -107,6 +107,54 @@ function patchIndexHtml(file) {
   return false;
 }
 
+// --- asset paths -----------------------------------------------------------
+// The pages were built to sit at the web root, so they ask for "/assets/...".
+// They are now served from /games/<folder>/, so every root-absolute asset URL
+// 404s. Fixes, matching how dragonTiger_Web was corrected by hand:
+//   *.css        url("/assets/…)      -> url("../assets/…)   (relative to the
+//                                        stylesheet, which lives in assets/)
+//   livegame.js  url(../assets/…)     -> url(/games/<folder>/assets/…)
+//                "/assets/audio/…"    -> "/games/<folder>/assets/audio/…"
+//                (inline styles and audio src resolve against index.html, so
+//                 "../" would climb out of the game folder)
+//   index.html   href="/assets/…"     -> href="assets/…"     (favicon)
+
+function patchCss(file) {
+  const before = fs.readFileSync(file, "utf8");
+  const src = before
+    .split("\n")
+    .map((line) =>
+      // leave commented-out rules alone
+      line.trim().startsWith("/*")
+        ? line
+        : line.replace(/url\((["']?)\/assets\//g, "url($1../assets/")
+    )
+    .join("\n");
+  if (src === before) return false;
+  fs.writeFileSync(file, src);
+  return true;
+}
+
+function patchAssetPaths(file, folder) {
+  const before = fs.readFileSync(file, "utf8");
+  const src = before
+    .replace(/url\(\.\.\/assets\//g, `url(/games/${folder}/assets/`)
+    .replace(/"\/assets\//g, `"/games/${folder}/assets/`)
+    // autoplay rejects until the user interacts; don't let it surface
+    .replace(/audio\[0\]\.play\(\);/g, "audio[0].play().catch(() => {});");
+  if (src === before) return false;
+  fs.writeFileSync(file, src);
+  return true;
+}
+
+function patchHtmlAssetPaths(file) {
+  const before = fs.readFileSync(file, "utf8");
+  const src = before.replace(/(href|src)="\/assets\//g, '$1="assets/');
+  if (src === before) return false;
+  fs.writeFileSync(file, src);
+  return true;
+}
+
 function copyVendor(dir) {
   const dest = path.join(dir, "assets", "vendor");
   fs.mkdirSync(dest, { recursive: true });
@@ -131,10 +179,26 @@ for (const folder of folders) {
     continue;
   }
   const changes = [];
+
   const gameJs = path.join(dir, "assets", "livegame.js");
-  if (fs.existsSync(gameJs) && patchGameJs(gameJs)) changes.push("livegame.js");
+  if (fs.existsSync(gameJs)) {
+    if (patchGameJs(gameJs)) changes.push("livegame.js");
+    if (patchAssetPaths(gameJs, folder)) changes.push("js asset paths");
+  }
+
   const indexHtml = path.join(dir, "index.html");
-  if (fs.existsSync(indexHtml) && patchIndexHtml(indexHtml)) changes.push("index.html");
+  if (fs.existsSync(indexHtml)) {
+    if (patchIndexHtml(indexHtml)) changes.push("index.html");
+    if (patchHtmlAssetPaths(indexHtml)) changes.push("html asset paths");
+  }
+
+  const cssDir = path.join(dir, "assets");
+  const cssFixed = fs.existsSync(cssDir)
+    ? fs.readdirSync(cssDir).filter((f) => f.endsWith(".css") &&
+        patchCss(path.join(cssDir, f))).length
+    : 0;
+  if (cssFixed) changes.push(`${cssFixed} css file(s)`);
+
   const n = copyVendor(dir);
   if (n) changes.push(`${n} vendor files`);
   total += changes.length ? 1 : 0;

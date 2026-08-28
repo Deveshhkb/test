@@ -223,7 +223,7 @@ body {
   width: 398px;
   height: 281px;
   margin: 345px 0 0 -2px;
-  background-image: url("/assets/images/desktopimg/tablebg.png");
+  background-image: url("../assets/images/desktopimg/tablebg.png");
   background-size: cover;
 }
 
@@ -404,7 +404,7 @@ body {
   width: 110px;
   height: 38px;
   margin: 55px 0 0px 31px;
-  background-image: url("/assets/images/mybetbg.png");
+  background-image: url("../assets/images/mybetbg.png");
   background-size: cover;
   cursor: pointer;
 }
@@ -679,7 +679,7 @@ body {
   height: 42px;
   z-index: 3;
   margin: 118px 0px 0px -240px;
-  background-image: url("/assets/images/desktopimg/betamount.png");
+  background-image: url("../assets/images/desktopimg/betamount.png");
   background-size: cover;
 }
 /* .betamountfield img {
@@ -1129,7 +1129,7 @@ div#DvLoaderProgress {
   top: 352px;
   width: 353px;
   height: 65px;
-  background-image: url("/assets/images/desktopimg/stopbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/stopbettingtxt.png");
   background-size: cover;
 }
 
@@ -1188,7 +1188,7 @@ div#DvLoaderProgress {
   top: 352px;
   width: 347px;
   height: 57px;
-  background-image: url("/assets/images/desktopimg/startbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/startbettingtxt.png");
   background-size: cover;
 }
 .betStart {
@@ -1246,7 +1246,7 @@ div#DvLoaderProgress {
   top: 369px;
   width: 396px;
   height: 36px;
-  background-image: url("/assets/images/desktopimg/waitingtxt.png");
+  background-image: url("../assets/images/desktopimg/waitingtxt.png");
   background-size: cover;
 }
 
@@ -1856,7 +1856,7 @@ div#DvLoaderProgress {
 .winnerimg {
   width: 120px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/woncup.png");
+  background-image: url("../assets/images/desktopimg/woncup.png");
   background-size: cover;
 }
 .dealearimgstyle {
@@ -1864,7 +1864,7 @@ div#DvLoaderProgress {
   margin: -159px 0 0 127px;
   width: 150px;
   height: 160px;
-  background-image: url("/assets/images/desktopimg/dealearimg.png");
+  background-image: url("../assets/images/desktopimg/dealearimg.png");
   background-size: cover;
 }
 
@@ -2013,7 +2013,7 @@ div#DvLoaderProgress {
   left: 20px;
   width: 110px;
   height: 46px;
-  background-image: url("/assets/images/desktopimg/playerA.png");
+  background-image: url("../assets/images/desktopimg/playerA.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2039,7 +2039,7 @@ div#DvLoaderProgress {
   top: 29px;
   width: 110px;
   height: 48px;
-  background-image: url("/assets/images/desktopimg/playerB.png");
+  background-image: url("../assets/images/desktopimg/playerB.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2173,7 +2173,7 @@ div#DvLoaderProgress {
   left: 305px;
   width: 32px;
   height: 32px;
-  background-image: url("/assets/images/desktopimg/menubtn.png");
+  background-image: url("../assets/images/desktopimg/menubtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);

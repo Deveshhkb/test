@@ -228,7 +228,7 @@ body {
   width: 378px;
   height: 263px;
   margin: 271px 0 0 10px;
-  background-image: url("/assets/images/desktopimg/tablebg.png");
+  background-image: url("../assets/images/desktopimg/tablebg.png");
   background-size: cover;
 }
 
@@ -409,7 +409,7 @@ body {
   width: 110px;
   height: 35px;
   margin: 42px 0 0px 33px;
-  background-image: url("/assets/images/mybetbg.png");
+  background-image: url("../assets/images/mybetbg.png");
   background-size: cover;
   cursor: pointer;
 }
@@ -534,7 +534,7 @@ body {
   left: 12px;
   width: 109px;
   height: 32px;
-  background-image: url("/assets/images/desktopimg/expbtn.png");
+  background-image: url("../assets/images/desktopimg/expbtn.png");
   background-size: cover;
 }
 #expBlsTxt {
@@ -723,7 +723,7 @@ body {
   top: 293px;
   width: 353px;
   height: 65px;
-  background-image: url("/assets/images/desktopimg/stopbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/stopbettingtxt.png");
   background-size: cover;
 }
 
@@ -782,7 +782,7 @@ body {
   top: 293px;
   width: 347px;
   height: 57px;
-  background-image: url("/assets/images/desktopimg/startbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/startbettingtxt.png");
   background-size: cover;
 }
 .betStart {
@@ -840,7 +840,7 @@ body {
   top: 369px;
   width: 396px;
   height: 36px;
-  background-image: url("/assets/images/desktopimg/waitingtxt.png");
+  background-image: url("../assets/images/desktopimg/waitingtxt.png");
   background-size: cover;
 }
 
@@ -922,7 +922,7 @@ body {
   height: 40px;
   z-index: 3;
   margin: 113px 0px 0px -228px;
-  background-image: url("/assets/images/desktopimg/betamount.png");
+  background-image: url("../assets/images/desktopimg/betamount.png");
   background-size: cover;
 }
 /* .betamountfield img {
@@ -1918,7 +1918,7 @@ div#DvLoaderProgress {
 .winnerimg {
   width: 120px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/woncup.png");
+  background-image: url("../assets/images/desktopimg/woncup.png");
   background-size: cover;
 }
 .dealearimgstyle {
@@ -1926,7 +1926,7 @@ div#DvLoaderProgress {
   margin: -118px 0 0 139px;
   width: 104px;
   height: 118px;
-  background-image: url("/assets/images/desktopimg/dealearimg.png");
+  background-image: url("../assets/images/desktopimg/dealearimg.png");
   background-size: cover;
 }
 
@@ -2005,7 +2005,7 @@ div#DvLoaderProgress {
   display: flex;
   align-items: flex-end;
   flex-direction: column;
-  background-image: url("/assets/images/desktopimg/mainResult.png");
+  background-image: url("../assets/images/desktopimg/mainResult.png");
   background-size: cover;
 }
 
@@ -2115,7 +2115,7 @@ div#DvLoaderProgress {
   width: 117px;
   height: 36px;
   font-family: Inter;
-  background-image: url("/assets/images/desktopimg/lowbtn.png");
+  background-image: url("../assets/images/desktopimg/lowbtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2139,7 +2139,7 @@ div#DvLoaderProgress {
   width: 117px;
   height: 36px;
   font-family: Inter;
-  background-image: url("/assets/images/desktopimg/highbtn.png");
+  background-image: url("../assets/images/desktopimg/highbtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2161,7 +2161,7 @@ div#DvLoaderProgress {
   width: 117px;
   height: 36px;
   font-family: Inter;
-  background-image: url("/assets/images/desktopimg/evenbtn.png");
+  background-image: url("../assets/images/desktopimg/evenbtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2185,7 +2185,7 @@ div#DvLoaderProgress {
   width: 117px;
   height: 36px;
   font-family: Inter;
-  background-image: url("/assets/images/desktopimg/oddbtn.png");
+  background-image: url("../assets/images/desktopimg/oddbtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2207,7 +2207,7 @@ div#DvLoaderProgress {
   width: 117px;
   height: 36px;
   font-family: Inter;
-  background-image: url("/assets/images/desktopimg/blackbtn.png");
+  background-image: url("../assets/images/desktopimg/blackbtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2231,7 +2231,7 @@ div#DvLoaderProgress {
   width: 117px;
   height: 36px;
   font-family: Inter;
-  background-image: url("/assets/images/desktopimg/redbtn.png");
+  background-image: url("../assets/images/desktopimg/redbtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2298,7 +2298,7 @@ div#DvLoaderProgress {
   left: 305px;
   width: 32px;
   height: 32px;
-  background-image: url("/assets/images/desktopimg/menubtn.png");
+  background-image: url("../assets/images/desktopimg/menubtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);

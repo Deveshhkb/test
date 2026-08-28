@@ -1703,7 +1703,7 @@ div#DvLoaderProgress {
   top: 412px;
   width: 713px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/stopbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/stopbettingtxt.png");
   background-size: cover;
 }
 
@@ -1763,7 +1763,7 @@ div#DvLoaderProgress {
   top: 412px;
   width: 713px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/startbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/startbettingtxt.png");
   background-size: cover;
 }
 
@@ -1822,7 +1822,7 @@ div#DvLoaderProgress {
   top: 412px;
   width: 709px;
   height: 64px;
-  background-image: url("/assets/images/desktopimg/waitingtxt.png");
+  background-image: url("../assets/images/desktopimg/waitingtxt.png");
   background-size: cover;
 }
 
@@ -2494,7 +2494,7 @@ all in -- #000000 */
   position: absolute;
   width: 185px;
   height: 177px;
-  background-image: url("/assets/images/desktopimg/woncup.png");
+  background-image: url("../assets/images/desktopimg/woncup.png");
   background-size: cover;
   z-index: 5;
 }
@@ -2721,7 +2721,7 @@ all in -- #000000 */
   height: 60px;
   left: 78px;
   top: 154px;
-  background-image: url("/assets/images/desktopimg/mybetbtn.png");
+  background-image: url("../assets/images/desktopimg/mybetbtn.png");
   background-size: cover;
   cursor: pointer;
 }
@@ -2777,7 +2777,7 @@ all in -- #000000 */
   top: 76%;
   width: 215px;
   height: 92px;
-  background-image: url("/assets/images/desktopimg/playerA.png");
+  background-image: url("../assets/images/desktopimg/playerA.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2803,7 +2803,7 @@ all in -- #000000 */
   top: 76%;
   width: 215px;
   height: 95px;
-  background-image: url("/assets/images/desktopimg/playerB.png");
+  background-image: url("../assets/images/desktopimg/playerB.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2830,7 +2830,7 @@ all in -- #000000 */
   left: 851px;
   width: 219px;
   height: 246px;
-  background-image: url("/assets/images/desktopimg/dealerImg.png");
+  background-image: url("../assets/images/desktopimg/dealerImg.png");
   background-size: cover;
 }
 
@@ -2840,7 +2840,7 @@ all in -- #000000 */
   left: 79px;
   width: 283px;
   height: 73px;
-  background-image: url("/assets/images/desktopimg/expBg.png");
+  background-image: url("../assets/images/desktopimg/expBg.png");
   background-size: cover;
 }
 

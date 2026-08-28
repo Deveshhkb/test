@@ -440,7 +440,7 @@ body {
   padding-left: 33px;
   padding-top: 19px;
   border-radius: 8px;
-  background-image: url("/assets/images/desktopimg/topbg.webp");
+  background-image: url("../assets/images/desktopimg/topbg.webp");
   background-size: cover;
 }
 
@@ -1848,7 +1848,7 @@ div#DvLoaderProgress {
   top: 412px;
   width: 713px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/stopbettingtxt.webp");
+  background-image: url("../assets/images/desktopimg/stopbettingtxt.webp");
   background-size: cover;
 }
 
@@ -1908,7 +1908,7 @@ div#DvLoaderProgress {
   top: 412px;
   width: 713px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/startbettingtxt.webp");
+  background-image: url("../assets/images/desktopimg/startbettingtxt.webp");
   background-size: cover;
 }
 .betStart {
@@ -1966,7 +1966,7 @@ div#DvLoaderProgress {
   top: 412px;
   width: 709px;
   height: 64px;
-  background-image: url("/assets/images/desktopimg/waitingtxt.webp");
+  background-image: url("../assets/images/desktopimg/waitingtxt.webp");
   background-size: cover;
 }
 
@@ -3026,7 +3026,7 @@ all in -- #000000 */
   right: 23%;
   width: 973px;
   height: 607px;
-  background-image: url("/assets/images/desktopimg/userhistBg.webp");
+  background-image: url("../assets/images/desktopimg/userhistBg.webp");
   background-size: cover;
 }
 .resultptrStyle {
@@ -3120,7 +3120,7 @@ all in -- #000000 */
   top: 157px;
   width: 333px;
   height: 78px;
-  background-image: url("/assets/images/desktopimg/mybetbtn.webp");
+  background-image: url("../assets/images/desktopimg/mybetbtn.webp");
   background-size: cover;
   cursor: pointer;
 }
@@ -3242,7 +3242,7 @@ all in -- #000000 */
   height: 186px;
   /* display: flex;
   justify-content: space-around; */
-  background-image: url("/assets/images/desktopimg/betbtnbg.webp");
+  background-image: url("../assets/images/desktopimg/betbtnbg.webp");
   background-size: cover;
 }
 
@@ -3311,14 +3311,14 @@ all in -- #000000 */
 #mainScreensize {
   width: 1920px;
   height: 1251px;
-  background-image: url("/assets/images/desktopimg/background.webp");
+  background-image: url("../assets/images/desktopimg/background.webp");
   background-size: cover;
 }
 #dealerImg {
   margin: 0px 0 0 851px;
   width: 279px;
   height: 315px;
-  background-image: url("/assets/images/dealerbg.webp");
+  background-image: url("../assets/images/dealerbg.webp");
   background-size: cover;
 }
 .expImgStyle {
@@ -3327,7 +3327,7 @@ all in -- #000000 */
   left: 86px;
   width: 285px;
   height: 73px;
-  background-image: url("/assets/images/desktopimg/expBg.webp");
+  background-image: url("../assets/images/desktopimg/expBg.webp");
   background-size: cover;
 }
 

@@ -105,7 +105,7 @@ body {
   padding-left: 13px;
   padding-top: 10px;
   border-radius: 8px;
-  background-image: url("/assets/images/desktopimg/topbg.png");
+  background-image: url("../assets/images/desktopimg/topbg.png");
   background-size: cover;
 }
 
@@ -1885,7 +1885,7 @@ all in -- #000000 */
   left: 1%;
   width: 386px;
   height: 630px;
-  background-image: url("/assets/images/desktopimg/userhistBg.png");
+  background-image: url("../assets/images/desktopimg/userhistBg.png");
   background-size: cover;
 }
 .resultptrStyle {
@@ -1962,7 +1962,7 @@ all in -- #000000 */
   left: 248px;
   top: 70px;
   cursor: pointer;
-  background-image: url("/assets/images/desktopimg/mybetbtn.png");
+  background-image: url("../assets/images/desktopimg/mybetbtn.png");
   background-size: cover;
 }
 
@@ -2048,7 +2048,7 @@ all in -- #000000 */
 .mainScreenGame {
   width: 395px;
   height: 1110px;
-  background-image: url("/assets/images/desktopimg/background.png");
+  background-image: url("../assets/images/desktopimg/background.png");
   background-size: cover;
 }
 .historyuserhis_child_style {
@@ -2106,7 +2106,7 @@ all in -- #000000 */
   left: 15px;
   width: 141px;
   height: 42px;
-  background-image: url("/assets/images/desktopimg/expbg.png");
+  background-image: url("../assets/images/desktopimg/expbg.png");
   background-size: cover;
 }
 #expBlsTxt {
@@ -2180,28 +2180,28 @@ all in -- #000000 */
 }
 
 #betKeymn_1 {
-  background-image: url("/assets/images/desktopimg/player_1.png");
+  background-image: url("../assets/images/desktopimg/player_1.png");
 }
 #betKeymn_2 {
-  background-image: url("/assets/images/desktopimg/player_2.png");
+  background-image: url("../assets/images/desktopimg/player_2.png");
 }
 #betKeymn_3 {
-  background-image: url("/assets/images/desktopimg/player_3.png");
+  background-image: url("../assets/images/desktopimg/player_3.png");
 }
 #betKeymn_4 {
-  background-image: url("/assets/images/desktopimg/player_4.png");
+  background-image: url("../assets/images/desktopimg/player_4.png");
 }
 #betKeymn_5 {
-  background-image: url("/assets/images/desktopimg/player_5.png");
+  background-image: url("../assets/images/desktopimg/player_5.png");
 }
 #betKeymn_6 {
-  background-image: url("/assets/images/desktopimg/player_6.png");
+  background-image: url("../assets/images/desktopimg/player_6.png");
 }
 #betKeymn_7 {
-  background-image: url("/assets/images/desktopimg/player_7.png");
+  background-image: url("../assets/images/desktopimg/player_7.png");
 }
 #betKeymn_8 {
-  background-image: url("/assets/images/desktopimg/player_8.png");
+  background-image: url("../assets/images/desktopimg/player_8.png");
 }
 
 .innerDataStyle {
@@ -2258,7 +2258,7 @@ all in -- #000000 */
   left: 127px;
   width: 144px;
   height: 163px;
-  background-image: url("/assets/images/desktopimg/dealerBg.png");
+  background-image: url("../assets/images/desktopimg/dealerBg.png");
   background-size: cover;
 }
 .menuStyle {
@@ -2267,7 +2267,7 @@ all in -- #000000 */
   left: 302px;
   width: 32px;
   height: 32px;
-  background-image: url("/assets/images/desktopimg/menubtn.png");
+  background-image: url("../assets/images/desktopimg/menubtn.png");
   background-size: cover;
   cursor: pointer;
   transform: scale(1, 1);
@@ -2305,7 +2305,7 @@ all in -- #000000 */
   top: 381px;
   width: 307px;
   height: 54px;
-  background-image: url("/assets/images/desktopimg/stopbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/stopbettingtxt.png");
   background-size: cover;
 }
 
@@ -2365,7 +2365,7 @@ all in -- #000000 */
   top: 377px;
   width: 374px;
   height: 65px;
-  background-image: url("/assets/images/desktopimg/startbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/startbettingtxt.png");
   background-size: cover;
 }
 .betStart {
@@ -2423,7 +2423,7 @@ all in -- #000000 */
   top: 475px;
   width: 332px;
   height: 31px;
-  background-image: url("/assets/images/desktopimg/waitingtxt.png");
+  background-image: url("../assets/images/desktopimg/waitingtxt.png");
   background-size: cover;
 }
 
