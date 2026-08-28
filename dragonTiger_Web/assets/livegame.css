@@ -139,7 +139,7 @@ body {
   padding-left: 33px;
   padding-top: 19px;
   border-radius: 8px;
-  background-image: url("/assets/images/desktopimg/topbg.png");
+  background-image: url("../assets/images/desktopimg/topbg.png");
   background-size: cover;
 }
 
@@ -714,7 +714,7 @@ body {
   top: 412px;
   width: 713px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/stopbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/stopbettingtxt.png");
   background-size: cover;
 }
 
@@ -774,7 +774,7 @@ body {
   top: 412px;
   width: 713px;
   height: 116px;
-  background-image: url("/assets/images/desktopimg/startbettingtxt.png");
+  background-image: url("../assets/images/desktopimg/startbettingtxt.png");
   background-size: cover;
 }
 .betStart {
@@ -832,7 +832,7 @@ body {
   top: 412px;
   width: 709px;
   height: 64px;
-  background-image: url("/assets/images/desktopimg/waitingtxt.png");
+  background-image: url("../assets/images/desktopimg/waitingtxt.png");
   background-size: cover;
 }
 
@@ -2118,7 +2118,7 @@ all in -- #000000 */
   right: 28%;
   width: 1051px;
   height: 650px;
-  background-image: url("/assets/images/desktopimg/userhistBg.png");
+  background-image: url("../assets/images/desktopimg/userhistBg.png");
   background-size: cover;
 }
 .resultptrStyle {
@@ -2185,7 +2185,7 @@ all in -- #000000 */
   /* background-color: #b10c7b; */
   text-align: center;
   cursor: pointer;
-  background-image: url("/assets/images/desktopimg/mybetbtn.png");
+  background-image: url("../assets/images/desktopimg/mybetbtn.png");
   background-size: cover;
 }
 
@@ -2285,7 +2285,7 @@ all in -- #000000 */
 .mainScreenGame {
   width: 1920px;
   height: 1529px;
-  background-image: url("/assets/images/desktopimg/background.png");
+  background-image: url("../assets/images/desktopimg/background.png");
   background-size: cover;
 }
 .historyuserhis_child_style {
@@ -2321,7 +2321,7 @@ all in -- #000000 */
   margin-top: 976px;
   width: 1920px;
   height: 1149px;
-  background-image: url("/assets/images/desktopimg/betbtnbg.webp");
+  background-image: url("../assets/images/desktopimg/betbtnbg.webp");
   background-size: cover;
   /* justify-content: space-around; */
 }
@@ -2489,7 +2489,7 @@ all in -- #000000 */
   left: 67px;
   width: 283px;
   height: 73px;
-  background-image: url("/assets/images/desktopimg/expbg.png");
+  background-image: url("../assets/images/desktopimg/expbg.png");
   background-size: cover;
 }
 #expBlsTxt {
@@ -2604,124 +2604,124 @@ all in -- #000000 */
 #betKeyAction_1 {
   width: 571px;
   height: 87px;
-  background-image: url("/assets/images/desktopimg/dragonbtn.png");
+  background-image: url("../assets/images/desktopimg/dragonbtn.png");
 }
 #betKeyAction_2 {
   width: 285px;
   height: 92px;
-  background-image: url("/assets/images/desktopimg/tiebtn.png");
+  background-image: url("../assets/images/desktopimg/tiebtn.png");
 }
 #betKeyAction_3 {
   width: 571px;
   height: 88px;
-  background-image: url("/assets/images/desktopimg/tigerbtn.png");
+  background-image: url("../assets/images/desktopimg/tigerbtn.png");
 }
 #betKeyAction_4 {
   width: 285px;
   height: 92px;
-  background-image: url("/assets/images/desktopimg/pairbtn.png");
+  background-image: url("../assets/images/desktopimg/pairbtn.png");
 }
 #betKeyAction_5 {
-  background-image: url("/assets/images/desktopimg/evenbtn.png");
+  background-image: url("../assets/images/desktopimg/evenbtn.png");
 }
 #betKeyAction_6 {
-  background-image: url("/assets/images/desktopimg/oddbtn.png");
+  background-image: url("../assets/images/desktopimg/oddbtn.png");
 }
 #betKeyAction_7 {
-  background-image: url("/assets/images/desktopimg/evenbtn.png");
+  background-image: url("../assets/images/desktopimg/evenbtn.png");
 }
 #betKeyAction_8 {
-  background-image: url("/assets/images/desktopimg/oddbtn.png");
+  background-image: url("../assets/images/desktopimg/oddbtn.png");
 }
 #betKeyAction_9 {
-  background-image: url("/assets/images/desktopimg/blackbtn.png");
+  background-image: url("../assets/images/desktopimg/blackbtn.png");
 }
 #betKeyAction_10 {
-  background-image: url("/assets/images/desktopimg/redbtn.png");
+  background-image: url("../assets/images/desktopimg/redbtn.png");
 }
 #betKeyAction_11 {
-  background-image: url("/assets/images/desktopimg/blackbtn.png");
+  background-image: url("../assets/images/desktopimg/blackbtn.png");
 }
 #betKeyAction_12 {
-  background-image: url("/assets/images/desktopimg/redbtn.png");
+  background-image: url("../assets/images/desktopimg/redbtn.png");
 }
 #betKeyAction_13 {
-  background-image: url("/assets/images/1_card.png");
+  background-image: url("../assets/images/1_card.png");
 }
 #betKeyAction_14 {
-  background-image: url("/assets/images/2_card.png");
+  background-image: url("../assets/images/2_card.png");
 }
 #betKeyAction_15 {
-  background-image: url("/assets/images/3_card.png");
+  background-image: url("../assets/images/3_card.png");
 }
 #betKeyAction_16 {
-  background-image: url("/assets/images/4_card.png");
+  background-image: url("../assets/images/4_card.png");
 }
 #betKeyAction_17 {
-  background-image: url("/assets/images/5_card.png");
+  background-image: url("../assets/images/5_card.png");
 }
 #betKeyAction_18 {
-  background-image: url("/assets/images/6_card.png");
+  background-image: url("../assets/images/6_card.png");
 }
 #betKeyAction_19 {
-  background-image: url("/assets/images/7_card.png");
+  background-image: url("../assets/images/7_card.png");
 }
 #betKeyAction_20 {
-  background-image: url("/assets/images/8_card.png");
+  background-image: url("../assets/images/8_card.png");
 }
 #betKeyAction_21 {
-  background-image: url("/assets/images/9_card.png");
+  background-image: url("../assets/images/9_card.png");
 }
 #betKeyAction_22 {
-  background-image: url("/assets/images/10_card.png");
+  background-image: url("../assets/images/10_card.png");
 }
 #betKeyAction_23 {
-  background-image: url("/assets/images/11_card.png");
+  background-image: url("../assets/images/11_card.png");
 }
 #betKeyAction_24 {
-  background-image: url("/assets/images/12_card.png");
+  background-image: url("../assets/images/12_card.png");
 }
 #betKeyAction_25 {
-  background-image: url("/assets/images/13_card.png");
+  background-image: url("../assets/images/13_card.png");
 }
 #betKeyAction_26 {
-  background-image: url("/assets/images/1_card.png");
+  background-image: url("../assets/images/1_card.png");
 }
 #betKeyAction_27 {
-  background-image: url("/assets/images/2_card.png");
+  background-image: url("../assets/images/2_card.png");
 }
 #betKeyAction_28 {
-  background-image: url("/assets/images/3_card.png");
+  background-image: url("../assets/images/3_card.png");
 }
 #betKeyAction_29 {
-  background-image: url("/assets/images/4_card.png");
+  background-image: url("../assets/images/4_card.png");
 }
 #betKeyAction_30 {
-  background-image: url("/assets/images/5_card.png");
+  background-image: url("../assets/images/5_card.png");
 }
 #betKeyAction_31 {
-  background-image: url("/assets/images/6_card.png");
+  background-image: url("../assets/images/6_card.png");
 }
 #betKeyAction_32 {
-  background-image: url("/assets/images/7_card.png");
+  background-image: url("../assets/images/7_card.png");
 }
 #betKeyAction_33 {
-  background-image: url("/assets/images/8_card.png");
+  background-image: url("../assets/images/8_card.png");
 }
 #betKeyAction_34 {
-  background-image: url("/assets/images/9_card.png");
+  background-image: url("../assets/images/9_card.png");
 }
 #betKeyAction_35 {
-  background-image: url("/assets/images/10_card.png");
+  background-image: url("../assets/images/10_card.png");
 }
 #betKeyAction_36 {
-  background-image: url("/assets/images/11_card.png");
+  background-image: url("../assets/images/11_card.png");
 }
 #betKeyAction_37 {
-  background-image: url("/assets/images/12_card.png");
+  background-image: url("../assets/images/12_card.png");
 }
 #betKeyAction_38 {
-  background-image: url("/assets/images/13_card.png");
+  background-image: url("../assets/images/13_card.png");
 }
 .dealerStyle {
   position: absolute;
@@ -2729,7 +2729,7 @@ all in -- #000000 */
   left: 852px;
   width: 235px;
   height: 266px;
-  background-image: url("/assets/images/desktopimg/dealerBg.png");
+  background-image: url("../assets/images/desktopimg/dealerBg.png");
   background-size: cover;
 }
 /* bottom bet place animation end */
