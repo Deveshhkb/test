@@ -319,8 +319,10 @@ export const DEFAULT_CONFIG: GameConfig = {
 
   timing: {
     bettingSeconds: 15,
-    resultSeconds: 5,
-    waitingSeconds: 3,
+    // A solo table should not make the player wait to bet again: the result
+    // holds long enough to read, then the felt clears straight away.
+    resultSeconds: 4,
+    waitingSeconds: 1,
     urgentSeconds: 5,
   },
 

@@ -118,6 +118,10 @@ export class ActionButton extends Container {
     return this.enabled;
   }
 
+  get currentRadius(): number {
+    return this.radius;
+  }
+
   /** Toggled look, used by the results-panel button. */
   setActive(active: boolean): void {
     if (this.active === active) return;

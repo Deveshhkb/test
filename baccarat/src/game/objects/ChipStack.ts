@@ -1,4 +1,4 @@
-import { BitmapText, Container, Graphics } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
 
 import { Fonts, Palette } from "../Constants";
 import type { ObjectPool } from "../core/ObjectPool";
@@ -7,6 +7,7 @@ import { Ease } from "../managers/AnimationManager";
 import { Sfx } from "../managers/AudioManager";
 import { formatCompact } from "../utils/Helpers";
 import { type Chip } from "./Chip";
+import { ShadowLabel } from "./ShadowLabel";
 
 /**
  * The pile of chips sitting on one betting spot, plus its running total.
@@ -22,7 +23,7 @@ export class ChipStack extends Container {
   private readonly pool: ObjectPool<Chip>;
   private readonly chipLayer = new Container();
   private readonly badge: Graphics;
-  private readonly totalText: BitmapText;
+  private readonly totalText: ShadowLabel;
 
   private readonly chips: Chip[] = [];
   private total = 0;
@@ -35,12 +36,11 @@ export class ChipStack extends Container {
     this.addChild(this.chipLayer);
 
     this.badge = new Graphics();
-    this.totalText = new BitmapText({
-      text: "",
-      style: { fontFamily: Fonts.Numeric, fontSize: 30 },
+    this.totalText = new ShadowLabel({
+      fontFamily: Fonts.Numeric,
+      fontSize: 32,
+      tint: Palette.goldBright,
     });
-    this.totalText.anchor.set(0.5);
-    this.totalText.tint = Palette.goldBright;
 
     this.addChild(this.badge, this.totalText);
     this.setTotal(0, false);
@@ -141,19 +141,29 @@ export class ChipStack extends Container {
 
     this.badge.clear();
     if (this.total > 0) {
-      const width = this.totalText.width + 26;
+      const width = this.totalText.textWidth + 34;
+      const height = this.totalText.textHeight + 12;
+      const radius = height / 2;
       this.badge
-        .roundRect(-width / 2, -17, width, 34, 17)
-        .fill({ color: 0x000000, alpha: 0.62 })
-        .roundRect(-width / 2, -17, width, 34, 17)
-        .stroke({ width: 1.5, color: Palette.gold, alpha: 0.8 });
+        .roundRect(-width / 2, -radius + 2, width, height, radius)
+        .fill({ color: 0x000000, alpha: 0.45 })
+        .roundRect(-width / 2, -radius, width, height, radius)
+        .fill({ color: 0x10131c, alpha: 0.95 })
+        .roundRect(-width / 2, -radius, width, height, radius)
+        .stroke({ width: 2, color: Palette.gold, alpha: 0.95 });
     }
 
     if (animate && this.total > 0) {
+      this.ctx.animation.killTweensOf(this.scale);
+      this.ctx.animation.fromTo(
+        this.badge.scale,
+        { x: 1.3, y: 1.3 },
+        { x: 1, y: 1, duration: 0.28, ease: Ease.uiIn },
+      );
       this.ctx.animation.killTweensOf(this.totalText.scale);
       this.ctx.animation.fromTo(
         this.totalText.scale,
-        { x: 1.35, y: 1.35 },
+        { x: 1.3, y: 1.3 },
         { x: 1, y: 1, duration: 0.28, ease: Ease.uiIn },
       );
     }

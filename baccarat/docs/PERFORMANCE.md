@@ -88,7 +88,15 @@ orphaned tween writing to a destroyed transform.
 `track()` **chains** onto a caller-supplied `onComplete` instead of replacing it — replacing
 it deadlocks every promise-based sequence in the engine.
 
-> **Rule:** never `import gsap` outside `AnimationManager`.
+GSAP's **lag smoothing is switched off** at construction, and that is a correctness
+decision rather than a tuning one. By default GSAP clamps the frame delta whenever a frame
+overruns, so tweens advance by *frames* instead of by *time*. Because the engine sequences
+the deal on awaited timelines, a handful of slow frames — boot, a GC pause, a weak phone —
+stretches the whole round and drifts it out of step with the server clock. Measured on a
+software rasteriser, it turned a 1.2 s boot into an 18 s one.
+
+> **Rule:** never `import gsap` outside `AnimationManager`, and never re-enable
+> `lagSmoothing` — round timing must follow the wall clock.
 
 ---
 

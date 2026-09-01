@@ -151,7 +151,8 @@ src/
     scenes/                 Scene base, Boot, Loading, Game
     objects/                Card, Deck, Chip, ChipStack, BettingSpot, ChipStepper,
                             ActionButton, StatusBar, ResultsPanel, InfoPanel,
-                            TableDressing, Timer, RoadMap, ScoreBoard, ResultBanner
+                            HandZone, ShadowLabel, TableDressing, Timer, RoadMap,
+                            ScoreBoard, ResultBanner
     managers/               Animation, Audio, Bet, Card, Game, History,
                             Input, Resize, Roadmap
     rules/                  BaccaratRules, RoadmapEngine (+ their tests)

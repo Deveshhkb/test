@@ -4,6 +4,7 @@ import { Fonts, Palette } from "../Constants";
 import type { GameContext } from "../GameContext";
 import { Ease } from "../managers/AnimationManager";
 import { RoundOutcome, type RoadEntry } from "../types";
+import { shade } from "../utils/Helpers";
 import { ActionButton } from "./ActionButton";
 
 interface Row {
@@ -25,12 +26,14 @@ export class ResultsPanel extends Container {
   private readonly frame = new Graphics();
   private readonly grid = new Graphics();
   private readonly rows: Row[] = [];
+  private readonly discs = new Graphics();
   private readonly closeButton: ActionButton;
 
   private readonly capacity: number;
   private readonly columns = 2;
   private readonly rowsPerColumn: number;
 
+  private discRadius = 11;
   private boxWidth = 240;
   private boxHeight = 420;
   private open = true;
@@ -41,7 +44,7 @@ export class ResultsPanel extends Container {
     this.rowsPerColumn = rowsPerColumn;
     this.capacity = rowsPerColumn * this.columns;
 
-    this.addChild(this.frame, this.grid);
+    this.addChild(this.frame, this.grid, this.discs);
 
     for (let i = 0; i < this.capacity; i++) {
       const index = new BitmapText({
@@ -49,7 +52,7 @@ export class ResultsPanel extends Container {
         style: { fontFamily: Fonts.Numeric, fontSize: 20 },
       });
       index.anchor.set(0.5);
-      index.tint = 0x5a5a5a;
+      index.tint = 0x8f8676;
 
       const value = new BitmapText({
         text: "",
@@ -93,15 +96,17 @@ export class ResultsPanel extends Container {
 
     this.frame
       .clear()
-      .roundRect(0, 0, width, height, 6)
-      .fill({ color: 0xf3f3f3, alpha: 0.96 })
-      .roundRect(0, 0, width, height, 6)
+      .roundRect(0, 0, width, height, 8)
+      .fill({ color: 0x060a10, alpha: 0.94 })
+      .roundRect(2, 2, width - 4, height - 4, 6)
+      .stroke({ width: 1.5, color: 0xffffff, alpha: 0.08 })
+      .roundRect(0, 0, width, height, 8)
       .stroke({ width: 2.5, color: Palette.gold, alpha: 0.95 });
 
     this.grid.clear();
     for (let c = 0; c < this.columns; c++) {
       const x = pad + c * colWidth;
-      this.grid.rect(x, pad, gutter, innerH).fill({ color: 0xe4e4e4, alpha: 1 });
+      this.grid.rect(x, pad, gutter, innerH).fill({ color: 0xffffff, alpha: 0.05 });
       for (let r = 0; r <= this.rowsPerColumn; r++) {
         this.grid.moveTo(x, pad + r * rowHeight).lineTo(x + colWidth, pad + r * rowHeight);
       }
@@ -109,9 +114,10 @@ export class ResultsPanel extends Container {
       this.grid.moveTo(x + gutter, pad).lineTo(x + gutter, pad + innerH);
       this.grid.moveTo(x + colWidth, pad).lineTo(x + colWidth, pad + innerH);
     }
-    this.grid.stroke({ width: 1, color: 0xb9a24a, alpha: 0.75 });
+    this.grid.stroke({ width: 1, color: Palette.gold, alpha: 0.28 });
 
     const scale = Math.min(1, rowHeight / 26);
+    this.discRadius = Math.min(rowHeight, colWidth - gutter) * 0.36;
     this.rows.forEach((row, i) => {
       const column = Math.floor(i / this.rowsPerColumn);
       const rowIndex = i % this.rowsPerColumn;
@@ -143,6 +149,8 @@ export class ResultsPanel extends Container {
     const strings = this.ctx.config.strings;
     const theme = this.ctx.config.theme;
 
+    this.discs.clear();
+
     this.rows.forEach((row, i) => {
       const entry = visible[i];
       if (!entry) {
@@ -153,15 +161,24 @@ export class ResultsPanel extends Container {
 
       const isPlayer = entry.outcome === RoundOutcome.Player;
       const isBanker = entry.outcome === RoundOutcome.Banker;
+      const color = isPlayer ? theme.player : isBanker ? theme.banker : theme.tie;
+
+      // A filled disc with the initial inside — the bead-plate convention, and
+      // far easier to scan than a column of bare letters.
+      this.discs
+        .circle(row.value.x, row.value.y, this.discRadius)
+        .fill({ color, alpha: 0.95 })
+        .circle(row.value.x, row.value.y, this.discRadius)
+        .stroke({ width: 1.5, color: shade(color, 0.45), alpha: 0.9 });
+
       row.value.text = (isPlayer ? strings.player : isBanker ? strings.banker : strings.tie)
         .slice(0, 1)
         .toUpperCase();
-      row.value.tint = isPlayer ? theme.player : isBanker ? theme.banker : theme.tie;
+      row.value.tint = 0xffffff;
 
-      // Pair indicators ride in the corner, as on a bead plate.
       row.pairMark.clear();
-      if (entry.playerPair) row.pairMark.circle(-4, 0, 3).fill(theme.player);
-      if (entry.bankerPair) row.pairMark.circle(4, 0, 3).fill(theme.banker);
+      if (entry.playerPair) row.pairMark.circle(-4, 0, 3.5).fill(theme.player);
+      if (entry.bankerPair) row.pairMark.circle(4, 0, 3.5).fill(theme.banker);
     });
 
     if (!animate) return;

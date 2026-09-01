@@ -44,6 +44,15 @@ export class AnimationManager {
 
   constructor(config: GameConfig) {
     this.config = config;
+
+    // GSAP's lag smoothing clamps the delta whenever a frame overruns, so a
+    // stalled frame makes every tween advance by frames instead of by time.
+    // In a casino round that is a correctness bug, not a smoothing nicety: the
+    // engine sequences the deal on awaited timelines, so a few slow frames
+    // during boot or a GC pause would stretch the round out of step with the
+    // server clock. (Measured: it turned a 1.2 s boot into an 18 s one on a
+    // software rasteriser.) Round timing must follow the wall clock.
+    gsap.ticker.lagSmoothing(0);
   }
 
   updateConfig(config: GameConfig): void {

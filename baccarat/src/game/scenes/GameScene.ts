@@ -1,6 +1,6 @@
-import { BitmapText, Container, Graphics, Sprite } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 
-import { Depth, Fonts, POOL_SIZE_CHIPS, Palette } from "../Constants";
+import { CARD_HEIGHT, CARD_WIDTH, Depth, Fonts, POOL_SIZE_CHIPS, Palette } from "../Constants";
 import { ObjectPool } from "../core/ObjectPool";
 import { ActionButton } from "../objects/ActionButton";
 import { BettingSpot, type BettingSpotOptions } from "../objects/BettingSpot";
@@ -11,7 +11,8 @@ import { InfoPanel } from "../objects/InfoPanel";
 import { ResultBanner } from "../objects/ResultBanner";
 import { ResultsPanel } from "../objects/ResultsPanel";
 import { RoadMap } from "../objects/RoadMap";
-import { ScorePlate } from "../objects/ScoreBoard";
+import { HandZone } from "../objects/HandZone";
+import { ShadowLabel } from "../objects/ShadowLabel";
 import { StatusBar } from "../objects/StatusBar";
 import { CardShoeCase, ChipRack, LimitSign, TableLogo } from "../objects/TableDressing";
 import { Timer } from "../objects/Timer";
@@ -28,6 +29,17 @@ import { Ease } from "../managers/AnimationManager";
 import { clamp } from "../utils/MathUtils";
 
 import { Scene } from "./Scene";
+
+/**
+ * Horizontal room one hand needs, as `scale * HAND_SPAN_PER_SCALE + THIRD_CARD_PAD`:
+ * two upright cards plus the third lying on its side beside them.
+ */
+const HAND_SPAN_PER_SCALE = CARD_WIDTH * 2 + CARD_HEIGHT;
+const THIRD_CARD_PAD = 46;
+/** How far a hand reaches past its centre on the side the third card lies. */
+const OUTWARD_SPAN_PER_SCALE = CARD_WIDTH + CARD_HEIGHT;
+/** Breathing room kept between a hand and whatever is next to it. */
+const HAND_GUTTER = 22;
 
 /** Resolved geometry for one wager band. */
 interface SpotLayout {
@@ -55,6 +67,8 @@ export class GameScene extends Scene {
   private readonly felt = new Sprite();
   private readonly feltMask = new Graphics();
   private readonly rail = new Graphics();
+  private readonly feltTrim = new Graphics();
+  private readonly secondaryPlate = new Graphics();
   private readonly dressing = new Container();
   private readonly betLayer = new Container();
   private readonly cardLayer = new Container();
@@ -72,14 +86,15 @@ export class GameScene extends Scene {
   /* Play ------------------------------------------------------------ */
   private readonly playerAnchor = new Container();
   private readonly bankerAnchor = new Container();
-  private readonly playerPlate: ScorePlate;
-  private readonly bankerPlate: ScorePlate;
+  private readonly playerZone: HandZone;
+  private readonly bankerZone: HandZone;
   private readonly spots = new Map<BetType, BettingSpot>();
   private readonly chipPool: ObjectPool<Chip>;
 
   /* HUD -------------------------------------------------------------- */
   private readonly timer: Timer;
-  private readonly statusMessage: BitmapText;
+  private readonly statusPlate = new Graphics();
+  private readonly statusMessage: ShadowLabel;
   private readonly statusBar: StatusBar;
   private readonly stepper: ChipStepper;
   private readonly resultsPanel: ResultsPanel;
@@ -115,24 +130,15 @@ export class GameScene extends Scene {
     this.logo = new TableLogo(this.ctx);
     this.deck = new Deck(this.ctx);
 
-    this.playerPlate = new ScorePlate(this.ctx, HandSide.Player, {
-      plain: true,
-      label: strings.player,
-      titleColor: Palette.goldBright,
-    });
-    this.bankerPlate = new ScorePlate(this.ctx, HandSide.Banker, {
-      plain: true,
-      label: strings.banker,
-      titleColor: 0xffffff,
-    });
+    this.playerZone = new HandZone(this.ctx, HandSide.Player, strings.player, Palette.goldBright);
+    this.bankerZone = new HandZone(this.ctx, HandSide.Banker, strings.banker, 0xffffff);
 
     this.timer = new Timer(this.ctx);
-    this.statusMessage = new BitmapText({
-      text: "",
-      style: { fontFamily: Fonts.Label, fontSize: 30 },
+    this.statusMessage = new ShadowLabel({
+      fontFamily: Fonts.Label,
+      fontSize: 32,
+      tint: 0xffffff,
     });
-    this.statusMessage.anchor.set(0.5);
-    this.statusMessage.alpha = 0.9;
 
     this.statusBar = new StatusBar(this.ctx);
     this.stepper = new ChipStepper(this.ctx);
@@ -173,19 +179,28 @@ export class GameScene extends Scene {
   }
 
   private buildLayers(): void {
-    this.dressing.addChild(this.chipRack, this.limitSign, this.shoeCase, this.logo, this.discardTray, this.deck);
-    this.cardLayer.addChild(this.playerAnchor, this.bankerAnchor);
+    this.dressing.addChild(
+      this.feltTrim,
+      this.chipRack,
+      this.limitSign,
+      this.shoeCase,
+      this.logo,
+      this.discardTray,
+      this.deck,
+    );
+    // Zones sit under the cards: the printed slots are what cards land on.
+    this.cardLayer.addChild(this.playerZone, this.bankerZone, this.playerAnchor, this.bankerAnchor);
 
     this.hudLayer.addChild(
-      this.playerPlate,
-      this.bankerPlate,
       this.timer,
+      this.statusPlate,
       this.statusMessage,
       this.roadmap,
       this.resultsPanel,
       this.stepper,
       this.statusBar,
     );
+    this.hudLayer.addChild(this.secondaryPlate);
     for (const button of Object.values(this.buttons)) this.hudLayer.addChild(button);
 
     this.overlayLayer.addChild(this.banner, this.infoPanel);
@@ -320,28 +335,26 @@ export class GameScene extends Scene {
 
     this.track(
       bus.on("hand:scoreChanged", ({ player, banker }) => {
-        this.playerPlate.setHandPresent(true);
-        this.bankerPlate.setHandPresent(true);
-        this.playerPlate.setTotal(player);
-        this.bankerPlate.setTotal(banker);
+        this.playerZone.setHandPresent(true);
+        this.bankerZone.setHandPresent(true);
+        this.playerZone.setTotal(player);
+        this.bankerZone.setTotal(banker);
       }),
     );
 
     this.track(
       bus.on("round:result", ({ result }) => {
         this.lastResult = result;
-        this.playerPlate.setPair(result.playerPair);
-        this.bankerPlate.setPair(result.bankerPair);
 
         if (result.outcome === RoundOutcome.Player) {
-          this.playerPlate.playWin();
-          this.bankerPlate.playLose();
+          this.playerZone.playWin();
+          this.bankerZone.playLose();
         } else if (result.outcome === RoundOutcome.Banker) {
-          this.bankerPlate.playWin();
-          this.playerPlate.playLose();
+          this.bankerZone.playWin();
+          this.playerZone.playLose();
         } else {
-          this.playerPlate.playWin();
-          this.bankerPlate.playWin();
+          this.playerZone.playWin();
+          this.bankerZone.playWin();
         }
       }),
     );
@@ -350,6 +363,7 @@ export class GameScene extends Scene {
       bus.on("round:settled", ({ settlements, netProfit, totalStake }) => {
         // The banner carries the outcome, so the phase line gets out of its way.
         this.statusMessage.visible = false;
+        this.statusPlate.visible = false;
         this.presentSettlements(settlements, netProfit, totalStake);
       }),
     );
@@ -433,14 +447,30 @@ export class GameScene extends Scene {
 
   private setStatus(text: string): void {
     this.statusMessage.text = text.toUpperCase();
-    this.statusMessage.tint = 0xffffff;
+    this.statusMessage.setTint(0xffffff);
     this.statusMessage.visible = true;
+    this.statusPlate.visible = true;
+    this.drawStatusPlate();
+  }
+
+  /** A dark lozenge behind the phase line so it never fights the felt. */
+  private drawStatusPlate(): void {
+    const w = this.statusMessage.textWidth + 64;
+    const h = this.statusMessage.textHeight + 22;
+    this.statusPlate
+      .clear()
+      .roundRect(-w / 2, -h / 2, w, h, h / 2)
+      .fill({ color: 0x05070c, alpha: 0.62 })
+      .roundRect(-w / 2, -h / 2, w, h, h / 2)
+      .stroke({ width: 1.5, color: this.ctx.config.theme.gold, alpha: 0.4 });
+    this.statusPlate.position.set(this.statusMessage.x, this.statusMessage.y);
   }
 
   /** Momentary warning — reverts to the phase message afterwards. */
   private flashStatus(text: string): void {
     this.statusMessage.text = text.toUpperCase();
-    this.statusMessage.tint = Palette.danger;
+    this.statusMessage.setTint(Palette.danger);
+    this.drawStatusPlate();
     this.ctx.animation.killTweensOf(this.statusMessage.scale);
     this.ctx.animation.fromTo(
       this.statusMessage.scale,
@@ -499,8 +529,8 @@ export class GameScene extends Scene {
   private resetTable(): void {
     this.lastResult = null;
     this.banner.hide();
-    this.playerPlate.reset();
-    this.bankerPlate.reset();
+    this.playerZone.reset();
+    this.bankerZone.reset();
     for (const spot of this.spots.values()) {
       spot.resetPresentation();
       spot.setAmount(0);
@@ -528,8 +558,8 @@ export class GameScene extends Scene {
     for (const spot of this.spots.values()) spot.refreshLabels();
 
     this.deck.refreshTextures();
-    this.playerPlate.refreshTextures();
-    this.bankerPlate.refreshTextures();
+    this.playerZone.setLabel(strings.player);
+    this.bankerZone.setLabel(strings.banker);
     this.banner.refreshTextures();
     this.limitSign.refresh();
     this.statusBar.refreshLabels();
@@ -622,37 +652,40 @@ export class GameScene extends Scene {
 
     /* --- Wager bands, stacked and widening downward ------------------- */
     const bandHeight = clamp(h * 0.1, 62, 104);
-    const bandGap = bandHeight * 0.35;
+    const bandGap = bandHeight * 0.58;
     const bandCentre = w * 0.5;
+    const bandBaseWidth = Math.min(520, w * 0.28);
     const tieY = h * 0.43;
-    this.layoutBands(bandCentre, tieY, bandHeight, bandGap, Math.min(560, w * 0.3));
+    this.layoutBands(bandCentre, tieY, bandHeight, bandGap, bandBaseWidth);
 
-    /* --- Hands and their name plates ---------------------------------- */
-    const handScale = clamp(h / 1500, 0.4, 0.72);
-    const handY = h * 0.44;
-    this.playerAnchor.position.set(w * 0.22, handY);
-    this.playerAnchor.scale.set(handScale);
-    this.bankerAnchor.position.set(w * 0.78, handY);
-    this.bankerAnchor.scale.set(handScale);
-
-    const plateWidth = Math.min(260, w * 0.15);
-    this.playerPlate.position.set(w * 0.22, h * 0.61);
-    this.playerPlate.resizeTo(plateWidth, h * 0.09);
-    this.bankerPlate.position.set(w * 0.78, h * 0.61);
-    this.bankerPlate.resizeTo(plateWidth, h * 0.09);
-
-    /* --- Phase readout and countdown ---------------------------------- */
-    this.statusMessage.position.set(w * 0.5, h * 0.29);
-    this.statusMessage.scale.set(clamp(w / 1900, 0.65, 1.1));
-    this.timer.position.set(w * 0.5, h * 0.29);
-    this.timer.setRadius(clamp(h * 0.06, 34, 62));
-
-    /* --- Results list, right rail ------------------------------------- */
-    const panelWidth = Math.min(280, w * 0.155);
+    /* --- Results rail, right edge -------------------------------------- */
+    const panelWidth = Math.min(250, w * 0.14);
     const panelHeight = Math.min(430, h * 0.44);
-    this.resultsPanel.position.set(w - margin - panelWidth, h * 0.2);
+    const railLeft = w - margin - panelWidth;
+    this.resultsPanel.position.set(railLeft, h * 0.2);
     this.resultsPanel.resizeTo(panelWidth, panelHeight);
     this.roadmap.visible = false;
+
+    /* --- Hands: sized to the gap between the bands and the rail --------- */
+    // Deriving the card scale from the measured gap — rather than from a fixed
+    // fraction of the viewport — is what stops a three-card hand sliding under
+    // the scoreboard: the third card lies sideways and needs real room.
+    const widestBand = bandBaseWidth * 1.12;
+    const bandEdge = bandCentre + widestBand / 2;
+    const gap = railLeft - bandEdge - HAND_GUTTER * 2;
+    const handScale = clamp((gap - THIRD_CARD_PAD) / HAND_SPAN_PER_SCALE, 0.45, 0.92);
+    const handY = h * 0.47;
+    const zoneWidth = Math.min(gap, 400);
+    const bankerX = (bandEdge + railLeft) / 2;
+    this.layoutHand(this.playerZone, this.playerAnchor, w - bankerX, handY, zoneWidth, handScale);
+    this.layoutHand(this.bankerZone, this.bankerAnchor, bankerX, handY, zoneWidth, handScale);
+
+    /* --- Phase readout and countdown ---------------------------------- */
+    this.statusMessage.position.set(w * 0.5, h * 0.285);
+    this.statusMessage.setFontScale(clamp(w / 1900, 0.7, 1.15));
+    this.drawStatusPlate();
+    this.timer.position.set(w * 0.5, h * 0.285);
+    this.timer.setRadius(clamp(h * 0.06, 34, 62));
 
     /* --- Near rail: stepper left, actions right ----------------------- */
     const controlY = h - statusHeight - clamp(h * 0.11, 60, 108);
@@ -715,28 +748,26 @@ export class GameScene extends Scene {
     this.drawDiscardTray(92, 68);
     this.discardTray.position.set(margin + 52, h * 0.16);
 
-    /* --- Names high, hands beneath them ------------------------------- */
-    const plateWidth = Math.min(300, w * 0.4);
-    this.playerPlate.position.set(w * 0.27, h * 0.28);
-    this.playerPlate.resizeTo(plateWidth, h * 0.05);
-    this.bankerPlate.position.set(w * 0.73, h * 0.28);
-    this.bankerPlate.resizeTo(plateWidth, h * 0.05);
-
-    const handScale = clamp(w / 1500, 0.34, 0.6);
-    const handY = h * 0.38;
-    this.playerAnchor.position.set(w * 0.27, handY);
-    this.playerAnchor.scale.set(handScale);
-    this.bankerAnchor.position.set(w * 0.73, handY);
-    this.bankerAnchor.scale.set(handScale);
+    /* --- Hands sit side by side above the wager bands ------------------ */
+    // Same reasoning as landscape: the limit is how far the sideways third
+    // card reaches toward the screen edge, so size the cards from that.
+    const playerX = w * 0.26;
+    const outwardRoom = playerX - margin;
+    const handScale = clamp((outwardRoom - THIRD_CARD_PAD) / OUTWARD_SPAN_PER_SCALE, 0.45, 0.95);
+    const handY = h * 0.34;
+    const zoneWidth = Math.min(w * 0.46, 460);
+    this.layoutHand(this.playerZone, this.playerAnchor, playerX, handY, zoneWidth, handScale);
+    this.layoutHand(this.bankerZone, this.bankerAnchor, w - playerX, handY, zoneWidth, handScale);
 
     this.statusMessage.position.set(w * 0.5, h * 0.465);
-    this.statusMessage.scale.set(clamp(w / 1100, 0.55, 1));
+    this.statusMessage.setFontScale(clamp(w / 1100, 0.6, 1));
+    this.drawStatusPlate();
     this.timer.position.set(w * 0.5, h * 0.465);
     this.timer.setRadius(clamp(h * 0.03, 28, 52));
 
     /* --- Wager bands -------------------------------------------------- */
     const bandHeight = clamp(h * 0.058, 56, 96);
-    const bandGap = bandHeight * 0.3;
+    const bandGap = bandHeight * 0.5;
     this.layoutBands(w * 0.5, h * 0.55, bandHeight, bandGap, Math.min(w * 0.66, 640));
 
     /* --- Results panel floats over the upper felt --------------------- */
@@ -830,6 +861,8 @@ export class GameScene extends Scene {
       });
     }
 
+    this.drawFeltTrim(centreX, topY, bandHeight, gap, baseWidth, order.length);
+
     for (const [betType, spot] of this.spots) {
       const layout = layouts.get(betType);
       if (!layout) {
@@ -871,15 +904,84 @@ export class GameScene extends Scene {
       .stroke({ width: 2, color: 0xffffff, alpha: 0.12 });
   }
 
+  /**
+   * The gold hairlines that frame the wager area.
+   *
+   * A real baccarat felt is *printed*: the zones sit inside concentric arcs
+   * that follow the table edge. Two of them, above and below the bands, is
+   * enough to stop the layout floating in the middle of a plain gradient.
+   */
+  private drawFeltTrim(
+    centreX: number,
+    topY: number,
+    bandHeight: number,
+    gap: number,
+    baseWidth: number,
+    bandCount: number,
+  ): void {
+    const gold = this.ctx.config.theme.gold;
+    const bottomY = topY + (bandCount - 1) * (bandHeight + gap);
+
+    const arc = (y: number, halfWidth: number, bow: number, alpha: number): void => {
+      this.feltTrim
+        .moveTo(centreX - halfWidth, y)
+        .quadraticCurveTo(centreX, y + bow, centreX + halfWidth, y)
+        .stroke({ width: 2, color: gold, alpha });
+    };
+
+    // Kept narrower than the hand zones on either side: a trim line that runs
+    // under a name banner reads as a mistake, not as decoration.
+    this.feltTrim.clear();
+    arc(topY - bandHeight * 0.78, baseWidth * 0.5, bandHeight * 0.34, 0.45);
+    arc(topY - bandHeight * 0.68, baseWidth * 0.46, bandHeight * 0.3, 0.2);
+    arc(bottomY + bandHeight * 0.86, baseWidth * 0.58, bandHeight * 0.4, 0.45);
+    arc(bottomY + bandHeight * 0.97, baseWidth * 0.62, bandHeight * 0.44, 0.2);
+  }
+
+  /** Places a hand zone and parks the card anchor on its printed slots. */
+  private layoutHand(
+    zone: HandZone,
+    anchor: Container,
+    x: number,
+    y: number,
+    width: number,
+    cardScale: number,
+  ): void {
+    zone.position.set(x, y);
+    zone.resizeTo(width, cardScale);
+    anchor.position.set(x, y + zone.cardAnchorY);
+    anchor.scale.set(cardScale);
+  }
+
   private placeButton(button: ActionButton, x: number, y: number, radius: number): void {
     button.position.set(x, y);
     button.setRadius(radius);
   }
 
+  /**
+   * Undo / repeat / double share one recessed plate. Loose icon buttons on an
+   * open felt read as debug controls; grouping them makes them a toolbar.
+   */
   private setSecondaryVisible(visible: boolean): void {
     this.buttons.undo.visible = visible;
     this.buttons.repeat.visible = visible;
     this.buttons.double.visible = visible;
+    this.secondaryPlate.visible = visible;
+    if (!visible) return;
+
+    const radius = this.buttons.undo.currentRadius;
+    const left = this.buttons.undo.x;
+    const right = this.buttons.double.x;
+    const y = this.buttons.undo.y;
+    const padX = radius * 0.75;
+    const height = radius * 2 + radius * 0.6;
+
+    this.secondaryPlate
+      .clear()
+      .roundRect(left - radius - padX, y - height / 2, right - left + (radius + padX) * 2, height, height / 2)
+      .fill({ color: 0x05070c, alpha: 0.45 })
+      .roundRect(left - radius - padX, y - height / 2, right - left + (radius + padX) * 2, height, height / 2)
+      .stroke({ width: 1.5, color: this.ctx.config.theme.gold, alpha: 0.28 });
   }
 
   /* ---------------------------------------------------------------- *

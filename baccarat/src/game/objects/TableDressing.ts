@@ -98,11 +98,20 @@ export class ChipRack extends Container {
     for (let i = 0; i < columns; i++) {
       const color = this.colors[i % this.colors.length] ?? 0xcccccc;
       const x = -width / 2 + slot * (i + 0.5);
-      // A column of chips seen edge-on: stacked ellipses.
-      for (let s = 0; s < 3; s++) {
+      const rx = slot * 0.38;
+      const ry = height * 0.1;
+
+      // A column of chips seen edge-on. Each disc gets a darker underside and a
+      // light top rim, which is what separates a stack from a striped blob.
+      for (let s = 3; s >= 0; s--) {
+        const y = height * 0.2 - s * ry * 1.45;
         this.art
-          .ellipse(x, -height * 0.16 + s * height * 0.17, slot * 0.36, height * 0.11)
-          .fill(shade(color, s === 0 ? 0.12 : -0.08 * s));
+          .ellipse(x, y + ry * 0.42, rx, ry)
+          .fill(shade(color, -0.45))
+          .ellipse(x, y, rx, ry)
+          .fill(shade(color, s === 0 ? 0.16 : 0))
+          .ellipse(x, y, rx, ry)
+          .stroke({ width: 1, color: shade(color, 0.4), alpha: 0.55 });
       }
     }
 

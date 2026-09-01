@@ -1,12 +1,14 @@
-import { BitmapText, Container, Graphics, Sprite } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
 
 import { CHIP_SIZE, Fonts, Palette } from "../Constants";
 import type { ObjectPool } from "../core/ObjectPool";
 import type { GameContext } from "../GameContext";
 import { Ease } from "../managers/AnimationManager";
 import { BetType } from "../types";
+import { shade } from "../utils/Helpers";
 import type { Chip } from "./Chip";
 import { ChipStack } from "./ChipStack";
+import { ShadowLabel } from "./ShadowLabel";
 
 export type SpotShape = "arc" | "rect" | "hex";
 
@@ -37,8 +39,8 @@ export class BettingSpot extends Container {
   private readonly options: BettingSpotOptions;
   private readonly body = new Graphics();
   private readonly glow: Sprite;
-  private readonly title: BitmapText;
-  private readonly payout: BitmapText;
+  private readonly title: ShadowLabel;
+  private readonly payout: ShadowLabel;
 
   private spotWidth = 320;
   private spotHeight = 96;
@@ -59,18 +61,18 @@ export class BettingSpot extends Container {
     this.glow.alpha = 0;
     this.glow.blendMode = "add";
 
-    this.title = new BitmapText({
+    this.title = new ShadowLabel({
       text: options.label.toUpperCase(),
-      style: { fontFamily: Fonts.Label, fontSize: 44 },
+      fontFamily: Fonts.Label,
+      fontSize: 44,
     });
-    this.title.anchor.set(0.5);
 
-    this.payout = new BitmapText({
+    this.payout = new ShadowLabel({
       text: this.payoutLabel(),
-      style: { fontFamily: Fonts.Numeric, fontSize: 26 },
+      fontFamily: Fonts.Numeric,
+      fontSize: 28,
+      tint: Palette.goldBright,
     });
-    this.payout.anchor.set(0.5);
-    this.payout.alpha = 0.9;
 
     this.stack = new ChipStack(ctx, chipPool);
 
@@ -91,10 +93,10 @@ export class BettingSpot extends Container {
     this.redraw();
 
     const scale = Math.min(1, width / 420, height / 100);
-    this.title.scale.set(scale);
-    this.payout.scale.set(scale);
-    this.title.position.set(0, -height * 0.16);
-    this.payout.position.set(0, height * 0.26);
+    this.title.setFontScale(scale);
+    this.payout.setFontScale(scale);
+    this.title.position.set(0, -height * 0.17);
+    this.payout.position.set(0, height * 0.27);
 
     this.glow.width = width * 1.15;
     this.glow.height = height * 2.4;
@@ -103,38 +105,68 @@ export class BettingSpot extends Container {
     // stay legible underneath a full stack.
     this.stack.position.set(-width * 0.31, height * 0.02);
     this.stack.setChipScale(Math.min(0.72, (height * 0.78) / CHIP_SIZE));
-    this.stack.setBadgeOffset(-height * 0.46);
+    this.stack.setBadgeOffset(-height * 0.62);
   }
 
+  /**
+   * Contrast comes from a dark base, not from tinting the felt.
+   *
+   * Washing a colour over crimson at low alpha produced muddy, near-identical
+   * bands; a near-black base under a saturated coloured rim gives each wager a
+   * clear identity and keeps white text readable whatever is on top of it.
+   */
   private redraw(): void {
     const hasBet = this.stack.amount > 0;
-    const gold = this.ctx.config.theme.gold;
+    const color = this.options.color;
 
-    // The reference layout is printed, not painted: a thin bright outline over
-    // the felt, with colour appearing only once the spot is live.
-    const border = this.locked
-      ? 0x8a8a8a
+    const rim = this.locked
+      ? 0x7c7c7c
       : hasBet
         ? Palette.goldBright
         : this.hovering
-          ? gold
-          : 0xd8d2d6;
-    const borderWidth = hasBet ? 4 : this.hovering ? 3.5 : 2.5;
-    const fillAlpha = hasBet ? 0.24 : this.hovering ? 0.16 : 0.09;
+          ? shade(color, 0.45)
+          : color;
+    const rimWidth = hasBet ? 5 : this.hovering ? 4 : 3;
+    const baseAlpha = this.locked ? 0.4 : hasBet ? 0.82 : this.hovering ? 0.72 : 0.6;
 
     this.body.clear();
-    this.trace(this.body);
-    this.body.fill({ color: hasBet ? this.options.color : 0x000000, alpha: fillAlpha });
-    this.trace(this.body);
-    this.body.stroke({
-      width: borderWidth,
-      color: border,
-      alignment: 0.5,
-      alpha: this.locked ? 0.5 : 0.95,
-    });
 
-    this.title.tint = this.locked ? 0x9a9a9a : 0xffffff;
-    this.payout.tint = this.locked ? 0x8a8a8a : 0xe8e2e6;
+    // Base plate.
+    this.trace(this.body);
+    this.body.fill({ color: 0x080a10, alpha: baseAlpha });
+
+    // Colour wash, strongest at the top edge so the band reads as lit.
+    this.trace(this.body);
+    this.body.fill({ color: shade(color, -0.55), alpha: this.locked ? 0.25 : 0.55 });
+
+    // Outer rim, plus an inner hairline for a printed-on-felt edge.
+    this.trace(this.body);
+    this.body.stroke({ width: rimWidth, color: rim, alignment: 0.5, alpha: this.locked ? 0.5 : 1 });
+    this.body.setStrokeStyle({ width: 1.5, color: 0xffffff, alpha: this.locked ? 0.08 : 0.22 });
+    this.traceInset(this.body, rimWidth + 3);
+    this.body.stroke();
+
+    this.title.setTint(this.locked ? 0x9a9a9a : 0xffffff);
+    this.payout.setTint(this.locked ? 0x8a8a8a : Palette.goldBright);
+  }
+
+  /** The band outline pulled inward, for the inner hairline. */
+  private traceInset(g: Graphics, inset: number): void {
+    const hw = this.spotWidth / 2 - inset;
+    const hh = this.spotHeight / 2 - inset;
+    const r = Math.max(4, Math.min(18, hh * 0.6));
+    const bow = this.bow;
+
+    g.moveTo(-hw + r, -hh)
+      .quadraticCurveTo(0, -hh + bow * 2, hw - r, -hh)
+      .quadraticCurveTo(hw, -hh, hw, -hh + r)
+      .lineTo(hw, hh - r)
+      .quadraticCurveTo(hw, hh, hw - r, hh)
+      .quadraticCurveTo(0, hh + bow * 2, -hw + r, hh)
+      .quadraticCurveTo(-hw, hh, -hw, hh - r)
+      .lineTo(-hw, -hh + r)
+      .quadraticCurveTo(-hw, -hh, -hw + r, -hh)
+      .closePath();
   }
 
   /** Traces the band outline: bowed top and bottom edges, rounded corners. */
