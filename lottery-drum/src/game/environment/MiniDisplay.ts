@@ -49,7 +49,7 @@ export class MiniDisplay {
       .stroke({ width: 2, color: COLOR_NEON, alpha: 0.5 });
 
 
-    this.buildWheel(Math.min(width, height) * 0.42);
+    this.buildWheel(Math.min(width, height) * 0.54);
 
     if (kind === 'wheel') {
       this.wheel.position.set(0, 0);
@@ -70,11 +70,11 @@ export class MiniDisplay {
   private buildWheelScreen(width: number, height: number): Graphics {
     return new Graphics()
       .rect(-width / 2, -height / 2, width, height)
-      .fill({ color: 0x1b2530 })
+      .fill({ color: 0x4a4038 })
       .rect(-width / 2, -height / 2, width, height * 0.1)
-      .fill({ color: 0x0a0e14 })
+      .fill({ color: 0x232d38 })
       .rect(-width / 2, height / 2 - height * 0.12, width, height * 0.12)
-      .fill({ color: 0x0a0e14 });
+      .fill({ color: 0x232d38 });
   }
 
   private buildDashboardScreen(
@@ -86,16 +86,16 @@ export class MiniDisplay {
     const container = new Container();
     const g = new Graphics()
       .rect(-width / 2, -height / 2, width, height)
-      .fill({ color: 0x18202b })
+      .fill({ color: 0x333f4c })
       // Left results column.
       .roundRect(-width / 2 + 8, -height / 2 + 34, width * 0.16, height * 0.78, 4)
-      .fill({ color: 0x161d27 })
+      .fill({ color: 0x3c4a58 })
       // Right stats block.
       .roundRect(width / 2 - width * 0.3, -height / 2 + 34, width * 0.28, height * 0.42, 4)
-      .fill({ color: 0x161d27 })
+      .fill({ color: 0x3c4a58 })
       // Bottom bet bar.
       .roundRect(-width / 2 + 8, height / 2 - 34, width - 16, 24, 4)
-      .fill({ color: 0x121821 });
+      .fill({ color: 0x2e3a46 });
 
     // Colour swatches in the stats block, mirroring the reference dashboard.
     const swatches = [0xe0454f, 0x2f8fd6, 0x35b877, 0xe0b13a, 0x8c5bd6];
@@ -129,13 +129,13 @@ export class MiniDisplay {
     const pockets = WHEEL_ORDER.length;
     const step = TAU / pockets;
 
-    g.circle(0, 0, radius * 1.06).fill({ color: 0x2c1a0e });
+    g.circle(0, 0, radius * 1.06).fill({ color: 0x54331c });
     g.circle(0, 0, radius * 1.06).stroke({ width: 2, color: COLOR_GOLD_DEEP, alpha: 0.8 });
 
     for (let i = 0; i < pockets; i++) {
       const n = WHEEL_ORDER[i];
       const a0 = i * step - step / 2;
-      const color = n === 0 ? 0x1f9d55 : RED_NUMBERS.has(n) ? 0xc03040 : 0x1a1d22;
+      const color = n === 0 ? 0x2ab567 : RED_NUMBERS.has(n) ? 0xd8404f : 0x2a2f36;
       g.moveTo(0, 0)
         .arc(0, 0, radius, a0, a0 + step)
         .closePath()
@@ -143,9 +143,9 @@ export class MiniDisplay {
     }
 
     // Wooden cone and gold turret.
-    g.circle(0, 0, radius * 0.66).fill({ color: 0x8a5a2b });
+    g.circle(0, 0, radius * 0.66).fill({ color: 0xa8763c });
     g.circle(0, 0, radius * 0.66).stroke({ width: 1.5, color: COLOR_GOLD_DEEP, alpha: 0.7 });
-    g.circle(0, 0, radius * 0.52).fill({ color: 0xa26c33 });
+    g.circle(0, 0, radius * 0.52).fill({ color: 0xc08f4e });
 
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * TAU;

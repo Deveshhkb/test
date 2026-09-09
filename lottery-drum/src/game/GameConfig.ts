@@ -211,13 +211,13 @@ export const COLOR_RESULT_CYAN = 0x7fe6ff;
 export const COLOR_GREEN_DOT = 0x31bc64;
 export const COLOR_GOLD = 0xe9c787;
 export const COLOR_GOLD_DEEP = 0xb8801f;
-export const COLOR_BACKDROP_TOP = 0x070d18;
-export const COLOR_BACKDROP_BOTTOM = 0x132436;
+export const COLOR_BACKDROP_TOP = 0x1f3548;
+export const COLOR_BACKDROP_BOTTOM = 0x55759b;
 export const COLOR_PILL_BG = 0x111114;
 export const COLOR_GLASS = 0xbcd6e8;
 export const COLOR_STEEL = 0x8b97a6;
 export const COLOR_STEEL_DARK = 0x39424f;
-export const COLOR_CHASSIS = 0x161c28;
+export const COLOR_CHASSIS = 0x10161f;
 
 // ---------------------------------------------------------------------------
 // Effects and rendering

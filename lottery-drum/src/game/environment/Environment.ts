@@ -1,4 +1,12 @@
-import { BlurFilter, Container, Graphics, Sprite, TextStyle } from 'pixi.js';
+import {
+  BlurFilter,
+  Container,
+  Graphics,
+  Rectangle,
+  Renderer,
+  Sprite,
+  TextStyle,
+} from 'pixi.js';
 import {
   COLOR_BACKDROP_BOTTOM,
   COLOR_BACKDROP_TOP,
@@ -33,6 +41,7 @@ import { MiniDisplay } from './MiniDisplay';
 export class Environment {
   readonly view = new Container();
 
+  private readonly farBand: Container;
   private readonly displays: MiniDisplay[] = [];
   private readonly guides: Sprite[] = [];
   private readonly neonTube: Graphics;
@@ -45,15 +54,15 @@ export class Environment {
     // Depth of field on the far wall, so it separates from the machine
     // optically and not only by draw order. Nothing in this band animates, so
     // it is baked to a texture once instead of running the blur every frame.
-    far.filters = [new BlurFilter({ strength: 4, quality: 2 })];
-    far.cacheAsTexture(true);
+    far.filters = [new BlurFilter({ strength: 1.6, quality: 2 })];
+    this.farBand = far;
 
     const depthHaze = new Sprite(glowTexture(0x14496e));
     depthHaze.anchor.set(0.5);
     depthHaze.width = DESIGN_WIDTH * 1.15;
     depthHaze.height = DESIGN_HEIGHT * 0.95;
     depthHaze.position.set(MACHINE_X, DESIGN_HEIGHT * 0.46);
-    depthHaze.alpha = 0.22;
+    depthHaze.alpha = 0.14;
     depthHaze.blendMode = 'add';
 
     const mid = new Container();
@@ -68,6 +77,26 @@ export class Environment {
     this.view.addChild(far, depthHaze, mid, near);
   }
 
+  /**
+   * Bakes the blurred far band to a texture so the blur stops running every
+   * frame. The frame is given explicitly: letting Pixi derive it from the
+   * container's own bounds clips the result, which silently cut the lower third
+   * of the background away.
+   */
+  bake(renderer: Renderer): void {
+    const texture = renderer.generateTexture({
+      target: this.farBand,
+      frame: new Rectangle(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT),
+      resolution: 1,
+    });
+    const baked = new Sprite(texture);
+    baked.width = DESIGN_WIDTH;
+    baked.height = DESIGN_HEIGHT;
+    this.farBand.filters = [];
+    this.farBand.removeChildren();
+    this.farBand.addChild(baked);
+  }
+
   update(dt: number): void {
     this.time += dt;
     for (const display of this.displays) display.update(dt);
@@ -75,7 +104,7 @@ export class Environment {
     // Light guides flicker only very slightly; a strong pulse reads as arcade.
     const pulse = 0.9 + Math.sin(this.time * 0.9) * 0.05;
     for (let i = 0; i < this.guides.length; i++) {
-      this.guides[i].alpha = (0.95 - (i % 5) * 0.11) * pulse;
+      this.guides[i].alpha = (1 - (i % 5) * 0.1) * pulse;
     }
     const tube = 0.95 + Math.sin(this.time * 1.7) * 0.04;
     this.neonTube.alpha = tube;
@@ -109,26 +138,26 @@ export class Environment {
         .lineTo(inner, bottom - 30)
         .lineTo(outer, bottom + 40)
         .closePath()
-        .fill({ color: 0x0a1421 });
+        .fill({ color: 0x35597a });
 
       // Lit inner corner where the slab turns away from the room.
       g.moveTo(inner, top + 46)
         .lineTo(inner, bottom - 30)
-        .stroke({ width: 3, color: COLOR_NEON, alpha: 0.18 });
+        .stroke({ width: 4, color: 0xbfeaff, alpha: 0.5 });
 
       // Horizontal seams across the slab.
       for (let i = 1; i < 5; i++) {
         const y = top + ((bottom - top) / 5) * i;
         g.moveTo(outer, y + side * 0).lineTo(inner, y).stroke({
           width: 1.5,
-          color: 0x2b4460,
-          alpha: 0.5,
+          color: 0x5a86ad,
+          alpha: 0.6,
         });
       }
     }
 
     // Header beam across the top of the set.
-    g.rect(DESIGN_WIDTH * 0.24, top - 10, DESIGN_WIDTH * 0.52, 40).fill({ color: 0x0c1826 });
+    g.rect(DESIGN_WIDTH * 0.24, top - 10, DESIGN_WIDTH * 0.52, 40).fill({ color: 0x1e364d });
     g.rect(DESIGN_WIDTH * 0.24, top + 26, DESIGN_WIDTH * 0.52, 4).fill({
       color: COLOR_NEON,
       alpha: 0.22,
@@ -139,31 +168,44 @@ export class Environment {
   /** Perforated LED panel directly behind the machine. */
   private buildLedWall(): Graphics {
     const g = new Graphics();
-    const left = DESIGN_WIDTH * 0.345;
-    const right = DESIGN_WIDTH * 0.655;
+    const left = DESIGN_WIDTH * 0.19;
+    const right = DESIGN_WIDTH * 0.81;
     const top = DESIGN_HEIGHT * 0.2;
     const bottom = DESIGN_HEIGHT * 0.88;
 
-    g.rect(left, top, right - left, bottom - top).fill({ color: 0x0b2440 });
+    g.rect(left, top, right - left, bottom - top).fill({ color: 0x357fbe });
     g.rect(left, top, right - left, bottom - top).stroke({
       width: 2,
       color: COLOR_NEON,
       alpha: 0.14,
     });
 
-    const spacing = 18;
+    const spacing = 21;
     for (let y = top + spacing; y < bottom; y += spacing) {
       for (let x = left + spacing; x < right; x += spacing) {
-        const fade = 1 - Math.abs(x - DESIGN_WIDTH * 0.5) / (DESIGN_WIDTH * 0.17);
+        const fade = 1 - Math.abs(x - DESIGN_WIDTH * 0.5) / (DESIGN_WIDTH * 0.36);
         if (fade <= 0.02) continue;
-        g.circle(x, y, 2.4).fill({ color: COLOR_NEON, alpha: 0.09 + fade * 0.26 });
+        g.circle(x, y, 3.4).fill({ color: 0xcaf0ff, alpha: 0.34 + fade * 0.5 });
       }
+    }
+
+    // Panel seams. The wall is an array of LED tiles, and without the joints
+    // it reads as one flat field of blue.
+    const panels = 8;
+    for (let i = 0; i <= panels; i++) {
+      const x = left + ((right - left) / panels) * i;
+      g.rect(x - 2, top, 4, bottom - top).fill({ color: 0x0d2a45, alpha: 0.75 });
+      g.rect(x - 2, top, 1.5, bottom - top).fill({ color: 0x8fd4ff, alpha: 0.18 });
+    }
+    for (let i = 0; i <= 4; i++) {
+      const y = top + ((bottom - top) / 4) * i;
+      g.rect(left, y - 2, right - left, 4).fill({ color: 0x0d2a45, alpha: 0.6 });
     }
 
     // The machine blocks the panel's light, so it falls off behind it.
     for (let i = 8; i > 0; i--) {
       const t = i / 8;
-      g.ellipse(MACHINE_X, MACHINE_Y, 760 * t, 560 * t).fill({ color: 0x03060c, alpha: 0.1 });
+      g.ellipse(MACHINE_X, MACHINE_Y, 760 * t, 560 * t).fill({ color: 0x0a1a2c, alpha: 0.05 });
     }
     return g;
   }
@@ -174,11 +216,11 @@ export class Environment {
     const g = new Graphics();
     const y = DESIGN_HEIGHT * 0.055;
 
-    g.rect(DESIGN_WIDTH * 0.1, y, DESIGN_WIDTH * 0.8, 9).fill({ color: 0x121b27 });
+    g.rect(DESIGN_WIDTH * 0.1, y, DESIGN_WIDTH * 0.8, 9).fill({ color: 0x24374b });
     for (let x = DESIGN_WIDTH * 0.1; x < DESIGN_WIDTH * 0.9; x += 52) {
       g.moveTo(x, y + 9).lineTo(x + 26, y + 34).lineTo(x + 52, y + 9).stroke({
         width: 2.5,
-        color: 0x1c2735,
+        color: 0x33475e,
       });
     }
     container.addChild(g);
@@ -187,7 +229,7 @@ export class Environment {
       const x = DESIGN_WIDTH * (0.16 + i * 0.136);
       const housing = new Graphics();
       housing.position.set(x, 0);
-      housing.roundRect(-18, y + 30, 36, 24, 4).fill({ color: 0x0e141d });
+      housing.roundRect(-18, y + 30, 36, 24, 4).fill({ color: 0x1d2a3a });
       housing.roundRect(-18, y + 30, 36, 5, 3).fill({ color: 0x2c3646, alpha: 0.8 });
       container.addChild(housing);
 
@@ -225,7 +267,7 @@ export class Environment {
           blade.height = Math.hypot(94, halfHeight);
           blade.position.set(originX + side * offset, midY + (half * halfHeight) / 2);
           blade.rotation = Math.atan2(half * halfHeight, side * 94) - Math.PI / 2;
-          blade.alpha = 0.95 - i * 0.11;
+          blade.alpha = 1 - i * 0.1;
           blade.blendMode = 'add';
           this.guides.push(blade);
           container.addChild(blade);
@@ -309,16 +351,16 @@ export class Environment {
     const horizon = DESIGN_HEIGHT * 0.9;
     const g = new Graphics();
 
-    g.rect(0, horizon, DESIGN_WIDTH, DESIGN_HEIGHT - horizon).fill({ color: 0x040709 });
+    g.rect(0, horizon, DESIGN_WIDTH, DESIGN_HEIGHT - horizon).fill({ color: 0x222a31 });
     container.addChild(g);
 
     // The floor is polished, so the room smears down into it.
-    const smear = new Sprite(verticalGradientTexture(0x123047, 0x040709));
+    const smear = new Sprite(verticalGradientTexture(0x3a6183, 0x222a31));
     smear.anchor.set(0.5, 0);
     smear.width = DESIGN_WIDTH;
     smear.height = (DESIGN_HEIGHT - horizon) * 0.85;
     smear.position.set(DESIGN_WIDTH * 0.5, horizon);
-    smear.alpha = 0.55;
+    smear.alpha = 0.7;
     container.addChild(smear);
 
     const edge = new Graphics();

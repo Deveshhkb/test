@@ -110,6 +110,10 @@ export class Game {
       else if (action === 'reset') this.reset();
     });
 
+    // Bake the static far band now the renderer exists, so its depth-of-field
+    // blur is paid for once instead of every frame.
+    this.environment.bake(this.app.renderer);
+
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(host);
     this.resize();

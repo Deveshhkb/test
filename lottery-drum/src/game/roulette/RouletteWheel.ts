@@ -81,7 +81,7 @@ export class RouletteWheel {
     const container = new Container();
     const g = new Graphics();
 
-    g.circle(0, 0, FRAME_OUTER_RADIUS + 6).fill({ color: 0x05080f, alpha: 0.85 });
+    g.circle(0, 0, FRAME_OUTER_RADIUS + 10).fill({ color: 0x05080f, alpha: 0.9 });
     g.circle(0, 0, FRAME_OUTER_RADIUS)
       .fill({ color: COLOR_CHASSIS })
       .circle(0, 0, FRAME_INNER_RADIUS)
@@ -122,13 +122,13 @@ export class RouletteWheel {
   private buildWheelSurface(): Graphics {
     const g = new Graphics();
 
-    g.circle(0, 0, POCKET_BAND_OUTER).fill({ color: 0x0a1b2c, alpha: 0.7 });
+    g.circle(0, 0, POCKET_BAND_OUTER).fill({ color: 0x0a1b2c, alpha: 0.42 });
     // Concentric falloff bands stand in for a dished surface.
     for (let i = 8; i > 0; i--) {
       const t = i / 8;
-      g.circle(0, 0, POCKET_BAND_OUTER * t).fill({ color: 0x0a1a2c, alpha: 0.14 });
+      g.circle(0, 0, POCKET_BAND_OUTER * t).fill({ color: 0x0a1a2c, alpha: 0.08 });
     }
-    g.circle(0, 0, POCKET_BAND_INNER).fill({ color: 0x040a12, alpha: 0.72 });
+    g.circle(0, 0, POCKET_BAND_INNER).fill({ color: 0x061020, alpha: 0.4 });
 
     // Machined guide grooves on the floor.
     for (let i = 1; i <= 3; i++) {

@@ -51,7 +51,7 @@ export class ResultOverlay {
       }),
     });
     this.bigNumber.anchor.set(0.5);
-    this.bigNumber.alpha = 0.72;
+    this.bigNumber.alpha = 0.8;
     this.numeralLayer.addChild(this.bigNumber);
 
     this.pillLabel = new Text({

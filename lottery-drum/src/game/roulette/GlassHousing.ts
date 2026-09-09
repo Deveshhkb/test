@@ -58,7 +58,7 @@ export class GlassHousing {
   private buildFarWall(): Graphics {
     const g = new Graphics();
     // Tinted interior, brighter where the far wall curves away from the light.
-    g.circle(0, 0, GLASS_RADIUS).fill({ color: 0x0d2036, alpha: 0.4 });
+    g.circle(0, 0, GLASS_RADIUS).fill({ color: 0x0d2036, alpha: 0.24 });
     g.arc(0, 0, GLASS_RADIUS - 8, Math.PI * 0.15, Math.PI * 0.85).stroke({
       width: 16,
       color: COLOR_GLASS,

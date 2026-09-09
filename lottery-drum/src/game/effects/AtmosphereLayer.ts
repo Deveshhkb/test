@@ -46,7 +46,7 @@ export class AtmosphereLayer {
     this.haze.alpha = 0.05;
     this.haze.blendMode = 'add';
 
-    const vignette = new Sprite(vignetteTexture(0.66, 0.47));
+    const vignette = new Sprite(vignetteTexture(0.34, 0.58));
     vignette.width = DESIGN_WIDTH;
     vignette.height = DESIGN_HEIGHT;
 

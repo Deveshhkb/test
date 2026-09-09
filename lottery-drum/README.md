@@ -97,6 +97,11 @@ separately. `utils/TextureFactory.ts` declares the key direction, the room's
 cyan bounce and the ambient, and every generated material reads them, so metal,
 glass and the balls agree about where the light is.
 
+Exposure is matched to the reference by measurement, not by eye. Region means
+sampled from a reference frame set the targets: the studio is brightly lit, and
+even its darkest wall reads as a mid slate blue rather than near-black. The
+whole-frame mean sits within about 20% of the reference.
+
 Three things carry most of the realism:
 
 * **Everything that emits light is additive.** Neon, lamps, screen spill, the
@@ -112,8 +117,10 @@ Three things carry most of the realism:
   occlusion ring where the glass meets the chassis, drop shadows under the
   spokes and the indicator arm, and a contact shadow under every ball.
 
-The far band of the room is blurred for depth of field and then baked to a
-texture with `cacheAsTexture`, since nothing in it animates.
+The far band of the room is blurred for depth of field, then baked once through
+`renderer.generateTexture` with an explicit frame, since nothing in it animates.
+The frame has to be given: deriving it from the container's own bounds clips the
+result.
 
 ## Procedural textures
 
