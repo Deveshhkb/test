@@ -1,5 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
-import { COLOR_NEON, COLOR_GOLD, COLOR_GOLD_DEEP } from '../config';
+import { COLOR_GOLD, COLOR_GOLD_DEEP, COLOR_NEON } from '../GameConfig';
 import { TAU } from '../utils/math';
 
 /** Standard European roulette wheel order, used for the on-screen wheels. */
@@ -12,14 +12,14 @@ const RED_NUMBERS = new Set([
   1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36,
 ]);
 
-export type MonitorKind = 'wheel' | 'dashboard';
+export type DisplayKind = 'wheel' | 'dashboard';
 
 /**
- * A wall monitor in the studio set. Both screens in the reference show roulette
- * content, so the wheel is generated from the real pocket order rather than
- * faked with a texture.
+ * A wall screen in the set. Both monitors in the reference carry roulette
+ * content, so the wheel is generated from the real European pocket order and
+ * animated rather than faked with a static image.
  */
-export class Monitor {
+export class MiniDisplay {
   readonly view = new Container();
 
   private readonly wheel = new Container();
@@ -28,7 +28,7 @@ export class Monitor {
   constructor(
     width: number,
     height: number,
-    kind: MonitorKind,
+    kind: DisplayKind,
     labelStyle: TextStyle,
     title: string,
   ) {

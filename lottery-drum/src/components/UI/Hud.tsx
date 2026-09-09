@@ -1,3 +1,4 @@
+import { STATE_LABEL } from '../../game/GameState';
 import type { GameState } from '../../game/types';
 
 interface HudProps {
@@ -5,15 +6,6 @@ interface HudProps {
   result: number | null;
   history: readonly number[];
 }
-
-const STATE_LABEL: Record<GameState, string> = {
-  idle: 'Siap',
-  spinning: 'Mengaduk',
-  draining: 'Mengeluarkan',
-  settling: 'Menetap',
-  revealing: 'Hasil',
-  returning: 'Selesai',
-};
 
 /** Red pockets on a European wheel, used to colour the history chips. */
 const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);

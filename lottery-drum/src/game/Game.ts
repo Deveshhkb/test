@@ -2,27 +2,30 @@ import { Application, Container, TextStyle } from 'pixi.js';
 import {
   BACKGROUND_CLEAR_COLOR,
   BALL_COUNT,
+  COLOR_RESULT_CYAN,
   DEFAULT_RESULT,
-  DRUM_CENTER_X,
-  DRUM_CENTER_Y,
+  DESIGN_HEIGHT,
+  DESIGN_WIDTH,
+  MACHINE_X,
+  MACHINE_Y,
   MAX_DEVICE_PIXEL_RATIO,
-  WORLD_HEIGHT,
-  WORLD_WIDTH,
-} from './config';
+} from './GameConfig';
 import { GameLoop } from './GameLoop';
-import { Ball } from './entities/Ball';
-import { Drum } from './entities/Drum';
-import { ResultOverlay } from './entities/ResultOverlay';
-import { Studio } from './entities/Studio';
-import { Particles } from './effects/Particles';
+import { AudioSystem } from './audio/AudioSystem';
+import { Camera } from './camera/Camera';
+import { GlowEffect } from './effects/GlowEffect';
+import { Environment } from './environment/Environment';
 import { InputManager } from './input/InputManager';
-import { PhysicsWorld } from './physics/PhysicsWorld';
-import { CameraSystem } from './systems/CameraSystem';
+import { RouletteBall } from './roulette/RouletteBall';
+import { RouletteMachine } from './roulette/RouletteMachine';
+import { RoulettePhysics } from './roulette/RoulettePhysics';
 import { DebugSystem } from './systems/DebugSystem';
 import { DrawSequenceSystem } from './systems/DrawSequenceSystem';
 import { SpinSystem } from './systems/SpinSystem';
+import { ResultOverlay } from './ui/ResultOverlay';
 import { EventBus } from './utils/EventBus';
 import { GameEvents } from './types';
+import { PLAYFIELD_RADIUS } from './GameConfig';
 
 const FONT_STACK = 'Inter, "Helvetica Neue", Helvetica, Arial, sans-serif';
 
@@ -30,41 +33,37 @@ const FONT_STACK = 'Inter, "Helvetica Neue", Helvetica, Arial, sans-serif';
  * Owns the Pixi application and wires the systems together.
  *
  * Scene graph, back to front:
- *   root (letterbox fit)
- *     camera            - dolly transform
- *       studio          - set, monitors, floor
- *       overlay.back    - large translucent result numeral
- *       drum.behind     - pedestal, drum interior, rotating rim cups
- *       drum.ballLayer  - motion-blur ghosts, then balls
- *       drum.agitator   - spokes and hub, over the balls
- *       drum.front      - near glass wall and highlights
- *       particles
- *       overlay.front   - the "Hasil" pill
- *       debug
+ *
+ *   root                  letterbox fit of the 1918x980 design space
+ *     camera              dolly transform about a world focus point
+ *       environment       room, LED wall, light blades, wall monitors, floor
+ *       machine           stand, wheel layers, glass, balls, hub, arm
+ *       overlay.numeral   large translucent result numeral
+ *       overlay.pill      the "Hasil" readout
+ *       debug             collision shapes
  */
 export class Game {
   readonly bus = new EventBus<GameEvents>();
+  readonly audio = new AudioSystem();
 
   private readonly app = new Application();
   private readonly root = new Container();
-  private readonly camera = new Container();
-  private readonly drumSpace = new Container();
-  private readonly trailLayer = new Container();
-  private readonly ballContainer = new Container();
+  private readonly cameraLayer = new Container();
+  private readonly machineSpace = new Container();
 
   private loop!: GameLoop;
   private input!: InputManager;
-  private studio!: Studio;
-  private drum!: Drum;
+  private environment!: Environment;
+  private machine!: RouletteMachine;
   private overlay!: ResultOverlay;
-  private particles!: Particles;
-  private physics!: PhysicsWorld;
-  private cameraSystem!: CameraSystem;
+  private glow!: GlowEffect;
+  private physics!: RoulettePhysics;
+  private camera!: Camera;
   private spin!: SpinSystem;
   private sequence!: DrawSequenceSystem;
   private debug!: DebugSystem;
 
-  private readonly balls: Ball[] = [];
+  private readonly balls: RouletteBall[] = [];
   private host: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private debugEnabled = false;
@@ -80,8 +79,8 @@ export class Game {
       autoDensity: true,
       resolution: Math.min(window.devicePixelRatio || 1, MAX_DEVICE_PIXEL_RATIO),
       powerPreference: 'high-performance',
-      width: host.clientWidth || WORLD_WIDTH,
-      height: host.clientHeight || WORLD_HEIGHT,
+      width: host.clientWidth || DESIGN_WIDTH,
+      height: host.clientHeight || DESIGN_HEIGHT,
     });
 
     if (this.destroyed) {
@@ -101,6 +100,8 @@ export class Game {
 
     this.input = new InputManager(this.app.canvas);
     this.input.on((action) => {
+      // Browsers only allow an AudioContext to start from a gesture.
+      this.audio.unlock();
       if (action === 'draw') this.startDraw();
       else if (action === 'toggleDebug') this.setDebug(!this.debugEnabled);
       else if (action === 'reset') this.reset();
@@ -115,94 +116,103 @@ export class Game {
   }
 
   private buildScene(): void {
-    const labelStyle = new TextStyle({
+    const uiLabel = new TextStyle({
       fontFamily: FONT_STACK,
       fontSize: 20,
       fontWeight: '700',
       fill: 0xdce6f2,
     });
-    const ballLabelStyle = new TextStyle({
+    const pocketLabel = new TextStyle({
       fontFamily: FONT_STACK,
-      fontSize: 26,
+      fontSize: 15,
+      fontWeight: '700',
+      fill: 0xa8c0d8,
+    });
+    const ballLabel = new TextStyle({
+      fontFamily: FONT_STACK,
+      fontSize: 24,
       fontWeight: '800',
       fill: 0x14161a,
     });
 
-    this.studio = new Studio(labelStyle);
-    this.drum = new Drum();
+    this.environment = new Environment(uiLabel);
+    this.machine = new RouletteMachine(pocketLabel);
     this.overlay = new ResultOverlay(FONT_STACK);
-    this.particles = new Particles();
-
-    this.drum.view.position.set(DRUM_CENTER_X, DRUM_CENTER_Y);
-    this.drumSpace.position.set(DRUM_CENTER_X, DRUM_CENTER_Y);
+    this.glow = new GlowEffect(COLOR_RESULT_CYAN);
 
     for (let i = 0; i < BALL_COUNT; i++) {
-      const ball = new Ball(i, ballLabelStyle);
-      for (const ghost of ball.trailViews) this.trailLayer.addChild(ghost);
-      this.ballContainer.addChild(ball.view);
+      const ball = new RouletteBall(i, ballLabel);
+      this.machine.ballShadowLayer.addChild(ball.shadowView);
+      for (const ghost of ball.trailViews) this.machine.ballTrailLayer.addChild(ghost);
+      this.machine.ballLayer.addChild(ball.view);
       this.balls.push(ball);
     }
-    this.drum.ballLayer.addChild(this.trailLayer, this.ballContainer, this.particles.view);
 
-    this.overlay.numeralLayer.position.set(DRUM_CENTER_X, DRUM_CENTER_Y);
-    this.overlay.pillLayer.position.set(DRUM_CENTER_X, DRUM_CENTER_Y);
+    this.machineSpace.position.set(MACHINE_X, MACHINE_Y);
+    this.machineSpace.addChild(this.glow.view);
+
+    this.overlay.numeralLayer.position.set(MACHINE_X, MACHINE_Y);
+    this.overlay.pillLayer.position.set(MACHINE_X, MACHINE_Y);
     this.overlay.setNumber(DEFAULT_RESULT);
 
-    this.camera.addChild(
-      this.studio.view,
-      this.drum.view,
+    this.cameraLayer.addChild(
+      this.environment.view,
+      this.machine.view,
+      this.machineSpace,
       this.overlay.numeralLayer,
-      this.drumSpace,
       this.overlay.pillLayer,
     );
 
-    this.root.addChild(this.camera);
+    this.root.addChild(this.cameraLayer);
     this.app.stage.addChild(this.root);
   }
 
   private buildSystems(): void {
-    this.physics = new PhysicsWorld();
+    this.physics = new RoulettePhysics();
     for (const ball of this.balls) this.physics.addBody(ball.body);
 
-    this.cameraSystem = new CameraSystem(this.camera);
+    this.camera = new Camera(this.cameraLayer);
     this.spin = new SpinSystem(this.physics);
-    this.debug = new DebugSystem(this.physics, this.balls);
-    this.drumSpace.addChild(this.debug.view);
+    this.debug = new DebugSystem(this.physics, this.balls, this.machine.wheel.pocketAngles);
+    this.machineSpace.addChild(this.debug.view);
 
     this.sequence = new DrawSequenceSystem(
       this.balls,
-      this.drum,
-      this.cameraSystem,
+      this.machine,
+      this.camera,
       this.spin,
       this.overlay,
-      this.particles,
+      this.glow,
       this.bus,
       () => this.physics.drumAngle,
     );
 
-    this.cameraSystem.snapWide();
+    this.camera.snapWide();
   }
 
   private readonly update = (dt: number): void => {
     this.spin.update(dt);
     this.physics.update(dt);
-    this.sequence.followParkedSlot();
+    this.sequence.followParkedPocket();
     this.sequence.update(dt);
 
-    this.drum.setAngle(this.physics.drumAngle);
+    this.machine.update(dt, this.physics.drumAngle, this.physics.drumOmega);
+
+    // Depth is the ball's height in the bowl, -1 at the top and +1 at the
+    // bottom; balls low in the bowl are nearer the camera.
     for (const ball of this.balls) {
-      if (ball.view.visible) ball.sync();
+      if (ball.view.visible) ball.sync(ball.body.position.y / PLAYFIELD_RADIUS);
     }
 
-    this.studio.update(dt);
-    this.particles.update(dt);
-    this.cameraSystem.update(dt);
+    this.environment.update(dt);
+    this.glow.update(dt);
+    this.camera.update(dt);
     this.debug.update();
 
     this.publishSnapshot(dt);
   };
 
-  /** React only hears about debug numbers a few times a second, never per frame. */
+  /** React hears debug numbers five times a second, never once per frame. */
   private publishSnapshot(dt: number): void {
     if (!this.debugEnabled) return;
     this.snapshotTimer += dt;
@@ -215,10 +225,15 @@ export class Game {
 
     this.bus.emit('debugSnapshot', {
       fps: this.loop.fps,
+      simDelta: this.loop.simDelta,
+      clamped: this.loop.isClamped,
       state: this.sequence.currentState,
       elapsed: this.sequence.elapsedInState,
+      progress: this.sequence.progressInPhase,
       drumOmega: this.physics.drumOmega,
-      zoom: this.cameraSystem.currentZoom,
+      drumAngle: this.physics.drumAngle,
+      armAngle: this.machine.arm.currentAngle,
+      zoom: this.camera.currentZoom,
       activeBalls,
       contacts: this.physics.lastContactCount,
       subSteps: this.physics.lastSubStepCount,
@@ -231,8 +246,8 @@ export class Game {
   }
 
   /**
-   * Letterbox fit: the 1920x1080 stage is scaled to fill the host while keeping
-   * its aspect ratio, so the framing matches the reference at any window size.
+   * Letterbox fit: the design space is scaled to fill the host while keeping
+   * its aspect ratio, so the composition holds at any window size.
    */
   private resize(): void {
     const host = this.host;
@@ -243,10 +258,10 @@ export class Game {
     this.app.renderer.resolution = Math.min(window.devicePixelRatio || 1, MAX_DEVICE_PIXEL_RATIO);
     this.app.renderer.resize(width, height);
 
-    const scale = Math.min(width / WORLD_WIDTH, height / WORLD_HEIGHT);
+    const scale = Math.min(width / DESIGN_WIDTH, height / DESIGN_HEIGHT);
     this.root.scale.set(scale);
-    this.root.x = (width - WORLD_WIDTH * scale) / 2;
-    this.root.y = (height - WORLD_HEIGHT * scale) / 2;
+    this.root.x = (width - DESIGN_WIDTH * scale) / 2;
+    this.root.y = (height - DESIGN_HEIGHT * scale) / 2;
   }
 
   startDraw(forced?: number): boolean {
@@ -254,9 +269,9 @@ export class Game {
   }
 
   reset(): void {
-    this.cameraSystem.snapWide();
+    this.camera.snapWide();
     this.overlay.setReveal(0);
-    this.overlay.setBigNumberAlpha(0.78);
+    this.overlay.setBigNumeralAlpha(0.78);
     this.sequence.fill();
   }
 
@@ -275,6 +290,7 @@ export class Game {
     this.resizeObserver = null;
     this.input?.destroy();
     this.loop?.destroy();
+    this.audio.destroy();
     this.bus.clear();
     if (this.app.renderer) this.app.destroy(true, { children: true, texture: true });
     this.host = null;

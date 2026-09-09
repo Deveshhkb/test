@@ -13,11 +13,11 @@ interface Particle {
 }
 
 /**
- * Fixed-size pool of soft sparks. Used only for the small puff of dust when the
- * winning ball seats into its cup; the reference has no other particle work, so
- * the pool is deliberately tiny.
+ * Fixed-size pool of soft sparks for the puff of dust thrown up when the
+ * winning ball seats into its pocket. Sprites are allocated once and recycled,
+ * so a burst costs no allocation.
  */
-export class Particles {
+export class ParticleSystem {
   readonly view = new Container();
 
   private readonly pool: Particle[] = [];

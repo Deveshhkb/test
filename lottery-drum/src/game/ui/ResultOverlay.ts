@@ -1,13 +1,14 @@
 import { BlurFilter, Container, Graphics, Text, TextStyle } from 'pixi.js';
 import {
+  BIG_NUMERAL_SIZE,
   COLOR_GREEN_DOT,
   COLOR_PILL_BG,
   COLOR_RESULT_CYAN,
   COLOR_RESULT_RED,
   PILL_HEIGHT,
+  PILL_MIN_WIDTH,
   PILL_OFFSET_Y,
-  PILL_WIDTH,
-} from '../config';
+} from '../GameConfig';
 import { clamp, lerp } from '../utils/math';
 
 /**
@@ -36,14 +37,14 @@ export class ResultOverlay {
 
   /** 0 = compact green readout, 1 = revealed cyan readout. */
   private revealAmount = 0;
-  private pillWidth = PILL_WIDTH;
+  private pillWidth = PILL_MIN_WIDTH;
 
   constructor(fontFamily: string) {
     this.bigNumber = new Text({
       text: '19',
       style: new TextStyle({
         fontFamily,
-        fontSize: 300,
+        fontSize: BIG_NUMERAL_SIZE,
         fontWeight: '800',
         fill: COLOR_RESULT_RED,
         letterSpacing: -6,
@@ -106,7 +107,7 @@ export class ResultOverlay {
   }
 
   /** Fades the big red numeral out while the camera is deep in the close-up. */
-  setBigNumberAlpha(alpha: number): void {
+  setBigNumeralAlpha(alpha: number): void {
     this.bigNumber.alpha = alpha;
   }
 
@@ -165,7 +166,7 @@ export class ResultOverlay {
     this.pillGlow.alpha = t * 0.85;
     this.pillGlow.visible = t > 0.02;
 
-    this.pillWidth = Math.max(PILL_WIDTH, contentWidth + lerp(150, 260, t));
+    this.pillWidth = Math.max(PILL_MIN_WIDTH, contentWidth + lerp(150, 260, t));
     const half = this.pillWidth / 2;
 
     this.pillBg

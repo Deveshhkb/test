@@ -2,12 +2,12 @@ import { Container } from 'pixi.js';
 import {
   CAM_CLOSE_FOCUS_Y,
   CAM_CLOSE_ZOOM,
-  CAM_IDLE_FOCUS_Y,
-  CAM_IDLE_ZOOM,
-  DRUM_CENTER_X,
-  WORLD_HEIGHT,
-  WORLD_WIDTH,
-} from '../config';
+  CAM_WIDE_FOCUS_Y,
+  CAM_WIDE_ZOOM,
+  DESIGN_HEIGHT,
+  DESIGN_WIDTH,
+  MACHINE_X,
+} from '../GameConfig';
 import { EasingFn, easeInOutCubic } from '../utils/easing';
 import { clamp, lerp } from '../utils/math';
 import { ScreenShake } from '../effects/ScreenShake';
@@ -21,19 +21,19 @@ import { ScreenShake } from '../effects/ScreenShake';
  * `update` advances it with delta time, so the motion is identical at any
  * refresh rate.
  */
-export class CameraSystem {
+export class Camera {
   readonly shake = new ScreenShake();
 
-  private zoom = CAM_IDLE_ZOOM;
-  private focusX = DRUM_CENTER_X;
-  private focusY = CAM_IDLE_FOCUS_Y;
+  private zoom = CAM_WIDE_ZOOM;
+  private focusX = MACHINE_X;
+  private focusY = CAM_WIDE_FOCUS_Y;
 
-  private fromZoom = CAM_IDLE_ZOOM;
-  private fromFocusX = DRUM_CENTER_X;
-  private fromFocusY = CAM_IDLE_FOCUS_Y;
-  private toZoom = CAM_IDLE_ZOOM;
-  private toFocusX = DRUM_CENTER_X;
-  private toFocusY = CAM_IDLE_FOCUS_Y;
+  private fromZoom = CAM_WIDE_ZOOM;
+  private fromFocusX = MACHINE_X;
+  private fromFocusY = CAM_WIDE_FOCUS_Y;
+  private toZoom = CAM_WIDE_ZOOM;
+  private toFocusX = MACHINE_X;
+  private toFocusY = CAM_WIDE_FOCUS_Y;
 
   private elapsed = 0;
   private duration = 0;
@@ -48,7 +48,7 @@ export class CameraSystem {
   /** Normalised push-in progress, 0 at the wide framing and 1 at the close-up. */
   get closeness(): number {
     return clamp(
-      (this.zoom - CAM_IDLE_ZOOM) / (CAM_CLOSE_ZOOM - CAM_IDLE_ZOOM),
+      (this.zoom - CAM_WIDE_ZOOM) / (CAM_CLOSE_ZOOM - CAM_WIDE_ZOOM),
       0,
       1,
     );
@@ -73,17 +73,30 @@ export class CameraSystem {
   }
 
   dollyToClose(duration: number, easing?: EasingFn): void {
-    this.dollyTo(CAM_CLOSE_ZOOM, DRUM_CENTER_X, CAM_CLOSE_FOCUS_Y, duration, easing);
+    this.dollyTo(CAM_CLOSE_ZOOM, MACHINE_X, CAM_CLOSE_FOCUS_Y, duration, easing);
   }
 
+  /** Frames an arbitrary world point, used to follow the drawn pocket. */
+  focusOn(x: number, y: number, zoom: number, duration: number, easing?: EasingFn): void {
+    this.dollyTo(zoom, x, y, duration, easing);
+  }
+
+  get focus(): { x: number; y: number } {
+    this.focusScratch.x = this.focusX;
+    this.focusScratch.y = this.focusY;
+    return this.focusScratch;
+  }
+
+  private readonly focusScratch = { x: 0, y: 0 };
+
   dollyToWide(duration: number, easing?: EasingFn): void {
-    this.dollyTo(CAM_IDLE_ZOOM, DRUM_CENTER_X, CAM_IDLE_FOCUS_Y, duration, easing);
+    this.dollyTo(CAM_WIDE_ZOOM, MACHINE_X, CAM_WIDE_FOCUS_Y, duration, easing);
   }
 
   snapWide(): void {
-    this.zoom = CAM_IDLE_ZOOM;
-    this.focusX = DRUM_CENTER_X;
-    this.focusY = CAM_IDLE_FOCUS_Y;
+    this.zoom = CAM_WIDE_ZOOM;
+    this.focusX = MACHINE_X;
+    this.focusY = CAM_WIDE_FOCUS_Y;
     this.duration = 0;
     this.elapsed = 0;
     this.shake.reset();
@@ -104,7 +117,7 @@ export class CameraSystem {
 
   private apply(): void {
     this.target.scale.set(this.zoom);
-    this.target.x = WORLD_WIDTH / 2 - this.focusX * this.zoom + this.shake.offsetX;
-    this.target.y = WORLD_HEIGHT / 2 - this.focusY * this.zoom + this.shake.offsetY;
+    this.target.x = DESIGN_WIDTH / 2 - this.focusX * this.zoom + this.shake.offsetX;
+    this.target.y = DESIGN_HEIGHT / 2 - this.focusY * this.zoom + this.shake.offsetY;
   }
 }

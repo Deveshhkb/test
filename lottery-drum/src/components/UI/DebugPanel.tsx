@@ -24,10 +24,14 @@ export default function DebugPanel({ snapshot }: DebugPanelProps) {
   return (
     <div className="debug">
       <div className="debug__title">Debug</div>
-      {row('fps', s.fps.toFixed(1))}
+      {row('fps', `${s.fps.toFixed(1)}${s.clamped ? ' (clamped)' : ''}`)}
+      {row('sim delta', `${(s.simDelta * 1000).toFixed(1)} ms`)}
       {row('state', `${s.state} (${s.elapsed.toFixed(2)}s)`)}
+      {row('phase progress', `${(s.progress * 100).toFixed(0)}%`)}
       {row('camera zoom', `${s.zoom.toFixed(2)}x`)}
       {row('drum ω', `${s.drumOmega.toFixed(2)} rad/s`)}
+      {row('drum angle', `${((s.drumAngle * 180) / Math.PI).toFixed(0)}°`)}
+      {row('arm angle', `${((s.armAngle * 180) / Math.PI).toFixed(0)}°`)}
       {row('balls visible', String(s.activeBalls))}
       {row('contacts', String(s.contacts))}
       {row('physics substeps', String(s.subSteps))}

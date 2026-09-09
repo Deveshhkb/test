@@ -3,8 +3,8 @@ import {
   SPIN_DECELERATION,
   SPIN_IDLE_SPEED,
   SPIN_TARGET_SPEED,
-} from '../config';
-import { PhysicsWorld } from '../physics/PhysicsWorld';
+} from '../GameConfig';
+import { RoulettePhysics } from '../roulette/RoulettePhysics';
 
 /**
  * Ramps the agitator's angular velocity. Acceleration and deceleration are
@@ -14,7 +14,7 @@ import { PhysicsWorld } from '../physics/PhysicsWorld';
 export class SpinSystem {
   private targetOmega = SPIN_IDLE_SPEED;
 
-  constructor(private readonly world: PhysicsWorld) {
+  constructor(private readonly world: RoulettePhysics) {
     this.world.drumOmega = SPIN_IDLE_SPEED;
   }
 

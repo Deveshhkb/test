@@ -1,21 +1,28 @@
 import {
+  AGITATION_INTERVAL,
+  AGITATION_STRENGTH,
   BALL_FRICTION,
   BALL_RESTITUTION,
-  DRUM_HUB_RADIUS,
-  DRUM_INNER_RADIUS,
-  DRUM_SPOKE_COUNT,
-  DRUM_SPOKE_HALF_WIDTH,
   GRAVITY,
+  HUB_RADIUS,
   LINEAR_DAMPING,
+  PADDLE_HALF_LENGTH,
+  PADDLE_HALF_WIDTH,
   PHYSICS_MAX_STEPS_PER_FRAME,
   PHYSICS_SOLVER_ITERATIONS,
   PHYSICS_STEP,
+  PLAYFIELD_RADIUS,
+  SPOKE_COUNT,
+  SPOKE_HALF_WIDTH,
+  SPOKE_INNER_RADIUS,
+  SPOKE_OUTER_RADIUS,
   SPOKE_RESTITUTION,
   SPOKE_TANGENT_GRIP,
   WALL_RESTITUTION,
   WALL_TANGENT_GRIP,
-} from '../config';
+} from '../GameConfig';
 import { TAU } from '../utils/math';
+import { Rng } from '../utils/random';
 import { BallBody } from './BallBody';
 import { resolveBallPair, resolveCircularWall, resolveRotatingSegment } from './collision';
 
@@ -28,7 +35,7 @@ import { resolveBallPair, resolveCircularWall, resolveRotatingSegment } from './
  * the rim and carried around emerges from wall grip plus centripetal contact,
  * not from any scripted path.
  */
-export class PhysicsWorld {
+export class RoulettePhysics {
   readonly bodies: BallBody[] = [];
 
   /** Current agitator angle and angular velocity, radians and radians/second. */
@@ -40,9 +47,12 @@ export class PhysicsWorld {
   lastContactCount = 0;
 
   private accumulator = 0;
-  private readonly spokeAngles = new Float32Array(DRUM_SPOKE_COUNT);
+  private readonly spokeAngles = new Float32Array(SPOKE_COUNT);
 
-  constructor(private readonly innerRadius = DRUM_INNER_RADIUS) {}
+  private readonly rng = new Rng(0x9e3779b9);
+  private agitationTimer = 0;
+
+  constructor(private readonly innerRadius = PLAYFIELD_RADIUS) {}
 
   addBody(body: BallBody): void {
     this.bodies.push(body);
@@ -68,6 +78,7 @@ export class PhysicsWorld {
 
   private step(h: number): void {
     this.drumAngle = (this.drumAngle + this.drumOmega * h) % TAU;
+    this.applyAgitation(h);
 
     const damping = Math.exp(-LINEAR_DAMPING * h);
     const bodies = this.bodies;
@@ -85,7 +96,7 @@ export class PhysicsWorld {
     for (let iter = 0; iter < PHYSICS_SOLVER_ITERATIONS; iter++) {
       contacts = 0;
 
-      // Ball vs ball. 20 bodies means 190 pairs, cheaper than any broadphase.
+      // Ball vs ball. 18 bodies means 153 pairs, cheaper than any broadphase.
       for (let i = 0; i < bodies.length; i++) {
         const a = bodies[i];
         if (!a.active) continue;
@@ -108,22 +119,41 @@ export class PhysicsWorld {
       for (let i = 0; i < bodies.length; i++) {
         const body = bodies[i];
         if (!body.active || body.invMass === 0) continue;
-        for (let s = 0; s < DRUM_SPOKE_COUNT; s++) {
+        for (let s = 0; s < SPOKE_COUNT; s++) {
           const angle = this.spokeAngles[s];
           const cos = Math.cos(angle);
           const sin = Math.sin(angle);
           const impulse = resolveRotatingSegment(
             body,
-            cos * DRUM_HUB_RADIUS,
-            sin * DRUM_HUB_RADIUS,
-            cos * this.innerRadius,
-            sin * this.innerRadius,
-            DRUM_SPOKE_HALF_WIDTH,
+            cos * SPOKE_INNER_RADIUS,
+            sin * SPOKE_INNER_RADIUS,
+            cos * SPOKE_OUTER_RADIUS,
+            sin * SPOKE_OUTER_RADIUS,
+            SPOKE_HALF_WIDTH,
             this.drumOmega,
             SPOKE_RESTITUTION,
             SPOKE_TANGENT_GRIP,
           );
           if (impulse > 0) contacts++;
+
+          // The paddle block on the spoke end is wider than the rod and is what
+          // actually scoops the balls, so it gets its own capsule.
+          const px = cos * (SPOKE_OUTER_RADIUS - 6);
+          const py = sin * (SPOKE_OUTER_RADIUS - 6);
+          const nx = -sin * PADDLE_HALF_LENGTH;
+          const ny = cos * PADDLE_HALF_LENGTH;
+          const paddleImpulse = resolveRotatingSegment(
+            body,
+            px + nx,
+            py + ny,
+            px - nx,
+            py - ny,
+            PADDLE_HALF_WIDTH,
+            this.drumOmega,
+            SPOKE_RESTITUTION,
+            SPOKE_TANGENT_GRIP,
+          );
+          if (paddleImpulse > 0) contacts++;
         }
       }
 
@@ -156,9 +186,44 @@ export class PhysicsWorld {
     }
   }
 
+  /**
+   * Random tangential and radial nudges on rim-riding balls.
+   *
+   * Grip alone drives every ball to exactly the wall's surface speed, at which
+   * point the ring freezes into a rigid formation and stops looking like loose
+   * balls in a drum. These impulses stand in for the surface irregularity and
+   * air turbulence that keep a real drum churning; they scale with drum speed
+   * and vanish when it stops, so a settled ball is never disturbed.
+   */
+  private applyAgitation(h: number): void {
+    const speedFactor = Math.min(Math.abs(this.drumOmega) / 6, 1);
+    if (speedFactor < 0.2) return;
+
+    this.agitationTimer += h;
+    if (this.agitationTimer < AGITATION_INTERVAL) return;
+    this.agitationTimer = 0;
+
+    const strength = AGITATION_STRENGTH * speedFactor;
+    for (let i = 0; i < this.bodies.length; i++) {
+      const body = this.bodies[i];
+      if (!body.active || body.invMass === 0) continue;
+
+      const dist = Math.hypot(body.position.x, body.position.y);
+      if (dist < this.innerRadius * 0.5) continue;
+
+      const nx = body.position.x / dist;
+      const ny = body.position.y / dist;
+      // Mostly inward, so balls occasionally break off the wall and fall back.
+      body.velocity.add(
+        -nx * this.rng.range(0.1, 1) * strength + -ny * this.rng.range(-0.5, 0.5) * strength,
+        -ny * this.rng.range(0.1, 1) * strength + nx * this.rng.range(-0.5, 0.5) * strength,
+      );
+    }
+  }
+
   private resolveHub(body: BallBody): void {
     const dist = Math.hypot(body.position.x, body.position.y);
-    const minDist = DRUM_HUB_RADIUS + body.radius;
+    const minDist = HUB_RADIUS + body.radius;
     if (dist >= minDist || dist < 1e-9) return;
 
     const nx = body.position.x / dist;
@@ -173,8 +238,8 @@ export class PhysicsWorld {
   }
 
   private writeSpokeAngles(): void {
-    const stepAngle = TAU / DRUM_SPOKE_COUNT;
-    for (let s = 0; s < DRUM_SPOKE_COUNT; s++) {
+    const stepAngle = TAU / SPOKE_COUNT;
+    for (let s = 0; s < SPOKE_COUNT; s++) {
       this.spokeAngles[s] = this.drumAngle + s * stepAngle;
     }
   }

@@ -9,9 +9,16 @@ export type GameState =
 
 export interface DebugSnapshot {
   fps: number;
+  /** Seconds of simulation advanced on the last frame. */
+  simDelta: number;
+  /** True when the frame was slow enough for the loop to clamp its delta. */
+  clamped: boolean;
   state: GameState;
   elapsed: number;
+  progress: number;
   drumOmega: number;
+  drumAngle: number;
+  armAngle: number;
   zoom: number;
   activeBalls: number;
   contacts: number;
