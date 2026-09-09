@@ -10,8 +10,12 @@ import {
   TRAIL_MIN_SPEED,
 } from '../GameConfig';
 import { BallBody } from './BallBody';
-import { clamp } from '../utils/math';
+import { clamp, TAU } from '../utils/math';
+import { easeOutCubic } from '../utils/easing';
 import { shadowTexture, sphereTexture } from '../utils/TextureFactory';
+
+/** How long the printed face takes to right itself once the ball stops. */
+const UPRIGHT_DURATION = 0.32;
 
 export type BallTint = 'red' | 'black';
 
@@ -37,6 +41,9 @@ export class RouletteBall {
   private trailHead = 0;
 
   private numberValue = 0;
+  private uprightFrom = 0;
+  private uprightTarget: number | null = null;
+  private uprightElapsed = 0;
 
   constructor(id: number, labelStyle: TextStyle) {
     this.body = new BallBody(id, BALL_RADIUS);
@@ -126,6 +133,8 @@ export class RouletteBall {
     this.contactShadow.visible = true;
     this.contactShadow.alpha = 0.4;
     this.trailHead = 0;
+    this.uprightTarget = null;
+    this.uprightElapsed = 0;
     for (let i = 0; i < TRAIL_LENGTH; i++) {
       this.trailX[i] = x;
       this.trailY[i] = y;
@@ -140,18 +149,41 @@ export class RouletteBall {
   }
 
   /**
+   * Turns the printed face to the nearest upright position.
+   *
+   * A settled ball would otherwise leave its number lying at whatever angle it
+   * happened to stop rolling at, which makes the drawn result unreadable. Real
+   * lottery balls carry a weighted insert that rights itself, and this is that
+   * settling nudge: it only ever runs on a ball that has already come to rest,
+   * and turns the marking, never the ball's position.
+   */
+  alignFaceUpright(): void {
+    this.uprightFrom = this.body.rotation;
+    this.uprightTarget = Math.round(this.body.rotation / TAU) * TAU;
+    this.uprightElapsed = 0;
+  }
+
+  /**
    * Sync display objects to the simulated body.
    *
    * `depth` is the ball's height in the playfield, normalised to -1 at the top
    * of the drum and +1 at the bottom. Balls low in the bowl are nearer the
    * camera, so they scale up slightly and cast a tighter shadow.
    */
-  sync(depth: number): void {
+  sync(depth: number, dt = 0): void {
     const { position } = this.body;
     this.view.x = position.x;
     this.view.y = position.y;
-    this.view.rotation = this.body.rotation * 0.25;
-    this.face.rotation = -this.view.rotation;
+
+    // The sphere's shading is baked for a fixed key light, so the sprite must
+    // not turn. Rolling shows on the printed face, which is a surface marking.
+    if (this.uprightTarget === null) {
+      this.face.rotation = this.body.rotation;
+    } else {
+      this.uprightElapsed += dt;
+      const t = easeOutCubic(clamp(this.uprightElapsed / UPRIGHT_DURATION, 0, 1));
+      this.face.rotation = this.uprightFrom + (this.uprightTarget - this.uprightFrom) * t;
+    }
 
     const proximity = clamp((depth + 1) * 0.5, 0, 1);
     this.view.scale.set(0.94 + proximity * 0.1);

@@ -185,6 +185,7 @@ export class Game {
       this.glow,
       this.bus,
       () => this.physics.drumAngle,
+      () => this.physics.drumOmega,
     );
 
     this.camera.snapWide();
@@ -201,7 +202,7 @@ export class Game {
     // Depth is the ball's height in the bowl, -1 at the top and +1 at the
     // bottom; balls low in the bowl are nearer the camera.
     for (const ball of this.balls) {
-      if (ball.view.visible) ball.sync(ball.body.position.y / PLAYFIELD_RADIUS);
+      if (ball.view.visible) ball.sync(ball.body.position.y / PLAYFIELD_RADIUS, dt);
     }
 
     this.environment.update(dt);

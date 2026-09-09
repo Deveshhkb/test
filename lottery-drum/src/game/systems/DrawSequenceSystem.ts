@@ -4,17 +4,22 @@ import {
   CAM_CLOSE_ZOOM,
   DEFAULT_RESULT,
   MACHINE_X,
-  GRAVITY,
   NUMBER_MAX,
   NUMBER_MIN,
   PLAYFIELD_RADIUS,
+  RELEASE_ANGLE,
+  RELEASE_ARC,
+  RELEASE_OMEGA,
+  RELEASE_OMEGA_FORCE,
   SPIN_TARGET_SPEED,
-  SPOKE_COUNT,
   T_ARM_SWING,
   T_DRAIN,
   T_RETURN,
   T_REVEAL_HOLD,
-  T_SETTLE,
+  REST_ANGULAR,
+  REST_HOLD,
+  REST_SPEED,
+  T_SETTLE_MAX,
   T_SPIN,
 } from '../GameConfig';
 import { canTransition } from '../GameState';
@@ -37,10 +42,6 @@ interface DrainRecord {
   draining: boolean;
 }
 
-const SETTLE_SPRING = 70;
-const SETTLE_DAMPING = 2 * Math.sqrt(SETTLE_SPRING);
-const PARK_DISTANCE = 5;
-const PARK_SPEED = 90;
 const DRAIN_DURATION = 0.3;
 const REVEAL_MORPH = 0.55;
 
@@ -64,11 +65,11 @@ export class DrawSequenceSystem {
   private displayedNumber = DEFAULT_RESULT;
   private parked = false;
   private parkLocalAngle = 0;
+  private parkLocalRadius = 0;
 
   private readonly drain: DrainRecord[] = [];
   private readonly rng = new Rng();
   private readonly history: number[] = [];
-  private readonly targetScratch = { x: 0, y: 0 };
 
   constructor(
     private readonly balls: readonly RouletteBall[],
@@ -79,6 +80,7 @@ export class DrawSequenceSystem {
     private readonly glow: GlowEffect,
     private readonly bus: EventBus<GameEvents>,
     private readonly getDrumAngle: () => number,
+    private readonly getDrumOmega: () => number,
   ) {
     for (let i = 0; i < balls.length; i++) {
       this.drain.push({ delay: 0, progress: 0, draining: false });
@@ -210,18 +212,20 @@ export class DrawSequenceSystem {
       case 'draining':
         this.fadeBigNumeral();
         this.updateDrain(dt);
+        this.tryReleaseWinner();
         if (this.elapsed >= T_DRAIN) this.setState('settling');
         break;
 
       case 'settling':
         this.updateDrain(dt);
+        this.tryReleaseWinner();
         this.updateSettle(dt);
         if (this.parked) {
           this.setState('revealing');
-        } else if (this.elapsed >= T_SETTLE * 2.5) {
-          // Safety net: if the ball never physically seated, force the reveal
-          // so the sequence can never wedge.
-          this.forcePark();
+        } else if (this.elapsed >= T_SETTLE_MAX) {
+          // Safety net: if the ball is somehow still moving, accept wherever it
+          // is rather than letting the sequence wedge. It is not repositioned.
+          this.parkInPlace();
           this.setState('revealing');
         }
         break;
@@ -291,35 +295,72 @@ export class DrawSequenceSystem {
     }
   }
 
+  /**
+   * Hands the drawn ball over to the solver, once the wheel has wound down far
+   * enough and the ball has come round to the release window on the descending
+   * side of the track.
+   *
+   * Nothing steers it after this. It leaves the track, falls, lands back on the
+   * curved lower track, bounces, rolls, climbs frets until it runs out of
+   * energy and comes to rest in a pocket. Which pocket that is is whichever one
+   * it reaches; the result is carried on the ball's printed face, so there is
+   * nothing to aim at.
+   *
+   * The forced release covers the case where the wheel stops before the ball
+   * reaches the window - it then simply rolls down from wherever it is.
+   */
+  private tryReleaseWinner(): void {
+    const winner = this.winner;
+    if (!winner || winner.body.settling) return;
+
+    const omega = Math.abs(this.getDrumOmega());
+    if (omega > RELEASE_OMEGA) return;
+
+    const angle = Math.atan2(winner.body.position.y, winner.body.position.x);
+    const inWindow = Math.abs(angleDelta(angle, RELEASE_ANGLE)) < RELEASE_ARC;
+    if (!inWindow && omega > RELEASE_OMEGA_FORCE) return;
+
+    winner.body.settling = true;
+    winner.body.restTimer = 0;
+  }
+
+  /** Watches for the ball coming to rest. It is never moved or steered. */
   private updateSettle(dt: number): void {
     const winner = this.winner;
     if (!winner || this.parked) return;
 
-    const target = this.pocketTarget();
     const body = winner.body;
-    const dx = target.x - body.position.x;
-    const dy = target.y - body.position.y;
 
-    // Critically damped pull into the pocket, with gravity cancelled so the
-    // ball seats instead of skipping past it.
-    body.velocity.x += (SETTLE_SPRING * dx - SETTLE_DAMPING * body.velocity.x) * dt;
-    body.velocity.y += (SETTLE_SPRING * dy - SETTLE_DAMPING * body.velocity.y - GRAVITY) * dt;
+    // The ball must be somewhere the track can actually hold it. On the upper
+    // wall it is momentarily slow at the apex of an arc but still accelerating,
+    // and without this it latches there and freezes halfway up the bowl.
+    const supported = body.position.y > body.radius;
+    const slow = body.speed < REST_SPEED && Math.abs(body.angularVelocity) < REST_ANGULAR;
 
-    if (Math.hypot(dx, dy) < PARK_DISTANCE && body.speed < PARK_SPEED) {
-      this.park(target.x, target.y);
-    }
+    // The thresholds have to hold for a moment, so the reversal at the top of a
+    // bounce is not mistaken for the ball having settled.
+    body.restTimer = supported && slow ? body.restTimer + dt : 0;
+    if (body.restTimer >= REST_HOLD) this.parkInPlace();
   }
 
-  private park(x: number, y: number): void {
+  /**
+   * Freezes the ball exactly where the simulation left it. There is no target
+   * position and no snap: the pocket it rests in is the one it rolled into.
+   */
+  private parkInPlace(): void {
     const winner = this.winner;
     if (!winner) return;
 
-    winner.body.position.set(x, y);
+    const x = winner.body.position.x;
+    const y = winner.body.position.y;
     winner.body.velocity.set(0, 0);
+    winner.body.angularVelocity = 0;
     winner.body.invMass = 0;
     winner.sync(y / PLAYFIELD_RADIUS);
+    winner.alignFaceUpright();
 
     this.parked = true;
+    this.parkLocalRadius = Math.hypot(x, y);
     this.parkLocalAngle = normalizeAngle(Math.atan2(y, x) - this.getDrumAngle());
 
     this.machine.particles.burst(x, y, 12, 280);
@@ -335,63 +376,18 @@ export class DrawSequenceSystem {
     this.camera.focusOn(MACHINE_X + x * 0.55, CAM_CLOSE_FOCUS_Y, CAM_CLOSE_ZOOM, 0.5);
   }
 
-  private forcePark(): void {
-    const target = this.pocketTarget();
-    this.park(target.x, target.y);
-  }
-
   /**
-   * Where the winner should seat. Prefers the pocket nearest the bottom of the
-   * wheel so it lands inside the close-up framing, and rejects pockets a
-   * stopped spoke is lying across.
+   * Holds the settled ball on the spot it came to rest as the wheel drifts.
+   * The position is stored in wheel-local polar form at the moment it parked,
+   * so this reproduces where the ball actually stopped rather than moving it.
    */
-  private pocketTarget(): { x: number; y: number } {
-    const drumAngle = this.getDrumAngle();
-    const radius = this.machine.wheel.pocketRadius;
-
-    let bestAngle = Math.PI / 2;
-    if (this.parked) {
-      bestAngle = this.parkLocalAngle + drumAngle;
-    } else {
-      let bestScore = Number.POSITIVE_INFINITY;
-      for (const pocket of this.machine.wheel.pocketAngles) {
-        const worldAngle = pocket + drumAngle;
-        // Weighted toward the bottom of the wheel so the winner lands inside
-        // the close-up framing rather than off at the side.
-        const score =
-          Math.abs(angleDelta(worldAngle, Math.PI / 2)) * 2.2 +
-          this.spokeClearancePenalty(pocket);
-        if (score < bestScore) {
-          bestScore = score;
-          bestAngle = worldAngle;
-        }
-      }
-    }
-
-    this.targetScratch.x = Math.cos(bestAngle) * radius;
-    this.targetScratch.y = Math.sin(bestAngle) * radius;
-    return this.targetScratch;
-  }
-
-  /**
-   * Spokes turn with the wheel, so a pocket's clearance is fixed in wheel-local
-   * space. Pockets a paddle would sit on top of are pushed down the ranking.
-   */
-  private spokeClearancePenalty(localPocketAngle: number): number {
-    const sector = TAU / SPOKE_COUNT;
-    const offset = Math.abs(
-      angleDelta(localPocketAngle, Math.round(localPocketAngle / sector) * sector),
-    );
-    const required = 0.3;
-    return offset >= required ? 0 : (required - offset) * 8;
-  }
-
-  /** Holds a parked ball and the arm on their pocket as the wheel drifts. */
   followParkedPocket(): void {
     if (!this.parked || !this.winner) return;
-    const target = this.pocketTarget();
-    this.winner.body.position.set(target.x, target.y);
-    this.machine.arm.swingTo(Math.atan2(target.y, target.x), 0.08);
+    const angle = this.parkLocalAngle + this.getDrumAngle();
+    const x = Math.cos(angle) * this.parkLocalRadius;
+    const y = Math.sin(angle) * this.parkLocalRadius;
+    this.winner.body.position.set(x, y);
+    this.machine.arm.swingTo(angle, 0.08);
   }
 
   private setState(next: GameState): void {
@@ -434,7 +430,7 @@ export class DrawSequenceSystem {
       case 'draining':
         return invLerp(0, T_DRAIN, this.elapsed);
       case 'settling':
-        return invLerp(0, T_SETTLE, this.elapsed);
+        return invLerp(0, T_SETTLE_MAX, this.elapsed);
       case 'revealing':
         return invLerp(0, T_REVEAL_HOLD, this.elapsed);
       case 'returning':

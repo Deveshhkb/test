@@ -121,10 +121,25 @@ The solver works in machine-local space, where the origin is the wheel centre.
   They vanish when the drum stops, so a settled ball is never disturbed.
 * **Stepping** — fixed 1/240 s substeps, three solver iterations, up to 16
   substeps per frame. Behaviour is identical at 30, 60 and 120 Hz.
-* **Settling** — the drawn ball is pulled into its pocket by a critically damped
-  spring with gravity cancelled, then parked once it is both close and slow.
-  Pockets a stopped spoke lies across are ranked out, and the choice is weighted
-  toward the bottom of the wheel so the winner lands inside the close-up.
+* **Settling** — nothing steers the drawn ball. Once the wheel has wound down
+  and the ball reaches the release window on the descending side of the track,
+  it is handed to a rolling-contact friction model: it leaves the track, falls,
+  lands back on the curved lower track, bounces, rolls, climbs the pocket frets
+  until it runs out of energy, and stops. It is then frozen exactly where it
+  came to rest — there is no target pocket and no snap. Which pocket it lands in
+  is whichever one it reaches; the result is printed on the ball, so there is
+  nothing to aim at.
+* **Rolling contact** — friction acts on the *slip* at the contact point
+  (`tangentialVelocity + angularVelocity * radius`), not on the ball's velocity.
+  A skidding ball is gripped hard and spun up; a rolling one is left alone,
+  which is why it keeps travelling instead of stopping dead on contact. The
+  impulse is split between linear and angular velocity using a solid sphere's
+  inertia and bounded by the normal force, whose steady part is gravity pressing
+  the ball into the curved track.
+* **Frets** — the studs between pockets are modelled as small circles near the
+  outer track, not as full radial walls. Radial walls converge toward the wheel
+  centre and wedge the ball in the V between two of them, holding it by geometry
+  alone even off the top of the wheel.
 
 ## Draw sequence
 

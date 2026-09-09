@@ -157,3 +157,162 @@ export function resolveRotatingSegment(
 
   return Math.abs(velAlongNormal);
 }
+
+/**
+ * Ball against the circular track, with rolling contact friction.
+ *
+ * The grip model above matches the ball's tangential velocity to the wall's,
+ * which is what carries balls around a spinning rim - but with the drum
+ * stopped it removes most of the tangential velocity on every solver
+ * iteration, so a ball hitting the track stops dead and can never roll.
+ *
+ * Here friction acts on the *slip* at the contact point, not on the ball's
+ * velocity. Slip is `tangentialVelocity + angularVelocity * radius`: it is zero
+ * exactly when the ball is rolling without slipping. So a skidding ball is
+ * gripped hard and spun up, and a rolling ball is left alone - which is why it
+ * keeps travelling along the track instead of stopping on contact. The impulse
+ * is shared between linear and angular velocity using a solid sphere's inertia
+ * (2/5 m r^2), and is bounded by the normal force in the usual Coulomb way.
+ *
+ * The normal force has two parts: the impulse from an impact, and the steady
+ * support of gravity pressing a resting ball into the curved track. Including
+ * the second is what lets a ball that has stopped bouncing still slow down and
+ * come to rest, and it follows the track's curvature rather than assuming a
+ * flat floor.
+ *
+ * `h` is the effective substep for the support term. Returns the normal
+ * impulse magnitude so callers can drive impact effects.
+ */
+export function resolveCircularWallFriction(
+  body: BallBody,
+  wallRadius: number,
+  omega: number,
+  restitution: number,
+  friction: number,
+  rollingResistance: number,
+  gravity: number,
+  h: number,
+): number {
+  const dist = Math.hypot(body.position.x, body.position.y);
+  const limit = wallRadius - body.radius;
+  if (dist <= limit || dist < 1e-9) return 0;
+
+  const nx = body.position.x / dist;
+  const ny = body.position.y / dist;
+  body.position.set(nx * limit, ny * limit);
+
+  // Surface velocity of the track at the contact point.
+  const wallVx = -omega * ny * wallRadius;
+  const wallVy = omega * nx * wallRadius;
+
+  let relVx = body.velocity.x - wallVx;
+  let relVy = body.velocity.y - wallVy;
+
+  // Normal impulse. Only an approaching contact bounces.
+  const velAlongNormal = relVx * nx + relVy * ny;
+  let normalImpulse = 0;
+  if (velAlongNormal > 0) {
+    normalImpulse = (1 + restitution) * velAlongNormal;
+    body.velocity.add(-nx * normalImpulse, -ny * normalImpulse);
+    relVx -= nx * normalImpulse;
+    relVy -= ny * normalImpulse;
+  }
+
+  // Gravity pressing the ball into the track, zero on the upper wall where the
+  // track cannot support it at all.
+  const support = Math.max(0, gravity * ny) * h;
+
+  const tx = -ny;
+  const ty = nx;
+  const velAlongTangent = relVx * tx + relVy * ty;
+
+  // Slip at the contact point. Zero means rolling without slipping.
+  const slip = velAlongTangent + body.angularVelocity * body.radius;
+
+  // Impulse that would kill the slip outright, then Coulomb's bound on it.
+  // A tangential impulse jt changes slip by 3.5 * jt for a solid sphere.
+  let tangentImpulse = -slip / 3.5;
+  const maxImpulse = friction * (normalImpulse + support);
+  if (tangentImpulse > maxImpulse) tangentImpulse = maxImpulse;
+  else if (tangentImpulse < -maxImpulse) tangentImpulse = -maxImpulse;
+
+  body.velocity.add(tx * tangentImpulse, ty * tangentImpulse);
+  body.angularVelocity += (2.5 * tangentImpulse) / body.radius;
+
+  // Rolling resistance: the small loss that finally brings a rolling ball to a
+  // stop. It only ever slows the ball, never reverses it.
+  const rolling = rollingResistance * (normalImpulse + support);
+  const remaining = velAlongTangent + tangentImpulse;
+  if (Math.abs(remaining) > 1e-6 && rolling > 0) {
+    const drag = Math.min(rolling, Math.abs(remaining)) * Math.sign(remaining);
+    body.velocity.add(-tx * drag, -ty * drag);
+    body.angularVelocity -= (drag / body.radius) * Math.sign(body.angularVelocity || 1) * 0.4;
+  }
+
+  return normalImpulse;
+}
+
+/**
+ * Ball against a static line segment expressed in the same space, used for the
+ * pocket separator fins. Same friction treatment as the track.
+ */
+export function resolveSegmentFriction(
+  body: BallBody,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  halfWidth: number,
+  restitution: number,
+  friction: number,
+  gravity: number,
+  h: number,
+): number {
+  const ex = bx - ax;
+  const ey = by - ay;
+  const lenSq = ex * ex + ey * ey;
+  let t = lenSq > 1e-9 ? ((body.position.x - ax) * ex + (body.position.y - ay) * ey) / lenSq : 0;
+  t = t < 0 ? 0 : t > 1 ? 1 : t;
+
+  const cx = ax + ex * t;
+  const cy = ay + ey * t;
+  const dx = body.position.x - cx;
+  const dy = body.position.y - cy;
+  const distSq = dx * dx + dy * dy;
+  const minDist = body.radius + halfWidth;
+  if (distSq >= minDist * minDist) return 0;
+
+  const dist = Math.sqrt(distSq);
+  let nx: number;
+  let ny: number;
+  if (dist < 1e-6) {
+    const inv = 1 / Math.sqrt(lenSq || 1);
+    nx = -ey * inv;
+    ny = ex * inv;
+  } else {
+    nx = dx / dist;
+    ny = dy / dist;
+  }
+
+  body.position.set(cx + nx * minDist, cy + ny * minDist);
+
+  const velAlongNormal = body.velocity.x * nx + body.velocity.y * ny;
+  let normalImpulse = 0;
+  if (velAlongNormal < 0) {
+    normalImpulse = -(1 + restitution) * velAlongNormal;
+    body.velocity.add(nx * normalImpulse, ny * normalImpulse);
+  }
+
+  const support = Math.max(0, gravity * -ny) * h;
+  const tx = -ny;
+  const ty = nx;
+  const velAlongTangent = body.velocity.x * tx + body.velocity.y * ty;
+  const limitImpulse = friction * (normalImpulse + support);
+
+  let tangentImpulse = -velAlongTangent;
+  if (tangentImpulse > limitImpulse) tangentImpulse = limitImpulse;
+  else if (tangentImpulse < -limitImpulse) tangentImpulse = -limitImpulse;
+  body.velocity.add(tx * tangentImpulse, ty * tangentImpulse);
+
+  return normalImpulse;
+}

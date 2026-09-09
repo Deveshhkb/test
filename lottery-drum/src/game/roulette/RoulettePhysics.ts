@@ -6,8 +6,12 @@ import {
   GRAVITY,
   HUB_RADIUS,
   LINEAR_DAMPING,
+  ANGULAR_DAMPING,
+  FRET_RING_RADIUS,
+  FRET_SIZE,
   PADDLE_HALF_LENGTH,
   PADDLE_HALF_WIDTH,
+  POCKET_COUNT,
   PHYSICS_MAX_STEPS_PER_FRAME,
   PHYSICS_SOLVER_ITERATIONS,
   PHYSICS_STEP,
@@ -16,6 +20,9 @@ import {
   SPOKE_HALF_WIDTH,
   SPOKE_INNER_RADIUS,
   SPOKE_OUTER_RADIUS,
+  SETTLE_FRICTION,
+  SETTLE_RESTITUTION,
+  SETTLE_ROLLING_RESISTANCE,
   SPOKE_RESTITUTION,
   SPOKE_TANGENT_GRIP,
   WALL_RESTITUTION,
@@ -24,7 +31,13 @@ import {
 import { TAU } from '../utils/math';
 import { Rng } from '../utils/random';
 import { BallBody } from './BallBody';
-import { resolveBallPair, resolveCircularWall, resolveRotatingSegment } from './collision';
+import {
+  resolveBallPair,
+  resolveCircularWall,
+  resolveCircularWallFriction,
+  resolveRotatingSegment,
+  resolveSegmentFriction,
+} from './collision';
 
 /**
  * Fixed-timestep rigid body world for the inside of the drum.
@@ -45,6 +58,8 @@ export class RoulettePhysics {
   /** Diagnostics for the debug overlay. */
   lastSubStepCount = 0;
   lastContactCount = 0;
+  /** Largest normal impulse a settling body took this frame. */
+  lastImpactImpulse = 0;
 
   private accumulator = 0;
   private readonly spokeAngles = new Float32Array(SPOKE_COUNT);
@@ -65,6 +80,7 @@ export class RoulettePhysics {
   /** Advance the simulation by a wall-clock delta, in fixed substeps. */
   update(dt: number): void {
     this.accumulator += dt;
+    this.lastImpactImpulse = 0;
     let steps = 0;
     while (this.accumulator >= PHYSICS_STEP && steps < PHYSICS_MAX_STEPS_PER_FRAME) {
       this.step(PHYSICS_STEP);
@@ -107,10 +123,13 @@ export class RoulettePhysics {
         }
       }
 
-      // Static hub in the middle of the agitator.
+      // Static hub in the middle of the agitator. A released ball has dropped
+      // into the outer pocket channel, which sits in front of the agitator
+      // plane - the renderer draws the agitator over the balls for the same
+      // reason - so it no longer collides with any of it.
       for (let i = 0; i < bodies.length; i++) {
         const body = bodies[i];
-        if (!body.active || body.invMass === 0) continue;
+        if (!body.active || body.invMass === 0 || body.settling) continue;
         this.resolveHub(body);
       }
 
@@ -118,7 +137,7 @@ export class RoulettePhysics {
       this.writeSpokeAngles();
       for (let i = 0; i < bodies.length; i++) {
         const body = bodies[i];
-        if (!body.active || body.invMass === 0) continue;
+        if (!body.active || body.invMass === 0 || body.settling) continue;
         for (let s = 0; s < SPOKE_COUNT; s++) {
           const angle = this.spokeAngles[s];
           const cos = Math.cos(angle);
@@ -157,10 +176,39 @@ export class RoulettePhysics {
         }
       }
 
+      // Pocket frets, for settling bodies only. These are what a rolling ball
+      // has to climb over, and what finally holds it in one pocket.
+      for (let i = 0; i < bodies.length; i++) {
+        const body = bodies[i];
+        if (!body.active || body.invMass === 0 || !body.settling) continue;
+        if (this.resolvePocketFrets(body, h)) contacts++;
+      }
+
       // Outer containment last so nothing ever ends a step outside the glass.
       for (let i = 0; i < bodies.length; i++) {
         const body = bodies[i];
         if (!body.active || body.invMass === 0) continue;
+
+        if (body.settling) {
+          const impulse = resolveCircularWallFriction(
+            body,
+            this.innerRadius,
+            this.drumOmega,
+            SETTLE_RESTITUTION,
+            SETTLE_FRICTION,
+            SETTLE_ROLLING_RESISTANCE,
+            GRAVITY,
+            // The solver runs several iterations per substep, so the support
+            // term is shared between them rather than applied in full by each.
+            h / PHYSICS_SOLVER_ITERATIONS,
+          );
+          if (impulse > 0) {
+            contacts++;
+            if (impulse > this.lastImpactImpulse) this.lastImpactImpulse = impulse;
+          }
+          continue;
+        }
+
         if (
           resolveCircularWall(
             body,
@@ -176,13 +224,24 @@ export class RoulettePhysics {
     }
     this.lastContactCount = contacts;
 
-    // Integrate the visual roll from how far each ball actually travelled.
+    // Roll. Contacts set the angular velocity toward rolling without slipping;
+    // in free flight it simply decays, so a ball that has stopped touching
+    // anything stops spinning up and a settled one winds down to zero.
+    const angularDecay = Math.exp(-ANGULAR_DAMPING * h);
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i];
       if (!body.active || body.invMass === 0) continue;
-      const dx = body.position.x - body.previousPosition.x;
-      const dy = body.position.y - body.previousPosition.y;
-      body.rotation += (dx * 0.7 + dy * 0.3) / body.radius;
+
+      if (!body.settling) {
+        // Balls in the churn take their roll from how far they travelled,
+        // which is cheap and reads correctly at drum speed.
+        const dx = body.position.x - body.previousPosition.x;
+        const dy = body.position.y - body.previousPosition.y;
+        body.angularVelocity = (dx * 0.7 + dy * 0.3) / (body.radius * h);
+      } else {
+        body.angularVelocity *= angularDecay;
+      }
+      body.rotation += body.angularVelocity * h;
     }
   }
 
@@ -220,6 +279,45 @@ export class RoulettePhysics {
       );
     }
   }
+
+  /**
+   * Resolves the ball against the pocket frets nearest its angle.
+   *
+   * The frets turn with the wheel, so their angles are fixed in wheel-local
+   * space and only the two or three around the ball can possibly touch it -
+   * testing all eighteen every iteration would be wasted work. Each fret is a
+   * stud, passed to the segment resolver as a zero-length segment.
+   */
+  private resolvePocketFrets(body: BallBody, h: number): boolean {
+    const step = TAU / POCKET_COUNT;
+    const localAngle = Math.atan2(body.position.y, body.position.x) - this.drumAngle;
+    const nearest = Math.round((localAngle + step / 2) / step);
+
+    let touched = false;
+    for (let k = -1; k <= 1; k++) {
+      const angle = (nearest + k) * step - step / 2 + this.drumAngle;
+      const fx = Math.cos(angle) * FRET_RING_RADIUS;
+      const fy = Math.sin(angle) * FRET_RING_RADIUS;
+      const impulse = resolveSegmentFriction(
+        body,
+        fx,
+        fy,
+        fx,
+        fy,
+        FRET_SIZE,
+        SETTLE_RESTITUTION,
+        SETTLE_FRICTION,
+        GRAVITY,
+        h / PHYSICS_SOLVER_ITERATIONS,
+      );
+      if (impulse > 0) {
+        touched = true;
+        if (impulse > this.lastImpactImpulse) this.lastImpactImpulse = impulse;
+      }
+    }
+    return touched;
+  }
+
 
   private resolveHub(body: BallBody): void {
     const dist = Math.hypot(body.position.x, body.position.y);
