@@ -41,12 +41,17 @@ export class RouletteBall {
   private trailHead = 0;
 
   private numberValue = 0;
+  /** Which marbling pattern this ball carries; fixed for its lifetime. */
+  private readonly variant: number;
   private uprightFrom = 0;
   private uprightTarget: number | null = null;
   private uprightElapsed = 0;
 
   constructor(id: number, labelStyle: TextStyle) {
     this.body = new BallBody(id, BALL_RADIUS);
+    // Three patterns per colour, so a drum full of balls does not read as one
+    // texture repeated eighteen times.
+    this.variant = id % 3;
 
     const spriteScale = (BALL_RADIUS * 2) / BALL_TEXTURE_RESOLUTION;
 
@@ -56,7 +61,9 @@ export class RouletteBall {
     this.contactShadow.height = BALL_RADIUS * 1.1;
     this.contactShadow.alpha = 0.4;
 
-    this.sphere = new Sprite(sphereTexture(BALL_RED, BALL_RED_SHADOW, BALL_TEXTURE_RESOLUTION));
+    this.sphere = new Sprite(
+      sphereTexture(BALL_RED, BALL_RED_SHADOW, BALL_TEXTURE_RESOLUTION, this.variant),
+    );
     this.sphere.anchor.set(0.5);
     this.sphere.scale.set(spriteScale * 1.12);
 
@@ -93,36 +100,36 @@ export class RouletteBall {
   setNumber(value: number): void {
     this.numberValue = value;
     this.label.text = String(value);
-    this.label.scale.set(String(value).length > 1 ? 0.78 : 0.95);
+    this.label.scale.set(String(value).length > 1 ? 0.56 : 0.7);
   }
 
   paint(tint: BallTint): void {
     const texture =
       tint === 'red'
-        ? sphereTexture(BALL_RED, BALL_RED_SHADOW, BALL_TEXTURE_RESOLUTION)
-        : sphereTexture(BALL_BLACK, BALL_BLACK_SHADOW, BALL_TEXTURE_RESOLUTION);
+        ? sphereTexture(BALL_RED, BALL_RED_SHADOW, BALL_TEXTURE_RESOLUTION, this.variant)
+        : sphereTexture(BALL_BLACK, BALL_BLACK_SHADOW, BALL_TEXTURE_RESOLUTION, this.variant);
 
     this.sphere.texture = texture;
     for (const ghost of this.trail) ghost.texture = texture;
 
-    const r = BALL_RADIUS * 0.44;
+    const r = BALL_RADIUS * 0.33;
     this.insert
       .clear()
       // Recess ring under the insert.
       .circle(0, 0, r + 2.5)
       .fill({ color: 0x000000, alpha: 0.35 })
       .circle(0, 0, r)
-      .fill({ color: 0xf6f5f1 })
+      .fill({ color: 0xcfccc4 })
       .circle(-r * 0.2, -r * 0.24, r * 0.78)
-      .fill({ color: 0xffffff })
+      .fill({ color: 0xe6e3da })
       .circle(0, 0, r)
-      .stroke({ width: 1.2, color: 0xb9b8b2, alpha: 0.9 });
+      .stroke({ width: 1, color: 0x8f8d86, alpha: 0.75 });
 
     // Moulded balls carry a second, smaller print above the main face. It sits
     // toward the light so it reads as curving away over the shoulder.
     this.insert
-      .ellipse(-BALL_RADIUS * 0.16, -BALL_RADIUS * 0.54, r * 0.3, r * 0.22)
-      .fill({ color: 0xe8e7e2, alpha: 0.5 });
+      .ellipse(-BALL_RADIUS * 0.18, -BALL_RADIUS * 0.5, r * 0.32, r * 0.22)
+      .fill({ color: 0xdedcd5, alpha: 0.35 });
   }
 
   reset(x: number, y: number): void {

@@ -99,10 +99,10 @@ export class CentralHub {
     // Machined block: a dark side face, a lit top face and a bevel between
     // them, so it reads as a solid with thickness rather than a rounded rect.
     paddle.roundRect(-w, -h + 4, w * 2, h * 2, 4).fill({ color: 0x05080d, alpha: 0.55 });
-    paddle.roundRect(-w, -h, w * 2, h * 2, 4).fill({ color: 0x49535f });
-    paddle.roundRect(-w, -h, w * 2 - 6, h * 2, 4).fill({ color: 0xc6d2df });
-    paddle.roundRect(-w, -h, w * 2 - 6, h * 0.55, 4).fill({ color: 0xffffff, alpha: 0.72 });
-    paddle.roundRect(-w + 2, -h + 3, 2.5, h * 2 - 6, 2).fill({ color: 0xffffff, alpha: 0.9 });
+    paddle.roundRect(-w, -h, w * 2, h * 2, 4).fill({ color: 0x333c47 });
+    paddle.roundRect(-w, -h, w * 2 - 6, h * 2, 4).fill({ color: 0x94a3b3 });
+    paddle.roundRect(-w, -h, w * 2 - 6, h * 0.5, 4).fill({ color: 0xe6eef6, alpha: 0.5 });
+    paddle.roundRect(-w + 2, -h + 3, 2, h * 2 - 6, 2).fill({ color: 0xffffff, alpha: 0.65 });
     paddle.roundRect(w - 4, -h + 3, 2, h * 2 - 6, 1).fill({ color: 0x62b4dc, alpha: 0.6 });
     paddle.roundRect(-w, -h, w * 2, h * 2, 4).stroke({ width: 1, color: 0x141a23, alpha: 0.85 });
 
@@ -118,18 +118,18 @@ export class CentralHub {
     const g = new Graphics();
     const r = HUB_RADIUS;
 
-    g.circle(0, 0, r + 10).fill({ color: 0x0c0d11, alpha: 0.9 });
-    g.circle(0, 0, r + 6).fill({ color: 0xc4322c });
-    g.circle(0, 0, r + 6).stroke({ width: 1.5, color: 0x7d1a16, alpha: 0.9 });
-    g.circle(0, 0, r).fill({ color: COLOR_GOLD_DEEP });
-    g.circle(0, 0, r - 7).fill({ color: COLOR_GOLD });
-    g.circle(-r * 0.16, -r * 0.16, r - 14).fill({ color: 0xfdeec3 });
-    g.circle(-r * 0.3, -r * 0.32, r * 0.28).fill({ color: 0xffffff, alpha: 0.85 });
+    g.circle(0, 0, r + 4).fill({ color: 0x0c0d11, alpha: 0.9 });
+    g.circle(0, 0, r).fill({ color: 0xa8302a });
+    g.circle(0, 0, r).stroke({ width: 1.5, color: 0x5e1310, alpha: 0.9 });
+    g.circle(0, 0, r - 6).fill({ color: COLOR_GOLD_DEEP });
+    g.circle(0, 0, r - 11).fill({ color: COLOR_GOLD });
+    g.circle(-r * 0.14, -r * 0.14, r - 16).fill({ color: 0xfdeec3 });
+    g.circle(-r * 0.28, -r * 0.3, r * 0.2).fill({ color: 0xffffff, alpha: 0.8 });
 
     // Retaining screws around the boss.
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * TAU + 0.3;
-      g.circle(Math.cos(a) * (r + 3), Math.sin(a) * (r + 3), 2.2).fill({
+      g.circle(Math.cos(a) * (r - 3), Math.sin(a) * (r - 3), 1.8).fill({
         color: COLOR_STEEL,
         alpha: 0.8,
       });

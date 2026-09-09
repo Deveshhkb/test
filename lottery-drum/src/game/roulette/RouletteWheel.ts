@@ -54,8 +54,8 @@ export class RouletteWheel {
     );
     this.rotatingLayer.addChild(
       this.buildPocketBand(labelStyle),
-      this.buildRing(OUTER_RING_RADIUS, OUTER_RING_THICKNESS, 0x46525f),
-      this.buildRing(INNER_RING_RADIUS, INNER_RING_THICKNESS, 0x6d7a89),
+      this.buildRing(OUTER_RING_RADIUS, OUTER_RING_THICKNESS, 0x39434f),
+      this.buildRing(INNER_RING_RADIUS, INNER_RING_THICKNESS, 0x323d4a),
     );
   }
 
@@ -107,15 +107,56 @@ export class RouletteWheel {
     return container;
   }
 
-  /** Brushed collar, rendered from a generated conic-gradient metal texture. */
-  private buildCollar(): Sprite {
-    const texture = metalRingTexture(FRAME_INNER_RADIUS, FRAME_INNER_RADIUS - OUTER_RING_RADIUS, 0x2b3644);
-    const sprite = new Sprite(texture);
-    sprite.anchor.set(0.5);
-    sprite.width = FRAME_INNER_RADIUS * 2;
-    sprite.height = FRAME_INNER_RADIUS * 2;
-    sprite.alpha = 0.3;
-    return sprite;
+  /**
+   * The clear acrylic flange around the vessel.
+   *
+   * Cast acrylic of this thickness pipes light along its edges, so the band
+   * glows brightest at its two rims and washes out in between, and the light
+   * entering at the top-left carries round the whole ring. A brushed metal
+   * bezel here is what made the machine read as machined rather than moulded.
+   */
+  private buildCollar(): Container {
+    const container = new Container();
+    const g = new Graphics();
+    const outer = FRAME_INNER_RADIUS;
+    const inner = OUTER_RING_RADIUS + 2;
+    const mid = (outer + inner) / 2;
+
+    // Body of the flange: translucent, picking up the room behind it.
+    g.circle(0, 0, outer).fill({ color: 0xc8dfef, alpha: 0.24 });
+    g.circle(0, 0, inner).cut();
+
+    // Light piped along both machined edges. The outer edge is the brighter of
+    // the two because it faces the room.
+    g.circle(0, 0, outer - 1.5).stroke({ width: 3, color: 0xf2fbff, alpha: 0.85 });
+    g.circle(0, 0, outer - 4.5).stroke({ width: 3, color: 0xcfe9f8, alpha: 0.45 });
+    g.circle(0, 0, inner + 1.5).stroke({ width: 2.5, color: 0xe8f6ff, alpha: 0.6 });
+
+    // Internal reflection running through the thickness, brightest where the
+    // key light enters at the upper left.
+    g.arc(0, 0, mid, Math.PI * 1.0, Math.PI * 1.5).stroke({
+      width: outer - inner - 4,
+      color: 0xffffff,
+      alpha: 0.34,
+      cap: 'butt',
+    });
+    g.arc(0, 0, mid, Math.PI * 0.42, Math.PI * 0.72).stroke({
+      width: outer - inner - 6,
+      color: 0xdff2ff,
+      alpha: 0.12,
+      cap: 'butt',
+    });
+
+    // Moulding seams across the flange, every 30 degrees.
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU + 0.13;
+      g.moveTo(Math.cos(a) * inner, Math.sin(a) * inner)
+        .lineTo(Math.cos(a) * outer, Math.sin(a) * outer)
+        .stroke({ width: 1, color: 0xffffff, alpha: 0.1 });
+    }
+
+    container.addChild(g);
+    return container;
   }
 
   /** Recessed floor of the playfield, darkening toward the rim. */
@@ -154,7 +195,7 @@ export class RouletteWheel {
     for (let i = 0; i < POCKET_COUNT; i++) {
       const start = i * step - step / 2;
       const end = start + step;
-      const shade = i % 2 === 0 ? 0x0b1727 : 0x07111d;
+      const shade = i % 2 === 0 ? 0x070e18 : 0x040910;
 
       g.moveTo(Math.cos(start) * POCKET_BAND_INNER, Math.sin(start) * POCKET_BAND_INNER)
         .arc(0, 0, POCKET_BAND_INNER, start, end)
@@ -168,20 +209,20 @@ export class RouletteWheel {
       const sin = Math.sin(start);
       g.moveTo(cos * POCKET_BAND_INNER, sin * POCKET_BAND_INNER)
         .lineTo(cos * POCKET_BAND_OUTER, sin * POCKET_BAND_OUTER)
-        .stroke({ width: 4, color: 0x6e7d90, alpha: 0.55 });
+        .stroke({ width: 3, color: 0x2c3949, alpha: 0.7 });
       g.moveTo(cos * POCKET_BAND_INNER, sin * POCKET_BAND_INNER)
         .lineTo(cos * POCKET_BAND_OUTER, sin * POCKET_BAND_OUTER)
-        .stroke({ width: 1.4, color: 0xdbe6f2, alpha: 0.5 });
+        .stroke({ width: 1, color: 0x8fa4ba, alpha: 0.28 });
     }
 
     // Moulded cup in each pocket, where a ball comes to rest.
     for (let i = 0; i < POCKET_COUNT; i++) {
       const angle = i * step;
       const cup = new Graphics();
-      cup.roundRect(-30, -15, 60, 30, 7).fill({ color: 0x0a1524, alpha: 0.95 });
-      cup.roundRect(-30, -15, 60, 30, 7).stroke({ width: 1.5, color: COLOR_GLASS, alpha: 0.3 });
+      cup.roundRect(-30, -15, 60, 30, 7).fill({ color: 0x050a12, alpha: 0.7 });
+      cup.roundRect(-30, -15, 60, 30, 7).stroke({ width: 1, color: COLOR_GLASS, alpha: 0.07 });
       cup.roundRect(-26, 2, 52, 11, 4).fill({ color: 0x000000, alpha: 0.55 });
-      cup.roundRect(-26, -12, 52, 6, 3).fill({ color: 0xdff0ff, alpha: 0.13 });
+      cup.roundRect(-26, -12, 52, 6, 3).fill({ color: 0xdff0ff, alpha: 0.06 });
       cup.position.set(Math.cos(angle) * POCKET_SEAT_RADIUS, Math.sin(angle) * POCKET_SEAT_RADIUS);
       cup.rotation = angle + Math.PI / 2;
       container.addChild(cup);
@@ -194,7 +235,7 @@ export class RouletteWheel {
       const angle = i * step;
       const label = new Text({ text: String(i + 1), style: labelStyle });
       label.anchor.set(0.5);
-      label.alpha = 0.34;
+      label.alpha = 0.13;
       label.position.set(
         Math.cos(angle) * (POCKET_BAND_INNER + 14),
         Math.sin(angle) * (POCKET_BAND_INNER + 14),
@@ -207,15 +248,15 @@ export class RouletteWheel {
     // falling to nothing on the shadow side.
     const edge = new Graphics();
     edge.arc(0, 0, POCKET_BAND_OUTER, Math.PI * 1.02, Math.PI * 1.62).stroke({
-      width: 3,
+      width: 2,
       color: 0xdcebf8,
-      alpha: 0.5,
+      alpha: 0.24,
       cap: 'round',
     });
     edge.arc(0, 0, POCKET_BAND_OUTER, Math.PI * 0.05, Math.PI * 0.4).stroke({
       width: 2,
       color: 0x8fd0f0,
-      alpha: 0.22,
+      alpha: 0.1,
       cap: 'round',
     });
     edge.circle(0, 0, POCKET_BAND_INNER).stroke({ width: 1.5, color: 0x18304a, alpha: 0.9 });

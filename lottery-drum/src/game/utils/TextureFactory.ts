@@ -38,6 +38,18 @@ function fromCanvas(key: string, canvas: HTMLCanvasElement): Texture {
   return texture;
 }
 
+/** Deterministic per-variant noise, so a ball's marbling never changes. */
+function seeded(seed: number): () => number {
+  let state = (seed * 0x9e3779b1) >>> 0 || 1;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function css(color: number, alpha = 1): string {
   const r = (color >> 16) & 0xff;
   const g = (color >> 8) & 0xff;
@@ -65,8 +77,13 @@ export function mixColor(a: number, b: number, t: number): number {
  * the lower right and a narrow rim light picks the silhouette back out of the
  * dark - the same read as the moulded balls in the reference.
  */
-export function sphereTexture(base: number, shadow: number, resolution = 256): Texture {
-  const key = `sphere:${base}:${shadow}:${resolution}`;
+export function sphereTexture(
+  base: number,
+  shadow: number,
+  resolution = 256,
+  variant = 0,
+): Texture {
+  const key = `sphere:${base}:${shadow}:${resolution}:${variant}`;
   const hit = cache.get(key);
   if (hit) return hit;
 
@@ -105,6 +122,50 @@ export function sphereTexture(base: number, shadow: number, resolution = 256): T
   body.addColorStop(1, css(shadow));
   ctx.fillStyle = body;
   ctx.fillRect(0, 0, size, size);
+
+  // Moulded lottery balls are marbled, not plain: the reference balls carry
+  // swirled veining across the whole surface. Drawn before the bounce, fill and
+  // specular so the lighting falls across the pattern instead of under it.
+  const rng = seeded(variant * 977 + base);
+  const veinDark = css(mixColor(shadow, 0x000000, 0.35), 0.5);
+  const veinLight = css(mixColor(base, 0xffffff, 0.55), 0.42);
+
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 46; i++) {
+    const angle = rng() * Math.PI * 2;
+    const radius = r * (0.12 + rng() * 0.88);
+    const sweep = (0.5 + rng() * 1.6) * (rng() < 0.5 ? 1 : -1);
+    const wobble = r * (0.1 + rng() * 0.4);
+
+    const x0 = c + Math.cos(angle) * radius;
+    const y0 = c + Math.sin(angle) * radius;
+    const x1 = c + Math.cos(angle + sweep) * radius * (0.6 + rng() * 0.7);
+    const y1 = c + Math.sin(angle + sweep) * radius * (0.6 + rng() * 0.7);
+
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.quadraticCurveTo(
+      c + Math.cos(angle + sweep * 0.5) * (radius + wobble),
+      c + Math.sin(angle + sweep * 0.5) * (radius + wobble),
+      x1,
+      y1,
+    );
+    ctx.strokeStyle = rng() < 0.62 ? veinDark : veinLight;
+    ctx.lineWidth = r * (0.025 + rng() * 0.075);
+    ctx.stroke();
+  }
+
+  // Fine speckle over the veining, for the grain of a moulded surface.
+  for (let i = 0; i < 200; i++) {
+    const angle = rng() * Math.PI * 2;
+    const radius = Math.sqrt(rng()) * r;
+    ctx.fillStyle = rng() < 0.5 ? veinDark : veinLight;
+    ctx.globalAlpha = 0.18;
+    ctx.beginPath();
+    ctx.arc(c + Math.cos(angle) * radius, c + Math.sin(angle) * radius, r * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 
   // Bounce light off the plate, low on the sphere.
   const bounce = ctx.createRadialGradient(
@@ -382,10 +443,10 @@ export function rodTexture(tint: number, resolution = 64): Texture {
   if (!ctx) throw new Error('2D canvas context unavailable');
 
   const gradient = ctx.createLinearGradient(0, 0, 0, resolution);
-  gradient.addColorStop(0, css(mixColor(tint, 0x000000, 0.55)));
-  gradient.addColorStop(0.14, css(mixColor(tint, 0xffffff, 0.4)));
-  gradient.addColorStop(0.3, css(mixColor(tint, 0xffffff, 0.98)));
-  gradient.addColorStop(0.44, css(mixColor(tint, 0xffffff, 0.32)));
+  gradient.addColorStop(0, css(mixColor(tint, 0x000000, 0.72)));
+  gradient.addColorStop(0.2, css(mixColor(tint, 0xffffff, 0.22)));
+  gradient.addColorStop(0.32, css(mixColor(tint, 0xffffff, 0.95)));
+  gradient.addColorStop(0.42, css(mixColor(tint, 0xffffff, 0.18)));
   gradient.addColorStop(0.64, css(tint));
   gradient.addColorStop(0.85, css(mixColor(tint, FILL_COLOR, 0.55)));
   gradient.addColorStop(1, css(mixColor(tint, 0x000000, 0.6)));

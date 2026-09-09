@@ -85,7 +85,13 @@ to front:
 | `hub` | yes | spokes and paddle blocks, drawn over the balls |
 | `arm` | independently | indicator arm and fork claw |
 | `particles` | no | seat dust |
-| `glass.front` | no | near wall, refraction band, specular sweeps, hood |
+| `glass.front` | no | near wall, refraction band, specular sweeps, loader cap |
+
+The vessel is drawn as a cylinder, not a disc. Seen slightly off axis its far
+opening sits a little up and right of the near one, and the thickness of the
+tube shows as a lit crescent along the lower left. That crescent, the clear
+acrylic flange around the rim, and the loader block on top are what give the
+machine a back for the eye to read depth against.
 
 The arm is aimed by the draw sequence, not carried round by the agitator, so the
 two rotate independently exactly as they do in the reference.
@@ -127,10 +133,13 @@ result.
 `utils/TextureFactory.ts` generates and caches everything Pixi's `Graphics`
 cannot express:
 
-* **Lit spheres** — a body gradient with the light up and to the left, a
-  terminator falling to the lower right, plate bounce, the room's cyan fill
-  wrapping the shadow side, a rim light, and a two-part specular. Eighteen
-  balls share two uploads.
+* **Lit, marbled spheres** — a body gradient with the light up and to the left,
+  a terminator falling to the lower right, plate bounce, the room's cyan fill
+  wrapping the shadow side, a rim light, and a two-part specular. Swirled
+  veining and fine speckle are drawn under the lighting, so the key light falls
+  across the pattern rather than sitting beneath it: the reference balls are
+  moulded and marbled, not smooth. Three seeded variants per colour keep a full
+  drum from reading as one texture repeated eighteen times.
 * **Brushed metal annuli** — a conic sweep with a narrow, very bright band
   where the ring faces the key light and a hard falloff either side. A gentle
   ramp reads as plastic.
