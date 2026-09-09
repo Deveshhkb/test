@@ -55,7 +55,9 @@ src/
       BallBody.ts, collision.ts, Vec2.ts
     environment/
       Environment.ts             room in three depth bands
-      MiniDisplay.ts             wall screen with a live roulette wheel
+      WallScreen.ts              physical monitor: bracket, bezel, glass
+      ResultBoard.ts             left screen content, the game's own history
+      LiveVideoFeed.ts           right screen content, live video or fallback
     camera/Camera.ts             eased dolly and focus
     effects/{ParticleSystem,GlowEffect,ScreenShake}.ts
     audio/AudioSystem.ts         sound front end (see below)
@@ -150,6 +152,30 @@ cannot express:
 * **Soft glows, occlusion rings and contact shadows** — radial falloffs for
   lamps, bloom, part-to-part occlusion and ball shadows.
 * **Vignette** — the screen falloff described above.
+
+## The wall monitors
+
+Both are physical panels built by `WallScreen`: a wall bracket, the shadow the
+panel casts, a bezel with a visible side face so it has thickness, a recessed
+screen well, and a glass front carrying the studio's reflections. Content is
+masked into the screen area, so nothing spills past the glass and the drum
+occludes them where it passes in front.
+
+The **left** monitor shows the game's own result history. It subscribes to the
+same `historyChanged` event the HUD does, so the board and the HUD are two views
+of one piece of state and cannot disagree.
+
+The **right** monitor is a live video surface. Set `LIVE_FEED_URL` in
+`GameConfig.ts` to a direct video URL the page can read cross-origin (`.mp4`,
+`.webm` or an HLS stream with permissive CORS) and it plays as a real `<video>`
+element sampled into a Pixi texture, which is what puts the picture *inside* the
+scene: the drum occludes it and the glass reflects over it. Left empty, the
+monitor shows a generated wheel instead, so the set is never a black rectangle,
+and a source that fails to load falls back the same way.
+
+A YouTube embed cannot be used here. Its pixels live in a sandboxed
+cross-origin iframe the page may never sample, so it could only be layered over
+the canvas as a DOM element, where nothing in the scene could overlap it.
 
 ## Physics
 

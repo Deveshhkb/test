@@ -226,5 +226,16 @@ export const COLOR_CHASSIS = 0x10161f;
 export const TRAIL_LENGTH = 5;
 export const TRAIL_MIN_SPEED = 520;
 
+/**
+ * Source for the right-hand monitor's live feed.
+ *
+ * Must be a direct video URL the page can read cross-origin (an .mp4, .webm or
+ * HLS stream with permissive CORS headers). Left empty the monitor falls back
+ * to a generated wheel. A YouTube watch/embed link cannot be used here: its
+ * pixels live in a sandboxed cross-origin iframe that the page may not sample,
+ * so it could only be layered over the canvas rather than inside the scene.
+ */
+export const LIVE_FEED_URL = '';
+
 export const MAX_DEVICE_PIXEL_RATIO = 2;
 export const BACKGROUND_CLEAR_COLOR = 0x04070d;

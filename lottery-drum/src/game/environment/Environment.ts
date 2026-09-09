@@ -5,7 +5,6 @@ import {
   Rectangle,
   Renderer,
   Sprite,
-  TextStyle,
 } from 'pixi.js';
 import {
   COLOR_BACKDROP_BOTTOM,
@@ -14,6 +13,7 @@ import {
   COLOR_NEON_DIM,
   DESIGN_HEIGHT,
   DESIGN_WIDTH,
+  LIVE_FEED_URL,
   MACHINE_X,
   MACHINE_Y,
 } from '../GameConfig';
@@ -24,7 +24,9 @@ import {
   shadowTexture,
   verticalGradientTexture,
 } from '../utils/TextureFactory';
-import { MiniDisplay } from './MiniDisplay';
+import { LiveVideoFeed } from './LiveVideoFeed';
+import { ResultBoard } from './ResultBoard';
+import { WallScreen } from './WallScreen';
 
 /**
  * The room, built as depth bands rather than one painted backdrop.
@@ -42,13 +44,15 @@ export class Environment {
   readonly view = new Container();
 
   private readonly farBand: Container;
-  private readonly displays: MiniDisplay[] = [];
+  private readonly displays: WallScreen[] = [];
+  private feed: LiveVideoFeed | null = null;
+  private board: ResultBoard | null = null;
   private readonly guides: Sprite[] = [];
   private readonly neonTube: Graphics;
   private readonly neonBloom: Sprite;
   private time = 0;
 
-  constructor(labelStyle: TextStyle) {
+  constructor(fontFamily: string) {
     const far = new Container();
     far.addChild(this.buildBackdrop(), this.buildArchitecture(), this.buildLedWall(), this.buildRig());
     // Depth of field on the far wall, so it separates from the machine
@@ -69,7 +73,7 @@ export class Environment {
     mid.addChild(this.buildLightGuides());
     this.neonBloom = this.buildNeonBloom();
     this.neonTube = this.buildNeonTube();
-    mid.addChild(this.neonBloom, this.neonTube, this.buildDisplays(labelStyle));
+    mid.addChild(this.neonBloom, this.neonTube, this.buildDisplays(fontFamily));
 
     const near = new Container();
     near.addChild(this.buildFloor(), this.buildSpareBalls());
@@ -100,6 +104,7 @@ export class Environment {
   update(dt: number): void {
     this.time += dt;
     for (const display of this.displays) display.update(dt);
+    this.feed?.update(dt);
 
     // Light guides flicker only very slightly; a strong pulse reads as arcade.
     const pulse = 0.9 + Math.sin(this.time * 0.9) * 0.05;
@@ -316,34 +321,45 @@ export class Environment {
     return bloom;
   }
 
-  private buildDisplays(labelStyle: TextStyle): Container {
+  /**
+   * The two wall monitors. Both are physical panels; what differs is only what
+   * is playing on them - results on the left, the live feed on the right.
+   */
+  private buildDisplays(fontFamily: string): Container {
     const container = new Container();
     const width = DESIGN_WIDTH * 0.256;
     const height = width * 0.565;
+    const inner = { w: width - 26, h: height - 26 };
 
-    const left = new MiniDisplay(width, height, 'dashboard', labelStyle, 'Trend Ribber');
+    const left = new WallScreen(width, height, -1);
     left.view.position.set(DESIGN_WIDTH * 0.245, DESIGN_HEIGHT * 0.32);
     left.view.skew.set(0, -0.055);
+    this.board = new ResultBoard(inner.w, inner.h, fontFamily);
+    left.screen.addChild(this.board.view);
 
-    const right = new MiniDisplay(width, height, 'wheel', labelStyle, 'Live Wheel');
+    const right = new WallScreen(width, height, 1);
     right.view.position.set(DESIGN_WIDTH * 0.755, DESIGN_HEIGHT * 0.31);
     right.view.skew.set(0, 0.055);
+    this.feed = new LiveVideoFeed(inner.w, inner.h, fontFamily, LIVE_FEED_URL);
+    right.screen.addChild(this.feed.view);
 
     this.displays.push(left, right);
     container.addChild(left.view, right.view);
-
-    // Each screen throws its own light onto the wall behind it.
-    for (const display of [left, right]) {
-      const spill = new Sprite(glowTexture(0x2e7fb8));
-      spill.anchor.set(0.5);
-      spill.width = width * 1.9;
-      spill.height = height * 2.2;
-      spill.position.set(display.view.x, display.view.y);
-      spill.alpha = 0.16;
-      spill.blendMode = 'add';
-      container.addChildAt(spill, 0);
-    }
     return container;
+  }
+
+  /** Mirrors the game's result history onto the left monitor. */
+  setHistory(history: readonly number[]): void {
+    this.board?.setHistory(history);
+  }
+
+  /** Retries live playback after a user gesture, which browsers require. */
+  resumeFeed(): void {
+    this.feed?.resume();
+  }
+
+  destroy(): void {
+    this.feed?.destroy();
   }
 
   private buildFloor(): Container {

@@ -105,6 +105,8 @@ export class Game {
     this.input.on((action) => {
       // Browsers only allow an AudioContext to start from a gesture.
       this.audio.unlock();
+      // Browsers block video autoplay until a gesture too.
+      this.environment.resumeFeed();
       if (action === 'draw') this.startDraw();
       else if (action === 'toggleDebug') this.setDebug(!this.debugEnabled);
       else if (action === 'reset') this.reset();
@@ -113,6 +115,10 @@ export class Game {
     // Bake the static far band now the renderer exists, so its depth-of-field
     // blur is paid for once instead of every frame.
     this.environment.bake(this.app.renderer);
+
+    // The left monitor shows the game's own result history, so it subscribes
+    // to the same event the HUD does rather than keeping its own copy.
+    this.bus.on('historyChanged', (history) => this.environment.setHistory(history));
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(host);
@@ -123,12 +129,6 @@ export class Game {
   }
 
   private buildScene(): void {
-    const uiLabel = new TextStyle({
-      fontFamily: FONT_STACK,
-      fontSize: 20,
-      fontWeight: '700',
-      fill: 0xdce6f2,
-    });
     const pocketLabel = new TextStyle({
       fontFamily: FONT_STACK,
       fontSize: 15,
@@ -142,7 +142,7 @@ export class Game {
       fill: 0x14161a,
     });
 
-    this.environment = new Environment(uiLabel);
+    this.environment = new Environment(FONT_STACK);
     this.machine = new RouletteMachine(pocketLabel);
     this.overlay = new ResultOverlay(FONT_STACK);
     this.glow = new GlowEffect(COLOR_RESULT_CYAN);
@@ -301,6 +301,7 @@ export class Game {
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     this.input?.destroy();
+    this.environment?.destroy();
     this.loop?.destroy();
     this.audio.destroy();
     this.bus.clear();
