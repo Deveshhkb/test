@@ -46,7 +46,8 @@ export class MiniDisplay {
 
     const glow = new Graphics()
       .roundRect(-width / 2 - 10, -height / 2 - 10, width + 20, height + 20, 8)
-      .stroke({ width: 2, color: COLOR_NEON, alpha: 0.35 });
+      .stroke({ width: 2, color: COLOR_NEON, alpha: 0.5 });
+
 
     this.buildWheel(Math.min(width, height) * 0.42);
 
@@ -69,7 +70,7 @@ export class MiniDisplay {
   private buildWheelScreen(width: number, height: number): Graphics {
     return new Graphics()
       .rect(-width / 2, -height / 2, width, height)
-      .fill({ color: 0x11161d })
+      .fill({ color: 0x1b2530 })
       .rect(-width / 2, -height / 2, width, height * 0.1)
       .fill({ color: 0x0a0e14 })
       .rect(-width / 2, height / 2 - height * 0.12, width, height * 0.12)
@@ -85,7 +86,7 @@ export class MiniDisplay {
     const container = new Container();
     const g = new Graphics()
       .rect(-width / 2, -height / 2, width, height)
-      .fill({ color: 0x0f141c })
+      .fill({ color: 0x18202b })
       // Left results column.
       .roundRect(-width / 2 + 8, -height / 2 + 34, width * 0.16, height * 0.78, 4)
       .fill({ color: 0x161d27 })

@@ -2,7 +2,6 @@ import { Container, Graphics, Sprite, Text, TextStyle } from 'pixi.js';
 import {
   COLOR_CHASSIS,
   COLOR_GLASS,
-  COLOR_NEON,
   COLOR_STEEL,
   COLOR_STEEL_DARK,
   FRAME_INNER_RADIUS,
@@ -17,7 +16,7 @@ import {
   POCKET_SEAT_RADIUS,
 } from '../GameConfig';
 import { TAU } from '../utils/math';
-import { metalRingTexture } from '../utils/TextureFactory';
+import { metalRingTexture, occlusionRingTexture } from '../utils/TextureFactory';
 
 /**
  * The wheel body, built as separate concentric layers so each can be
@@ -47,16 +46,34 @@ export class RouletteWheel {
       this.pocketAngles.push((i / POCKET_COUNT) * TAU);
     }
 
-    this.staticLayer.addChild(this.buildOuterFrame(), this.buildCollar(), this.buildWheelSurface());
+    this.staticLayer.addChild(
+      this.buildOuterFrame(),
+      this.buildCollar(),
+      this.buildWheelSurface(),
+      this.buildOcclusion(),
+    );
     this.rotatingLayer.addChild(
       this.buildPocketBand(labelStyle),
-      this.buildRing(OUTER_RING_RADIUS, OUTER_RING_THICKNESS, 0x5a6675),
+      this.buildRing(OUTER_RING_RADIUS, OUTER_RING_THICKNESS, 0x46525f),
       this.buildRing(INNER_RING_RADIUS, INNER_RING_THICKNESS, 0x6d7a89),
     );
   }
 
   setRotation(angle: number): void {
     this.rotatingLayer.rotation = angle;
+  }
+
+  /**
+   * Contact shading where the chassis meets the playfield. Parts that touch
+   * darken toward each other; without it every ring looks pasted on rather
+   * than seated in the casting.
+   */
+  private buildOcclusion(): Sprite {
+    const ao = new Sprite(occlusionRingTexture(0.3, 0.8));
+    ao.anchor.set(0.5);
+    ao.width = FRAME_INNER_RADIUS * 2.02;
+    ao.height = FRAME_INNER_RADIUS * 2.02;
+    return ao;
   }
 
   /** Cast chassis ring, with mounting bosses at the four compass points. */
@@ -92,12 +109,12 @@ export class RouletteWheel {
 
   /** Brushed collar, rendered from a generated conic-gradient metal texture. */
   private buildCollar(): Sprite {
-    const texture = metalRingTexture(FRAME_INNER_RADIUS, FRAME_INNER_RADIUS - OUTER_RING_RADIUS, 0x445062);
+    const texture = metalRingTexture(FRAME_INNER_RADIUS, FRAME_INNER_RADIUS - OUTER_RING_RADIUS, 0x2b3644);
     const sprite = new Sprite(texture);
     sprite.anchor.set(0.5);
     sprite.width = FRAME_INNER_RADIUS * 2;
     sprite.height = FRAME_INNER_RADIUS * 2;
-    sprite.alpha = 0.5;
+    sprite.alpha = 0.3;
     return sprite;
   }
 
@@ -105,13 +122,13 @@ export class RouletteWheel {
   private buildWheelSurface(): Graphics {
     const g = new Graphics();
 
-    g.circle(0, 0, POCKET_BAND_OUTER).fill({ color: 0x0a1526 });
+    g.circle(0, 0, POCKET_BAND_OUTER).fill({ color: 0x0a1b2c, alpha: 0.7 });
     // Concentric falloff bands stand in for a dished surface.
     for (let i = 8; i > 0; i--) {
       const t = i / 8;
-      g.circle(0, 0, POCKET_BAND_OUTER * t).fill({ color: 0x0d1b2f, alpha: 0.16 });
+      g.circle(0, 0, POCKET_BAND_OUTER * t).fill({ color: 0x0a1a2c, alpha: 0.14 });
     }
-    g.circle(0, 0, POCKET_BAND_INNER).fill({ color: 0x08111f, alpha: 0.9 });
+    g.circle(0, 0, POCKET_BAND_INNER).fill({ color: 0x040a12, alpha: 0.72 });
 
     // Machined guide grooves on the floor.
     for (let i = 1; i <= 3; i++) {
@@ -137,7 +154,7 @@ export class RouletteWheel {
     for (let i = 0; i < POCKET_COUNT; i++) {
       const start = i * step - step / 2;
       const end = start + step;
-      const shade = i % 2 === 0 ? 0x16283f : 0x101d2e;
+      const shade = i % 2 === 0 ? 0x0b1727 : 0x07111d;
 
       g.moveTo(Math.cos(start) * POCKET_BAND_INNER, Math.sin(start) * POCKET_BAND_INNER)
         .arc(0, 0, POCKET_BAND_INNER, start, end)
@@ -161,10 +178,10 @@ export class RouletteWheel {
     for (let i = 0; i < POCKET_COUNT; i++) {
       const angle = i * step;
       const cup = new Graphics();
-      cup.roundRect(-30, -15, 60, 30, 7).fill({ color: 0x1b2c42, alpha: 0.95 });
-      cup.roundRect(-30, -15, 60, 30, 7).stroke({ width: 1.5, color: COLOR_GLASS, alpha: 0.22 });
-      cup.roundRect(-26, 3, 52, 9, 4).fill({ color: 0x000000, alpha: 0.35 });
-      cup.roundRect(-26, -12, 52, 7, 3).fill({ color: 0xffffff, alpha: 0.07 });
+      cup.roundRect(-30, -15, 60, 30, 7).fill({ color: 0x0a1524, alpha: 0.95 });
+      cup.roundRect(-30, -15, 60, 30, 7).stroke({ width: 1.5, color: COLOR_GLASS, alpha: 0.3 });
+      cup.roundRect(-26, 2, 52, 11, 4).fill({ color: 0x000000, alpha: 0.55 });
+      cup.roundRect(-26, -12, 52, 6, 3).fill({ color: 0xdff0ff, alpha: 0.13 });
       cup.position.set(Math.cos(angle) * POCKET_SEAT_RADIUS, Math.sin(angle) * POCKET_SEAT_RADIUS);
       cup.rotation = angle + Math.PI / 2;
       container.addChild(cup);
@@ -186,10 +203,22 @@ export class RouletteWheel {
       container.addChild(label);
     }
 
-    // Faint indicator glow around the band edge.
-    const edge = new Graphics()
-      .circle(0, 0, POCKET_BAND_OUTER)
-      .stroke({ width: 2, color: COLOR_NEON, alpha: 0.12 });
+    // Machined lip on the band, bright where it faces the key light and
+    // falling to nothing on the shadow side.
+    const edge = new Graphics();
+    edge.arc(0, 0, POCKET_BAND_OUTER, Math.PI * 1.02, Math.PI * 1.62).stroke({
+      width: 3,
+      color: 0xdcebf8,
+      alpha: 0.5,
+      cap: 'round',
+    });
+    edge.arc(0, 0, POCKET_BAND_OUTER, Math.PI * 0.05, Math.PI * 0.4).stroke({
+      width: 2,
+      color: 0x8fd0f0,
+      alpha: 0.22,
+      cap: 'round',
+    });
+    edge.circle(0, 0, POCKET_BAND_INNER).stroke({ width: 1.5, color: 0x18304a, alpha: 0.9 });
     container.addChild(edge);
     return container;
   }

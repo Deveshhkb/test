@@ -206,7 +206,7 @@ export const BIG_NUMERAL_SIZE = 300;
 
 export const COLOR_NEON = 0x17c6fb;
 export const COLOR_NEON_DIM = 0x0d6f92;
-export const COLOR_RESULT_RED = 0xff6865;
+export const COLOR_RESULT_RED = 0xf2454b;
 export const COLOR_RESULT_CYAN = 0x7fe6ff;
 export const COLOR_GREEN_DOT = 0x31bc64;
 export const COLOR_GOLD = 0xe9c787;

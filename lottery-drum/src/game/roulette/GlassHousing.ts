@@ -18,13 +18,14 @@ export class GlassHousing {
   private sheenPhase = 0;
 
   constructor() {
-    this.back.addChild(this.buildFarWall());
+    this.back.addChild(this.buildFarWall(), this.buildInteriorLight());
 
     this.sheen = new Sprite(glowTexture(0xdff2ff));
     this.sheen.anchor.set(0.5);
     this.sheen.width = GLASS_RADIUS * 1.5;
     this.sheen.height = GLASS_RADIUS * 0.85;
-    this.sheen.alpha = 0.07;
+    this.sheen.alpha = 0.1;
+    this.sheen.blendMode = 'add';
     this.sheen.rotation = -0.5;
     this.sheen.position.set(-GLASS_RADIUS * 0.22, -GLASS_RADIUS * 0.3);
 
@@ -38,10 +39,26 @@ export class GlassHousing {
     this.sheen.alpha = 0.055 + Math.sin(this.sheenPhase * 0.7) * 0.02;
   }
 
+  /**
+   * Ambient inside the vessel. Light entering the dome scatters off the far
+   * wall and the balls, so the interior sits brighter than the room behind it -
+   * without this the drum reads as a hole cut in the set.
+   */
+  private buildInteriorLight(): Sprite {
+    const light = new Sprite(glowTexture(0x4e9ccc));
+    light.anchor.set(0.5);
+    light.width = GLASS_RADIUS * 2.1;
+    light.height = GLASS_RADIUS * 2.1;
+    light.position.set(-GLASS_RADIUS * 0.12, -GLASS_RADIUS * 0.16);
+    light.alpha = 0.2;
+    light.blendMode = 'add';
+    return light;
+  }
+
   private buildFarWall(): Graphics {
     const g = new Graphics();
     // Tinted interior, brighter where the far wall curves away from the light.
-    g.circle(0, 0, GLASS_RADIUS).fill({ color: 0x0b1a2c, alpha: 0.55 });
+    g.circle(0, 0, GLASS_RADIUS).fill({ color: 0x0d2036, alpha: 0.4 });
     g.arc(0, 0, GLASS_RADIUS - 8, Math.PI * 0.15, Math.PI * 0.85).stroke({
       width: 16,
       color: COLOR_GLASS,
@@ -66,34 +83,48 @@ export class GlassHousing {
     }
 
     // Bright containment lip against the chassis.
-    g.circle(0, 0, GLASS_RADIUS).stroke({ width: 3, color: COLOR_GLASS, alpha: 0.5 });
-    g.circle(0, 0, FRAME_INNER_RADIUS - 2).stroke({ width: 2, color: 0xffffff, alpha: 0.16 });
+    g.circle(0, 0, GLASS_RADIUS).stroke({ width: 2.5, color: 0xe8f6ff, alpha: 0.7 });
+    g.circle(0, 0, GLASS_RADIUS - 3).stroke({ width: 1, color: 0xffffff, alpha: 0.35 });
+    g.circle(0, 0, FRAME_INNER_RADIUS - 2).stroke({ width: 2, color: 0xffffff, alpha: 0.2 });
 
     // Two specular sweeps: a long one upper-left, a short kicker lower-right.
-    g.arc(0, 0, GLASS_RADIUS - 14, Math.PI * 1.06, Math.PI * 1.44).stroke({
-      width: 15,
-      color: 0xffffff,
-      alpha: 0.3,
+    g.arc(0, 0, GLASS_RADIUS - 16, Math.PI * 1.04, Math.PI * 1.46).stroke({
+      width: 22,
+      color: 0xd6ecff,
+      alpha: 0.16,
       cap: 'round',
     });
-    g.arc(0, 0, GLASS_RADIUS - 16, Math.PI * 1.09, Math.PI * 1.4).stroke({
-      width: 4,
+    g.arc(0, 0, GLASS_RADIUS - 15, Math.PI * 1.07, Math.PI * 1.42).stroke({
+      width: 9,
       color: 0xffffff,
-      alpha: 0.55,
+      alpha: 0.4,
       cap: 'round',
     });
-    g.arc(0, 0, GLASS_RADIUS - 13, Math.PI * 0.1, Math.PI * 0.32).stroke({
-      width: 8,
+    g.arc(0, 0, GLASS_RADIUS - 15, Math.PI * 1.1, Math.PI * 1.35).stroke({
+      width: 3,
       color: 0xffffff,
-      alpha: 0.14,
+      alpha: 0.9,
+      cap: 'round',
+    });
+    // Short kicker where the room light wraps the far side.
+    g.arc(0, 0, GLASS_RADIUS - 13, Math.PI * 0.08, Math.PI * 0.3).stroke({
+      width: 7,
+      color: 0xbfe4ff,
+      alpha: 0.24,
+      cap: 'round',
+    });
+    g.arc(0, 0, GLASS_RADIUS - 13, Math.PI * 0.12, Math.PI * 0.26).stroke({
+      width: 2,
+      color: 0xffffff,
+      alpha: 0.5,
       cap: 'round',
     });
 
     // Vertical edge highlights so the dome reads as a cylinder, not a disc.
     for (const side of [-1, 1]) {
-      g.ellipse(side * (GLASS_RADIUS - 8), 0, 7, GLASS_RADIUS * 0.86).fill({
-        color: 0xffffff,
-        alpha: 0.055,
+      g.ellipse(side * (GLASS_RADIUS - 8), 0, 8, GLASS_RADIUS * 0.86).fill({
+        color: 0xcfe6ff,
+        alpha: 0.085,
       });
     }
 

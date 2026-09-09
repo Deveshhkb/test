@@ -90,18 +90,50 @@ to front:
 The arm is aimed by the draw sequence, not carried round by the agitator, so the
 two rotate independently exactly as they do in the reference.
 
+## Rendering and lighting
+
+The scene is lit by one environment rather than by colouring each object
+separately. `utils/TextureFactory.ts` declares the key direction, the room's
+cyan bounce and the ambient, and every generated material reads them, so metal,
+glass and the balls agree about where the light is.
+
+Three things carry most of the realism:
+
+* **Everything that emits light is additive.** Neon, lamps, screen spill, the
+  floor pool, the hub lamp and the seat flash all use `blendMode: 'add'`. Drawn
+  normally they composite a dull wash over the room instead of brightening it,
+  which is what makes an otherwise correct scene look flat.
+* **The frame is graded.** `effects/AtmosphereLayer.ts` adds a key wash, a
+  shallow depth haze and a vignette, outside the camera transform so it stays
+  locked to the frame while the camera dollies. The reference studio is almost
+  entirely deep navy with a handful of small bright accents; without the falloff
+  every surface competes and nothing reads as lit.
+* **Contact is shaded.** Parts that touch darken toward each other - an
+  occlusion ring where the glass meets the chassis, drop shadows under the
+  spokes and the indicator arm, and a contact shadow under every ball.
+
+The far band of the room is blurred for depth of field and then baked to a
+texture with `cacheAsTexture`, since nothing in it animates.
+
 ## Procedural textures
 
 `utils/TextureFactory.ts` generates and caches everything Pixi's `Graphics`
 cannot express:
 
 * **Lit spheres** — a body gradient with the light up and to the left, a
-  terminator falling to the lower right, plate bounce, a rim light, and a
-  two-part specular. Eighteen balls share two uploads.
-* **Brushed metal annuli** — a conic sweep through light and dark with fine
-  turning lines, used for every ring.
-* **Soft glows and contact shadows** — radial falloffs for lamps, bloom and
-  ball shadows.
+  terminator falling to the lower right, plate bounce, the room's cyan fill
+  wrapping the shadow side, a rim light, and a two-part specular. Eighteen
+  balls share two uploads.
+* **Brushed metal annuli** — a conic sweep with a narrow, very bright band
+  where the ring faces the key light and a hard falloff either side. A gentle
+  ramp reads as plastic.
+* **Cylindrical rods** — the anisotropic highlight that makes the agitator
+  spokes and the indicator arm read as machined bar rather than flat strokes.
+* **Edge-lit panels** — a narrow hot line with a wide dim body, for the acrylic
+  light guides on the side walls.
+* **Soft glows, occlusion rings and contact shadows** — radial falloffs for
+  lamps, bloom, part-to-part occlusion and ball shadows.
+* **Vignette** — the screen falloff described above.
 
 ## Physics
 

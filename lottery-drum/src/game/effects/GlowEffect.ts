@@ -23,6 +23,7 @@ export class GlowEffect {
     for (let i = 0; i < capacity; i++) {
       const sprite = new Sprite(texture);
       sprite.anchor.set(0.5);
+      sprite.blendMode = 'add';
       sprite.visible = false;
       this.view.addChild(sprite);
       this.pool.push({ sprite, life: 0, maxLife: 1, fromSize: 0, toSize: 0 });

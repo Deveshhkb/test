@@ -137,13 +137,48 @@ export class MachineStand {
     }
     container.addChild(g);
 
-    // Control panel lamps.
+    // Control panel lamps, each behind its own halo.
     for (let i = 0; i < 3; i++) {
+      const halo = new Sprite(glowTexture(COLOR_NEON));
+      halo.anchor.set(0.5);
+      halo.width = 92;
+      halo.height = 108;
+      halo.position.set(-32 + i * 32, columnTop - 10);
+      halo.alpha = 0.3;
+      halo.blendMode = 'add';
+      container.addChild(halo);
+
       const lamp = new Graphics();
       lamp.roundRect(-13, -20, 26, 40, 4).fill({ color: COLOR_NEON });
+      lamp.roundRect(-9, -16, 18, 32, 3).fill({ color: 0xe4f8ff, alpha: 0.85 });
       lamp.position.set(-32 + i * 32, columnTop - 10);
       this.panelLights.push(lamp);
       container.addChild(lamp);
+    }
+
+    // Ball chutes across the base, lit from inside.
+    const chuteY = columnTop + 168;
+    for (let i = 0; i < 3; i++) {
+      const x = -62 + i * 62;
+      const spill = new Sprite(glowTexture(0xdfeeff));
+      spill.anchor.set(0.5);
+      spill.width = 128;
+      spill.height = 118;
+      spill.position.set(x, chuteY + 14);
+      spill.alpha = 0.3;
+      spill.blendMode = 'add';
+      container.addChild(spill);
+
+      const chute = new Graphics();
+      chute.roundRect(x - 21, chuteY, 42, 34, 4).fill({ color: 0x0a0d13 });
+      chute.roundRect(x - 17, chuteY + 4, 34, 26, 3).fill({ color: 0xd8e6f2 });
+      chute.roundRect(x - 17, chuteY + 4, 34, 8, 3).fill({ color: 0xffffff, alpha: 0.9 });
+      chute.roundRect(x - 21, chuteY, 42, 34, 4).stroke({
+        width: 1.4,
+        color: 0x66707e,
+        alpha: 0.8,
+      });
+      container.addChild(chute);
     }
 
     // Readout strip.
@@ -180,7 +215,9 @@ export class MachineStand {
       .lineTo(-250, y + 10)
       .closePath()
       .fill({ color: 0x2a3346 });
-    g.moveTo(-300, y + 58).lineTo(300, y + 58).stroke({ width: 2, color: COLOR_NEON, alpha: 0.25 });
+    g.moveTo(-300, y + 58).lineTo(300, y + 58).stroke({ width: 2, color: COLOR_NEON, alpha: 0.4 });
+    // Lit strip along the front lip of the plinth.
+    g.moveTo(-248, y + 4).lineTo(248, y + 4).stroke({ width: 3, color: 0xbfeaff, alpha: 0.5 });
     return g;
   }
 
@@ -190,7 +227,8 @@ export class MachineStand {
     glow.width = 560;
     glow.height = 140;
     glow.y = columnTop + 250;
-    glow.alpha = 0.16;
+    glow.alpha = 0.22;
+    glow.blendMode = 'add';
     return glow;
   }
 }

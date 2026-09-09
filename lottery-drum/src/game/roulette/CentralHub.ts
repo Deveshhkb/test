@@ -12,7 +12,7 @@ import {
   SPOKE_OUTER_RADIUS,
 } from '../GameConfig';
 import { TAU } from '../utils/math';
-import { glowTexture } from '../utils/TextureFactory';
+import { glowTexture, rodTexture } from '../utils/TextureFactory';
 
 /**
  * The agitator: hub, shaft collar, five spokes and the paddle blocks that scoop
@@ -28,11 +28,15 @@ export class CentralHub {
   constructor() {
     this.view.addChild(this.buildSpokes());
 
-    this.hotGlow = new Sprite(glowTexture(0xff8a4a));
+    // Kept tight to the boss. A wide additive glow here washes warm colour
+    // across the spokes and the whole pocket band at close-up, and the steel
+    // stops reading as steel.
+    this.hotGlow = new Sprite(glowTexture(0xffb070));
     this.hotGlow.anchor.set(0.5);
-    this.hotGlow.width = HUB_RADIUS * 5;
-    this.hotGlow.height = HUB_RADIUS * 5;
-    this.hotGlow.alpha = 0.3;
+    this.hotGlow.width = HUB_RADIUS * 2.4;
+    this.hotGlow.height = HUB_RADIUS * 2.4;
+    this.hotGlow.alpha = 0.22;
+    this.hotGlow.blendMode = 'add';
     this.view.addChild(this.hotGlow, this.buildHub());
   }
 
@@ -43,49 +47,42 @@ export class CentralHub {
   /** The hub lamp breathes; counter-rotated so it does not spin with the arm. */
   update(dt: number, speedFactor: number): void {
     this.glowPhase += dt * 2.2;
-    this.hotGlow.alpha = 0.22 + Math.sin(this.glowPhase) * 0.05 + speedFactor * 0.22;
+    this.hotGlow.alpha = 0.18 + Math.sin(this.glowPhase) * 0.03 + speedFactor * 0.12;
     this.hotGlow.rotation = -this.view.rotation;
   }
 
   private buildSpokes(): Container {
     const container = new Container();
-    const g = new Graphics();
     const half = SPOKE_HALF_WIDTH;
+    const texture = rodTexture(0x93a2b3);
 
     for (let i = 0; i < SPOKE_COUNT; i++) {
       const angle = (i / SPOKE_COUNT) * TAU;
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const ix = cos * SPOKE_INNER_RADIUS;
-      const iy = sin * SPOKE_INNER_RADIUS;
-      const ox = cos * SPOKE_OUTER_RADIUS;
-      const oy = sin * SPOKE_OUTER_RADIUS;
-      const nx = -sin;
-      const ny = cos;
+      const ix = Math.cos(angle) * SPOKE_INNER_RADIUS;
+      const iy = Math.sin(angle) * SPOKE_INNER_RADIUS;
+      const length = SPOKE_OUTER_RADIUS - SPOKE_INNER_RADIUS;
 
-      // Shadow side of the rod.
-      g.moveTo(ix + nx * half, iy + ny * half)
-        .lineTo(ox + nx * half, oy + ny * half)
-        .lineTo(ox - nx * half, oy - ny * half)
-        .lineTo(ix - nx * half, iy - ny * half)
-        .closePath()
-        .fill({ color: 0x5d6875 });
+      // Shadow the rod drops onto the playfield, offset toward the key light.
+      const drop = new Sprite(texture);
+      drop.anchor.set(0, 0.5);
+      drop.width = length;
+      drop.height = half * 2.6;
+      drop.position.set(ix + 4, iy + 6);
+      drop.rotation = angle;
+      drop.tint = 0x000000;
+      drop.alpha = 0.4;
+      container.addChild(drop);
 
-      // Lit face, offset toward the light.
-      g.moveTo(ix + nx * half * 0.15, iy + ny * half * 0.15)
-        .lineTo(ox + nx * half * 0.15, oy + ny * half * 0.15)
-        .lineTo(ox - nx * half * 0.8, oy - ny * half * 0.8)
-        .lineTo(ix - nx * half * 0.8, iy - ny * half * 0.8)
-        .closePath()
-        .fill({ color: 0xd9e2ec });
-
-      // Specular line down the crown of the rod.
-      g.moveTo(ix - nx * half * 0.35, iy - ny * half * 0.35)
-        .lineTo(ox - nx * half * 0.35, oy - ny * half * 0.35)
-        .stroke({ width: 1.6, color: 0xffffff, alpha: 0.75 });
+      // The rod itself: generated cylindrical shading stretched along its
+      // length, so the highlight lands where the key light actually is.
+      const rod = new Sprite(texture);
+      rod.anchor.set(0, 0.5);
+      rod.width = length;
+      rod.height = half * 2;
+      rod.position.set(ix, iy);
+      rod.rotation = angle;
+      container.addChild(rod);
     }
-
-    container.addChild(g);
 
     for (let i = 0; i < SPOKE_COUNT; i++) {
       const angle = (i / SPOKE_COUNT) * TAU;
@@ -99,10 +96,15 @@ export class CentralHub {
     const w = PADDLE_HALF_WIDTH;
     const h = PADDLE_HALF_LENGTH;
 
-    paddle.roundRect(-w, -h, w * 2, h * 2, 4).fill({ color: 0x8e9aa8 });
-    paddle.roundRect(-w, -h, w * 2 - 5, h * 2, 4).fill({ color: 0xeef3f8 });
-    paddle.roundRect(-w, -h, w * 2, h * 2, 4).stroke({ width: 1.4, color: 0x6b7684, alpha: 0.9 });
-    paddle.roundRect(-w + 2, -h + 3, 3, h * 2 - 6, 2).fill({ color: 0xffffff, alpha: 0.85 });
+    // Machined block: a dark side face, a lit top face and a bevel between
+    // them, so it reads as a solid with thickness rather than a rounded rect.
+    paddle.roundRect(-w, -h + 4, w * 2, h * 2, 4).fill({ color: 0x05080d, alpha: 0.55 });
+    paddle.roundRect(-w, -h, w * 2, h * 2, 4).fill({ color: 0x49535f });
+    paddle.roundRect(-w, -h, w * 2 - 6, h * 2, 4).fill({ color: 0xc6d2df });
+    paddle.roundRect(-w, -h, w * 2 - 6, h * 0.55, 4).fill({ color: 0xffffff, alpha: 0.72 });
+    paddle.roundRect(-w + 2, -h + 3, 2.5, h * 2 - 6, 2).fill({ color: 0xffffff, alpha: 0.9 });
+    paddle.roundRect(w - 4, -h + 3, 2, h * 2 - 6, 1).fill({ color: 0x62b4dc, alpha: 0.6 });
+    paddle.roundRect(-w, -h, w * 2, h * 2, 4).stroke({ width: 1, color: 0x141a23, alpha: 0.85 });
 
     paddle.position.set(
       Math.cos(angle) * (SPOKE_OUTER_RADIUS - 6),

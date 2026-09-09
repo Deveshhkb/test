@@ -26,6 +26,7 @@ export class ParticleSystem {
   constructor(capacity = 24, color = 0xd8e8ff) {
     for (let i = 0; i < capacity; i++) {
       const view = new Graphics().circle(0, 0, 1).fill({ color });
+      view.blendMode = 'add';
       view.visible = false;
       this.view.addChild(view);
       this.pool.push({ view, x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 1 });

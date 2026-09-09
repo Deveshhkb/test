@@ -10,6 +10,19 @@ import { Texture } from 'pixi.js';
  */
 const cache = new Map<string, Texture>();
 
+/**
+ * One lighting environment for the whole scene.
+ *
+ * The key is a hard white source above and to the left, as in the reference
+ * studio. The fill is the room itself: a dim cyan bounce that wraps the
+ * shadow side of everything. Every generated material reads these, so metal,
+ * glass and the balls all agree about where the light is coming from.
+ */
+export const KEY_DIR = { x: -0.55, y: -0.72 };
+export const KEY_COLOR = 0xffffff;
+export const FILL_COLOR = 0x2f7fa8;
+export const AMBIENT_COLOR = 0x0a1626;
+
 function makeCanvas(size: number): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -88,7 +101,7 @@ export function sphereTexture(base: number, shadow: number, resolution = 256): T
   );
   body.addColorStop(0, css(mixColor(base, 0xffffff, 0.42)));
   body.addColorStop(0.32, css(base));
-  body.addColorStop(0.72, css(mixColor(base, shadow, 0.7)));
+  body.addColorStop(0.68, css(mixColor(base, shadow, 0.78)));
   body.addColorStop(1, css(shadow));
   ctx.fillStyle = body;
   ctx.fillRect(0, 0, size, size);
@@ -107,10 +120,26 @@ export function sphereTexture(base: number, shadow: number, resolution = 256): T
   ctx.fillStyle = bounce;
   ctx.fillRect(0, 0, size, size);
 
-  // Rim light along the shadowed edge.
-  const rim = ctx.createRadialGradient(c, c, r * 0.82, c, c, r);
+  // Cyan fill from the room, wrapping the shadow side.
+  const fill = ctx.createRadialGradient(
+    c + r * 0.5,
+    c + r * 0.45,
+    r * 0.05,
+    c + r * 0.4,
+    c + r * 0.4,
+    r * 1.05,
+  );
+  fill.addColorStop(0, css(FILL_COLOR, 0.26));
+  fill.addColorStop(0.55, css(FILL_COLOR, 0.08));
+  fill.addColorStop(1, css(FILL_COLOR, 0));
+  ctx.fillStyle = fill;
+  ctx.fillRect(0, 0, size, size);
+
+  // Rim light along the shadowed edge, picking the silhouette out of the dark.
+  const rim = ctx.createRadialGradient(c, c, r * 0.8, c, c, r);
   rim.addColorStop(0, 'rgba(255,255,255,0)');
-  rim.addColorStop(1, 'rgba(210,228,255,0.4)');
+  rim.addColorStop(0.78, css(0x9fd8ff, 0.1));
+  rim.addColorStop(1, css(0xcfe6ff, 0.42));
   ctx.fillStyle = rim;
   ctx.fillRect(0, 0, size, size);
 
@@ -215,14 +244,20 @@ export function metalRingTexture(
   const sweep = ctx.createConicGradient
     ? ctx.createConicGradient(-Math.PI * 0.75, c, c)
     : ctx.createLinearGradient(0, 0, resolution, resolution);
+  // Turned metal has a narrow, very bright band where it faces the key light
+  // and falls away hard on either side. A gentle ramp reads as plastic.
   const stops: Array<[number, number]> = [
-    [0, mixColor(tint, 0xffffff, 0.42)],
-    [0.12, tint],
-    [0.28, mixColor(tint, 0x000000, 0.62)],
-    [0.45, mixColor(tint, 0xffffff, 0.14)],
-    [0.6, mixColor(tint, 0x000000, 0.68)],
-    [0.78, mixColor(tint, 0xffffff, 0.26)],
-    [1, mixColor(tint, 0xffffff, 0.42)],
+    [0, mixColor(tint, 0x000000, 0.72)],
+    [0.1, mixColor(tint, 0x000000, 0.5)],
+    [0.16, mixColor(tint, 0xffffff, 0.86)],
+    [0.2, mixColor(tint, 0xffffff, 0.34)],
+    [0.3, mixColor(tint, 0x000000, 0.55)],
+    [0.44, mixColor(tint, 0x000000, 0.78)],
+    [0.56, mixColor(tint, FILL_COLOR, 0.42)],
+    [0.66, mixColor(tint, 0xffffff, 0.5)],
+    [0.72, mixColor(tint, 0x000000, 0.35)],
+    [0.86, mixColor(tint, 0x000000, 0.74)],
+    [1, mixColor(tint, 0x000000, 0.72)],
   ];
   for (const [stop, color] of stops) sweep.addColorStop(stop, css(color));
   ctx.fillStyle = sweep;
@@ -257,6 +292,105 @@ export function verticalGradientTexture(top: number, bottom: number, height = 12
   gradient.addColorStop(1, css(bottom));
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 1, height);
+  return fromCanvas(key, canvas);
+}
+
+/**
+ * Soft dark ring, used as ambient occlusion where one part meets another.
+ * `softness` is the fraction of the radius the falloff occupies.
+ */
+export function occlusionRingTexture(softness = 0.35, strength = 0.75, resolution = 256): Texture {
+  const key = `ao:${softness}:${strength}:${resolution}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+
+  const { canvas, ctx } = makeCanvas(resolution);
+  const c = resolution / 2;
+  const gradient = ctx.createRadialGradient(c, c, c * (1 - softness), c, c, c);
+  gradient.addColorStop(0, 'rgba(0,0,0,0)');
+  gradient.addColorStop(0.75, `rgba(0,0,0,${strength * 0.5})`);
+  gradient.addColorStop(1, `rgba(0,0,0,${strength})`);
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(c, c, c, 0, Math.PI * 2);
+  ctx.fill();
+  return fromCanvas(key, canvas);
+}
+
+/**
+ * Screen vignette. Painted over the finished frame, it is what stops a scene
+ * built from flat shapes reading as evenly lit poster art: the corners fall
+ * away and attention lands on the machine.
+ */
+export function vignetteTexture(strength = 0.8, inner = 0.32, resolution = 512): Texture {
+  const key = `vignette:${strength}:${inner}:${resolution}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+
+  const { canvas, ctx } = makeCanvas(resolution);
+  const c = resolution / 2;
+  const gradient = ctx.createRadialGradient(c, c, c * inner, c, c, c * 0.95);
+  gradient.addColorStop(0, 'rgba(0,0,0,0)');
+  gradient.addColorStop(0.55, `rgba(2,5,10,${strength * 0.22})`);
+  gradient.addColorStop(0.82, `rgba(2,5,10,${strength * 0.62})`);
+  gradient.addColorStop(1, `rgba(1,3,7,${strength})`);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, resolution, resolution);
+  return fromCanvas(key, canvas);
+}
+
+/**
+ * A lit acrylic panel: bright along one edge, falling to near nothing across
+ * its width. The chevron light guides in the reference set are stacks of these.
+ */
+export function edgeLitPanelTexture(color: number, resolution = 128): Texture {
+  const key = `edgelit:${color}:${resolution}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = resolution;
+  canvas.height = 1;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2D canvas context unavailable');
+
+  const gradient = ctx.createLinearGradient(0, 0, resolution, 0);
+  gradient.addColorStop(0, css(mixColor(color, 0xffffff, 0.9), 1));
+  gradient.addColorStop(0.035, css(mixColor(color, 0xffffff, 0.5), 0.8));
+  gradient.addColorStop(0.12, css(color, 0.24));
+  gradient.addColorStop(0.4, css(color, 0.07));
+  gradient.addColorStop(1, css(color, 0));
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, resolution, 1);
+  return fromCanvas(key, canvas);
+}
+
+/**
+ * Anisotropic highlight for a cylindrical rod: dark edges, one bright specular
+ * line offset toward the key light. Stretched along a bar it reads as machined
+ * steel rather than a flat stroke.
+ */
+export function rodTexture(tint: number, resolution = 64): Texture {
+  const key = `rod:${tint}:${resolution}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = resolution;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2D canvas context unavailable');
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, resolution);
+  gradient.addColorStop(0, css(mixColor(tint, 0x000000, 0.55)));
+  gradient.addColorStop(0.14, css(mixColor(tint, 0xffffff, 0.4)));
+  gradient.addColorStop(0.3, css(mixColor(tint, 0xffffff, 0.98)));
+  gradient.addColorStop(0.44, css(mixColor(tint, 0xffffff, 0.32)));
+  gradient.addColorStop(0.64, css(tint));
+  gradient.addColorStop(0.85, css(mixColor(tint, FILL_COLOR, 0.55)));
+  gradient.addColorStop(1, css(mixColor(tint, 0x000000, 0.6)));
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 1, resolution);
   return fromCanvas(key, canvas);
 }
 

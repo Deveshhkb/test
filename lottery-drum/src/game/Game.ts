@@ -12,6 +12,7 @@ import {
 } from './GameConfig';
 import { GameLoop } from './GameLoop';
 import { AudioSystem } from './audio/AudioSystem';
+import { AtmosphereLayer } from './effects/AtmosphereLayer';
 import { Camera } from './camera/Camera';
 import { GlowEffect } from './effects/GlowEffect';
 import { Environment } from './environment/Environment';
@@ -41,6 +42,7 @@ const FONT_STACK = 'Inter, "Helvetica Neue", Helvetica, Arial, sans-serif';
  *       overlay.numeral   large translucent result numeral
  *       overlay.pill      the "Hasil" readout
  *       debug             collision shapes
+ *     atmosphere          key wash, depth haze and vignette, frame-locked
  */
 export class Game {
   readonly bus = new EventBus<GameEvents>();
@@ -56,6 +58,7 @@ export class Game {
   private environment!: Environment;
   private machine!: RouletteMachine;
   private overlay!: ResultOverlay;
+  private atmosphere!: AtmosphereLayer;
   private glow!: GlowEffect;
   private physics!: RoulettePhysics;
   private camera!: Camera;
@@ -163,7 +166,10 @@ export class Game {
       this.overlay.pillLayer,
     );
 
-    this.root.addChild(this.cameraLayer);
+    // Sits outside the camera transform so it stays locked to the frame while
+    // the camera dollies, the way a lens effect would.
+    this.atmosphere = new AtmosphereLayer();
+    this.root.addChild(this.cameraLayer, this.atmosphere.view);
     this.app.stage.addChild(this.root);
   }
 
@@ -206,6 +212,7 @@ export class Game {
     }
 
     this.environment.update(dt);
+    this.atmosphere.update(dt);
     this.glow.update(dt);
     this.camera.update(dt);
     this.debug.update();
