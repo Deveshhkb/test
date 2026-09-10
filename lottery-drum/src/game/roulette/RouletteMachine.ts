@@ -36,6 +36,15 @@ export class RouletteMachine {
   readonly particles = new ParticleSystem();
   /** Soft light under a seating ball; sits below the balls so it never veils one. */
   readonly seatGlow = new GlowEffect(0x9fe4ff);
+  /**
+   * The return channel lighting up as the mechanism takes the ball back. In the
+   * reference this is the loudest part of the whole return: a wide blue bloom
+   * fills the lower drum a frame after the ball leaves its holder, peaks, and is
+   * gone about a quarter of a second later. It sits behind the balls, so the
+   * departing ball reads as a dark silhouette against it exactly as it does
+   * there.
+   */
+  readonly returnGlow = new GlowEffect(0x4fa8ff, 2);
 
   readonly ballShadowLayer = new Container();
   readonly ballTrailLayer = new Container();
@@ -51,6 +60,7 @@ export class RouletteMachine {
       this.glass.back,
       this.wheel.rotatingLayer,
       this.seatGlow.view,
+      this.returnGlow.view,
       this.ballShadowLayer,
       this.ballTrailLayer,
       this.ballLayer,
@@ -74,5 +84,6 @@ export class RouletteMachine {
     this.stand.update(dt);
     this.particles.update(dt);
     this.seatGlow.update(dt);
+    this.returnGlow.update(dt);
   }
 }

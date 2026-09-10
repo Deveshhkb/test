@@ -172,13 +172,18 @@ export const RELEASE_OMEGA_FORCE = 0.6;
 /**
  * Mechanism engagement, before the ball leaves the holder.
  *
- * The reference frames show the ball spinning up on the spot first: over four
- * frames its printed number whirls round and blurs while the ball itself stays
- * seated, and only then does it rise. That spin-up is the mechanism taking hold,
- * and it happens while the result is still up, before the camera pulls back.
+ * The reference frames show the ball spinning up on the spot first: its printed
+ * number whirls round and blurs while the ball itself stays seated, and only
+ * then does it rise. That spin-up is the mechanism taking hold, and it happens
+ * while the result is still up, before the camera pulls back.
+ *
+ * Measured across reference frames 045-049, the face is sharp at 046, tilting
+ * at 047, fully wrapped round at 048 and the ball is off its holder by 049. At
+ * 24 fps that is two frames of spin-up, and roughly half a turn inside the
+ * first of them - a short, violent take-up rather than a slow wind-on.
  */
-export const LIFT_SPINUP_TIME = 0.35;
-export const LIFT_SPINUP_SPIN = 20;
+export const LIFT_SPINUP_TIME = 0.1;
+export const LIFT_SPINUP_SPIN = 42;
 /** Distance over which the ball recedes into the core before it is gone. */
 export const CORE_ENTRY_DEPTH = 74;
 /** Acceleration once the mechanism has the ball, px/s^2. */

@@ -165,6 +165,7 @@ export class DrawSequenceSystem {
     this.engageElapsed = -1;
     this.machine.particles.reset();
     this.machine.seatGlow.reset();
+    this.machine.returnGlow.reset();
     this.glow.reset();
     this.machine.arm.stow(0.35);
   }
@@ -468,8 +469,13 @@ export class DrawSequenceSystem {
     this.liftElapsed = 0;
     this.engageElapsed = -1;
 
-    // The release port lights as the mechanism takes the ball.
-    this.machine.seatGlow.pulse(body.position.x, body.position.y, 70, 300, 0.9);
+    // The release port lights as the mechanism takes the ball: a wide blue
+    // bloom over the lower drum, ramping in over the first frames of the rise
+    // and gone a quarter of a second later, as in reference frames 051-056.
+    this.machine.returnGlow.pulse(body.position.x, body.position.y, 150, 520, 0.34, {
+      intensity: 0.9,
+      attack: 0.08,
+    });
     this.machine.arm.setLit(false);
   }
 

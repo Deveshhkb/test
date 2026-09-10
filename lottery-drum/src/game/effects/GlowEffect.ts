@@ -7,6 +7,15 @@ interface Pulse {
   maxLife: number;
   fromSize: number;
   toSize: number;
+  intensity: number;
+  attack: number;
+}
+
+export interface PulseOptions {
+  /** Peak alpha. */
+  intensity?: number;
+  /** Seconds spent ramping up to that peak. 0 flashes on instantly. */
+  attack?: number;
 }
 
 /**
@@ -26,11 +35,26 @@ export class GlowEffect {
       sprite.blendMode = 'add';
       sprite.visible = false;
       this.view.addChild(sprite);
-      this.pool.push({ sprite, life: 0, maxLife: 1, fromSize: 0, toSize: 0 });
+      this.pool.push({
+        sprite,
+        life: 0,
+        maxLife: 1,
+        fromSize: 0,
+        toSize: 0,
+        intensity: 0.55,
+        attack: 0,
+      });
     }
   }
 
-  pulse(x: number, y: number, fromSize: number, toSize: number, duration: number): void {
+  pulse(
+    x: number,
+    y: number,
+    fromSize: number,
+    toSize: number,
+    duration: number,
+    options: PulseOptions = {},
+  ): void {
     const free = this.pool.find((p) => p.life <= 0);
     if (!free) return;
     free.sprite.position.set(x, y);
@@ -39,6 +63,8 @@ export class GlowEffect {
     free.maxLife = duration;
     free.fromSize = fromSize;
     free.toSize = toSize;
+    free.intensity = options.intensity ?? 0.55;
+    free.attack = options.attack ?? 0;
   }
 
   update(dt: number): void {
@@ -53,7 +79,10 @@ export class GlowEffect {
       const size = pulse.fromSize + (pulse.toSize - pulse.fromSize) * t;
       pulse.sprite.width = size;
       pulse.sprite.height = size;
-      pulse.sprite.alpha = (1 - t) * 0.55;
+      // With no attack this is the original instant flash, so the pulse the
+      // ball fires when it seats is unchanged.
+      const rise = pulse.attack > 0 ? Math.min((t * pulse.maxLife) / pulse.attack, 1) : 1;
+      pulse.sprite.alpha = rise * (1 - t) * pulse.intensity;
     }
   }
 
