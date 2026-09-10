@@ -101,7 +101,7 @@ export class RoulettePhysics {
 
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i];
-      if (!body.active || body.invMass === 0) continue;
+      if (!body.active || body.invMass === 0 || body.lifting) continue;
       body.previousPosition.copyFrom(body.position);
       body.velocity.y += GRAVITY * h;
       body.velocity.scale(damping);
@@ -115,10 +115,10 @@ export class RoulettePhysics {
       // Ball vs ball. 18 bodies means 153 pairs, cheaper than any broadphase.
       for (let i = 0; i < bodies.length; i++) {
         const a = bodies[i];
-        if (!a.active) continue;
+        if (!a.active || a.lifting) continue;
         for (let j = i + 1; j < bodies.length; j++) {
           const b = bodies[j];
-          if (!b.active) continue;
+          if (!b.active || b.lifting) continue;
           if (resolveBallPair(a, b, BALL_RESTITUTION, BALL_FRICTION) > 0) contacts++;
         }
       }
@@ -129,7 +129,7 @@ export class RoulettePhysics {
       // reason - so it no longer collides with any of it.
       for (let i = 0; i < bodies.length; i++) {
         const body = bodies[i];
-        if (!body.active || body.invMass === 0 || body.settling) continue;
+        if (!body.active || body.invMass === 0 || body.settling || body.lifting) continue;
         this.resolveHub(body);
       }
 
@@ -137,7 +137,7 @@ export class RoulettePhysics {
       this.writeSpokeAngles();
       for (let i = 0; i < bodies.length; i++) {
         const body = bodies[i];
-        if (!body.active || body.invMass === 0 || body.settling) continue;
+        if (!body.active || body.invMass === 0 || body.settling || body.lifting) continue;
         for (let s = 0; s < SPOKE_COUNT; s++) {
           const angle = this.spokeAngles[s];
           const cos = Math.cos(angle);
@@ -180,14 +180,14 @@ export class RoulettePhysics {
       // has to climb over, and what finally holds it in one pocket.
       for (let i = 0; i < bodies.length; i++) {
         const body = bodies[i];
-        if (!body.active || body.invMass === 0 || !body.settling) continue;
+        if (!body.active || body.invMass === 0 || !body.settling || body.lifting) continue;
         if (this.resolvePocketFrets(body, h)) contacts++;
       }
 
       // Outer containment last so nothing ever ends a step outside the glass.
       for (let i = 0; i < bodies.length; i++) {
         const body = bodies[i];
-        if (!body.active || body.invMass === 0) continue;
+        if (!body.active || body.invMass === 0 || body.lifting) continue;
 
         if (body.settling) {
           const impulse = resolveCircularWallFriction(
@@ -230,7 +230,7 @@ export class RoulettePhysics {
     const angularDecay = Math.exp(-ANGULAR_DAMPING * h);
     for (let i = 0; i < bodies.length; i++) {
       const body = bodies[i];
-      if (!body.active || body.invMass === 0) continue;
+      if (!body.active || body.invMass === 0 || body.lifting) continue;
 
       if (!body.settling) {
         // Balls in the churn take their roll from how far they travelled,

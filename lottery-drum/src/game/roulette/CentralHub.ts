@@ -4,6 +4,7 @@ import {
   COLOR_GOLD_DEEP,
   COLOR_STEEL,
   HUB_RADIUS,
+  HUB_VISUAL_RADIUS,
   PADDLE_HALF_LENGTH,
   PADDLE_HALF_WIDTH,
   SPOKE_COUNT,
@@ -118,7 +119,7 @@ export class CentralHub {
     const g = new Graphics();
     const r = HUB_RADIUS;
 
-    g.circle(0, 0, r + 4).fill({ color: 0x0c0d11, alpha: 0.9 });
+    g.circle(0, 0, HUB_VISUAL_RADIUS).fill({ color: 0x0c0d11, alpha: 0.9 });
     g.circle(0, 0, r).fill({ color: 0xa8302a });
     g.circle(0, 0, r).stroke({ width: 1.5, color: 0x5e1310, alpha: 0.9 });
     g.circle(0, 0, r - 6).fill({ color: COLOR_GOLD_DEEP });

@@ -3,6 +3,7 @@ import {
   CAM_CLOSE_FOCUS_Y,
   CAM_CLOSE_ZOOM,
   DEFAULT_RESULT,
+  HUB_VISUAL_RADIUS,
   MACHINE_X,
   NUMBER_MAX,
   NUMBER_MIN,
@@ -10,6 +11,13 @@ import {
   RELEASE_ANGLE,
   RELEASE_ARC,
   RELEASE_OMEGA,
+  LIFT_ACCELERATION,
+  LIFT_ENGAGE_SPEED,
+  LIFT_ENGAGE_TIME,
+  LIFT_MAX_SPEED,
+  LIFT_SPIN,
+  LIFT_VIBRATION,
+  LIFT_VIBRATION_RATE,
   RELEASE_OMEGA_FORCE,
   SPIN_TARGET_SPEED,
   T_ARM_SWING,
@@ -66,6 +74,8 @@ export class DrawSequenceSystem {
   private parked = false;
   private parkLocalAngle = 0;
   private parkLocalRadius = 0;
+  /** Seconds since the return mechanism engaged; negative while it has not. */
+  private liftElapsed = -1;
 
   private readonly drain: DrainRecord[] = [];
   private readonly rng = new Rng();
@@ -146,6 +156,7 @@ export class DrawSequenceSystem {
 
     this.winner = null;
     this.parked = false;
+    this.liftElapsed = -1;
     this.machine.particles.reset();
     this.machine.seatGlow.reset();
     this.glow.reset();
@@ -234,6 +245,7 @@ export class DrawSequenceSystem {
         this.overlay.setReveal(easeOutCubic(clamp(this.elapsed / REVEAL_MORPH, 0, 1)));
         if (this.elapsed >= T_REVEAL_HOLD) {
           this.camera.dollyToWide(T_RETURN, easeInOutCubic);
+          this.beginReturnLift();
           // The arm stays on the drawn pocket and only dims: it marks the
           // result until the next draw stows it. Calling stow() here would be
           // undone every frame by followParkedPocket, which owns the angle
@@ -247,6 +259,7 @@ export class DrawSequenceSystem {
         const t = clamp(this.elapsed / T_RETURN, 0, 1);
         this.overlay.setReveal(1 - easeInCubic(clamp(this.elapsed / (T_RETURN * 0.6), 0, 1)));
         this.overlay.setBigNumeralAlpha(easeOutQuart(t) * 0.78);
+        this.updateReturnLift(dt);
         if (this.elapsed >= T_RETURN) this.setState('idle');
         break;
       }
@@ -382,12 +395,106 @@ export class DrawSequenceSystem {
    * so this reproduces where the ball actually stopped rather than moving it.
    */
   followParkedPocket(): void {
-    if (!this.parked || !this.winner) return;
+    if (!this.parked || !this.winner || this.winner.body.lifting) return;
     const angle = this.parkLocalAngle + this.getDrumAngle();
     const x = Math.cos(angle) * this.parkLocalRadius;
     const y = Math.sin(angle) * this.parkLocalRadius;
     this.winner.body.position.set(x, y);
     this.machine.arm.swingTo(angle, 0.08);
+  }
+
+  /**
+   * Hands the settled ball to the return mechanism.
+   *
+   * In the reference the ball sits in its pocket for about 2.2 seconds and then
+   * leaves it as the camera begins pulling back, drawn up into the machine's
+   * core and out of sight roughly two thirds of a second later. It is taken off
+   * the track here - the solver stops touching it - and driven by the lift
+   * below, so none of the fall or settle behaviour is affected.
+   */
+  private beginReturnLift(): void {
+    const winner = this.winner;
+    if (!winner) return;
+
+    const body = winner.body;
+    body.lifting = true;
+    body.invMass = 1;
+    body.velocity.set(0, 0);
+    this.liftElapsed = 0;
+
+    // The release port lights as the mechanism takes the ball.
+    this.machine.seatGlow.pulse(body.position.x, body.position.y, 70, 300, 0.9);
+    this.machine.arm.setLit(false);
+  }
+
+  /**
+   * Drives the ball up the return channel.
+   *
+   * Velocity based and delta timed throughout: the mechanism takes up its slack
+   * as a slow creep, then accelerates the ball along the channel toward the
+   * machine's core, adding the shake of a driven part and the spin the channel
+   * imparts. Nothing here interpolates between two points.
+   */
+  private updateReturnLift(dt: number): void {
+    const winner = this.winner;
+    if (!winner || this.liftElapsed < 0) return;
+
+    const body = winner.body;
+    if (!body.lifting) return;
+
+    this.liftElapsed += dt;
+
+    // The channel runs from the pocket toward the centre of the machine, so the
+    // drive direction is simply radially inward from wherever the ball settled.
+    const distance = Math.hypot(body.position.x, body.position.y);
+    if (distance < 1e-4) return;
+    const inwardX = -body.position.x / distance;
+    const inwardY = -body.position.y / distance;
+
+    if (this.liftElapsed < LIFT_ENGAGE_TIME) {
+      // Take-up: the ball barely moves while the mechanism closes on it.
+      body.velocity.set(inwardX * LIFT_ENGAGE_SPEED, inwardY * LIFT_ENGAGE_SPEED);
+    } else {
+      body.velocity.x += inwardX * LIFT_ACCELERATION * dt;
+      body.velocity.y += inwardY * LIFT_ACCELERATION * dt;
+
+      const speed = body.speed;
+      if (speed > LIFT_MAX_SPEED) {
+        const scale = LIFT_MAX_SPEED / speed;
+        body.velocity.x *= scale;
+        body.velocity.y *= scale;
+      }
+    }
+
+    body.position.addScaled(body.velocity, dt);
+
+    // Shake of a driven mechanism, across the channel rather than along it.
+    const wobble = Math.sin(this.liftElapsed * LIFT_VIBRATION_RATE) * LIFT_VIBRATION;
+    body.position.add(-inwardY * wobble, inwardX * wobble);
+
+    // The channel spins the ball as it goes.
+    body.angularVelocity = LIFT_SPIN;
+    body.rotation += body.angularVelocity * dt;
+
+    // It disappears because the hub covers it, not because it is switched off:
+    // the agitator draws over the ball layer, so once the ball is far enough in
+    // for the boss to cover it completely there is nothing left to see. Tested
+    // against the position after the move, and against the ball's whole
+    // silhouette rather than its centre - hiding it as soon as its centre
+    // reached the boss would pop, because most of the ball is still outside it.
+    const remaining = Math.hypot(body.position.x, body.position.y);
+    if (remaining + BALL_RADIUS <= HUB_VISUAL_RADIUS) {
+      winner.setVisible(false);
+      body.lifting = false;
+      this.liftElapsed = -1;
+      // The ball has left the drum, so it leaves the simulation too: parked
+      // would let the pocket follower drag it back down, and leaving it active
+      // would have an invisible ball falling around inside the empty machine.
+      this.parked = false;
+      body.active = false;
+      body.velocity.set(0, 0);
+      body.angularVelocity = 0;
+    }
   }
 
   private setState(next: GameState): void {

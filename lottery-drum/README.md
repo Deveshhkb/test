@@ -215,6 +215,26 @@ The solver works in machine-local space, where the origin is the wheel centre.
   centre and wedge the ball in the V between two of them, holding it by geometry
   alone even off the top of the wheel.
 
+## Return lift
+
+After the hold, the drawn ball is taken off the track by the return mechanism
+and drawn up into the machine's core. It is velocity driven throughout: a slow
+take-up while the mechanism closes on the ball, then acceleration along the
+channel toward the centre, with the shake of a driven part and the spin the
+channel imparts. Nothing interpolates between two points.
+
+Timings come from the reference clip read frame by frame at 24 fps: the ball
+sits in its pocket from frame 106 to frame 160 (4.42s to 6.67s, a hold of about
+2.2s), then leaves and is gone by frame 176 (7.33s). The lift runs concurrently
+with the camera pulling back, as it does in the reference, and completes in
+about 0.55s against the reference's 0.67s.
+
+It disappears by occlusion, not by being switched off: the agitator draws over
+the ball layer, and the ball is hidden only once its whole silhouette is inside
+the hub boss. Testing the centre instead would pop, because most of the ball is
+still outside the boss at that point. Once gone it leaves the simulation, so no
+invisible ball falls around inside the empty machine.
+
 ## Draw sequence
 
 `idle → spinning → draining → settling → revealing → returning → idle`

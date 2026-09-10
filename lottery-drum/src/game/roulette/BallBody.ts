@@ -21,6 +21,12 @@ export class BallBody {
    * the wall the instant the drum stops.
    */
   settling = false;
+  /**
+   * True while the return mechanism has hold of the ball. It is then off the
+   * track entirely - inside the return channel - so the solver leaves it alone
+   * and the draw sequence drives it directly.
+   */
+  lifting = false;
   /** How long the body has continuously met the at-rest thresholds. */
   restTimer = 0;
 
@@ -40,6 +46,7 @@ export class BallBody {
     this.invMass = 1;
     this.active = true;
     this.settling = false;
+    this.lifting = false;
     this.restTimer = 0;
   }
 

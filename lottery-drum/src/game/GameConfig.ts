@@ -40,6 +40,8 @@ export const POCKET_SEAT_RADIUS = 200;
 export const POCKET_COUNT = 18;
 
 export const HUB_RADIUS = 34;
+/** Outer radius the hub boss is actually drawn to, which is what occludes. */
+export const HUB_VISUAL_RADIUS = HUB_RADIUS + 4;
 export const SPOKE_COUNT = 5;
 export const SPOKE_HALF_WIDTH = 6;
 export const SPOKE_INNER_RADIUS = HUB_RADIUS + 2;
@@ -156,6 +158,29 @@ export const RELEASE_ANGLE = -0.75;
 export const RELEASE_ARC = 0.95;
 /** If the wheel has all but stopped, release wherever the ball happens to be. */
 export const RELEASE_OMEGA_FORCE = 0.6;
+
+// ---------------------------------------------------------------------------
+// Return lift
+//
+// Timed off the reference clip frame by frame. The drawn ball sits in its
+// pocket from frame 106 to frame 160 (4.42s to 6.67s, a hold of about 2.2s),
+// then leaves the pocket and is drawn up into the machine's core, gone by
+// frame 176 (7.33s). The lift runs concurrently with the camera pulling back,
+// exactly as it does in the reference.
+// ---------------------------------------------------------------------------
+
+/** Mechanism take-up before the ball actually moves, in seconds. */
+export const LIFT_ENGAGE_TIME = 0.12;
+/** Creep speed during take-up, px/s. */
+export const LIFT_ENGAGE_SPEED = 26;
+/** Acceleration once the mechanism has the ball, px/s^2. */
+export const LIFT_ACCELERATION = 1400;
+export const LIFT_MAX_SPEED = 1350;
+/** Amplitude and rate of the mechanical shake while the lift runs. */
+export const LIFT_VIBRATION = 1.4;
+export const LIFT_VIBRATION_RATE = 47;
+/** Spin imparted by the return channel, rad/s. */
+export const LIFT_SPIN = 7.5;
 
 // ---------------------------------------------------------------------------
 // Spin ramps, radians per second
