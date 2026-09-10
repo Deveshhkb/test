@@ -18,7 +18,6 @@ export interface DebugSnapshot {
   progress: number;
   drumOmega: number;
   drumAngle: number;
-  armAngle: number;
   zoom: number;
   activeBalls: number;
   contacts: number;

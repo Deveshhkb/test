@@ -45,7 +45,7 @@ export class CentralHub {
     this.view.rotation = angle;
   }
 
-  /** The hub lamp breathes; counter-rotated so it does not spin with the arm. */
+  /** The hub lamp breathes; counter-rotated so it does not spin with the spokes. */
   update(dt: number, speedFactor: number): void {
     this.glowPhase += dt * 2.2;
     this.hotGlow.alpha = 0.18 + Math.sin(this.glowPhase) * 0.03 + speedFactor * 0.12;

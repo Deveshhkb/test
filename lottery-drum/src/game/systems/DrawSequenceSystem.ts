@@ -20,7 +20,6 @@ import {
   LIFT_VIBRATION_RATE,
   RELEASE_OMEGA_FORCE,
   SPIN_TARGET_SPEED,
-  T_ARM_SWING,
   T_DRAIN,
   T_RETURN,
   T_REVEAL_HOLD,
@@ -167,7 +166,6 @@ export class DrawSequenceSystem {
     this.machine.seatGlow.reset();
     this.machine.returnGlow.reset();
     this.glow.reset();
-    this.machine.arm.stow(0.35);
   }
 
   /** Starts a draw. `forced` pins the result; otherwise it is drawn at random. */
@@ -203,7 +201,6 @@ export class DrawSequenceSystem {
     this.parked = false;
 
     this.spin.spinUp();
-    this.machine.arm.stow(0.4);
     // One continuous push-in through the spin and into the drain.
     this.camera.dollyToClose(T_SPIN + T_DRAIN, easeInOutCubic);
 
@@ -256,11 +253,6 @@ export class DrawSequenceSystem {
         if (this.elapsed >= T_REVEAL_HOLD) {
           this.camera.dollyToWide(T_RETURN, easeInOutCubic);
           this.beginReturnLift();
-          // The arm stays on the drawn pocket and only dims: it marks the
-          // result until the next draw stows it. Calling stow() here would be
-          // undone every frame by followParkedPocket, which owns the angle
-          // while a ball is parked.
-          this.machine.arm.setLit(false);
           this.setState('returning');
         }
         break;
@@ -390,10 +382,6 @@ export class DrawSequenceSystem {
     this.machine.seatGlow.pulse(x, y, 50, 190, 0.55);
     this.camera.shake.kick(2.2, 0.22);
 
-    // The indicator arm swings across and lights on the seated ball.
-    this.machine.arm.swingTo(Math.atan2(y, x), T_ARM_SWING);
-    this.machine.arm.setLit(true);
-
     // Ease the framing onto the pocket. Only part of the way in x, so the move
     // reads as the operator re-framing rather than a snap.
     this.camera.focusOn(MACHINE_X + x * 0.55, CAM_CLOSE_FOCUS_Y, CAM_CLOSE_ZOOM, 0.5);
@@ -410,7 +398,6 @@ export class DrawSequenceSystem {
     const x = Math.cos(angle) * this.parkLocalRadius;
     const y = Math.sin(angle) * this.parkLocalRadius;
     this.winner.body.position.set(x, y);
-    this.machine.arm.swingTo(angle, 0.08);
   }
 
   /**
@@ -476,7 +463,6 @@ export class DrawSequenceSystem {
       intensity: 0.9,
       attack: 0.08,
     });
-    this.machine.arm.setLit(false);
   }
 
   /**

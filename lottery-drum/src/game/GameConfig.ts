@@ -50,10 +50,6 @@ export const SPOKE_OUTER_RADIUS = 214;
 export const PADDLE_HALF_LENGTH = 18;
 export const PADDLE_HALF_WIDTH = 11;
 
-/** The pointer arm that swings over to mark the drawn pocket. */
-export const ARM_LENGTH = 160;
-export const ARM_PIVOT_RADIUS = 20;
-export const ARM_REST_ANGLE = -Math.PI / 2;
 
 // ---------------------------------------------------------------------------
 // Balls
@@ -212,8 +208,6 @@ export const T_SPIN = 3.5;
 export const T_DRAIN = 0.9;
 export const T_REVEAL_HOLD = 1.6;
 export const T_RETURN = 1.4;
-/** How long the pointer arm takes to swing onto the drawn pocket. */
-export const T_ARM_SWING = 0.65;
 
 // ---------------------------------------------------------------------------
 // Camera

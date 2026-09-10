@@ -48,7 +48,6 @@ src/
       RouletteWheel.ts           chassis, collar, playfield, pockets, rings
       GlassHousing.ts            far wall, near wall, specular, fresnel
       CentralHub.ts              hub, spokes, paddles
-      MechanicalArm.ts           independent indicator arm
       MachineStand.ts            yoke, column, control panel, plinth
       RouletteBall.ts            lit sphere, printed face, shadow, trail
       RoulettePhysics.ts         fixed-step solver
@@ -85,7 +84,6 @@ to front:
 | `seatGlow` | no | soft light behind a seating ball |
 | ball shadows / trails / balls | no | contact shadows, motion-blur ghosts, spheres |
 | `hub` | yes | spokes and paddle blocks, drawn over the balls |
-| `arm` | independently | indicator arm and fork claw |
 | `particles` | no | seat dust |
 | `glass.front` | no | near wall, refraction band, specular sweeps, loader cap |
 
@@ -94,9 +92,6 @@ opening sits a little up and right of the near one, and the thickness of the
 tube shows as a lit crescent along the lower left. That crescent, the clear
 acrylic flange around the rim, and the loader block on top are what give the
 machine a back for the eye to read depth against.
-
-The arm is aimed by the draw sequence, not carried round by the agitator, so the
-two rotate independently exactly as they do in the reference.
 
 ## Rendering and lighting
 
@@ -123,7 +118,7 @@ Three things carry most of the realism:
   every surface competes and nothing reads as lit.
 * **Contact is shaded.** Parts that touch darken toward each other - an
   occlusion ring where the glass meets the chassis, drop shadows under the
-  spokes and the indicator arm, and a contact shadow under every ball.
+  spokes, and a contact shadow under every ball.
 
 The far band of the room is blurred for depth of field, then baked once through
 `renderer.generateTexture` with an explicit frame, since nothing in it animates.
@@ -146,7 +141,7 @@ cannot express:
   where the ring faces the key light and a hard falloff either side. A gentle
   ramp reads as plastic.
 * **Cylindrical rods** — the anisotropic highlight that makes the agitator
-  spokes and the indicator arm read as machined bar rather than flat strokes.
+  spokes read as machined bar rather than flat strokes.
 * **Edge-lit panels** — a narrow hot line with a wide dim body, for the acrylic
   light guides on the side walls.
 * **Soft glows, occlusion rings and contact shadows** — radial falloffs for
@@ -274,7 +269,7 @@ pitch-tracked loops, master volume and mute. Register a buffer against a
 Press `D`. The overlay draws the collision shapes the solver actually uses —
 containment circle, hub, every spoke and paddle capsule, pocket seat ring, ball
 radii and velocity vectors — and the panel reports frame rate, simulation delta,
-phase and progress, camera zoom, drum angle and angular velocity, arm angle,
+phase and progress, camera zoom, drum angle and angular velocity,
 contact count, substeps, and the winning ball's position and velocity.
 
 Frame rate is measured from the *unclamped* delta. Deriving it from the clamped

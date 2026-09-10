@@ -5,7 +5,6 @@ import { ParticleSystem } from '../effects/ParticleSystem';
 import { CentralHub } from './CentralHub';
 import { GlassHousing } from './GlassHousing';
 import { MachineStand } from './MachineStand';
-import { MechanicalArm } from './MechanicalArm';
 import { RouletteWheel } from './RouletteWheel';
 
 /**
@@ -21,7 +20,6 @@ import { RouletteWheel } from './RouletteWheel';
  *   ballTrails      - motion-blur ghosts
  *   balls           - the balls themselves
  *   hub             - agitator spokes and paddles, over the balls
- *   arm             - indicator arm, over the agitator
  *   particles       - seat dust
  *   glass.front     - near wall, specular sweeps, fresnel
  */
@@ -32,7 +30,6 @@ export class RouletteMachine {
   readonly wheel: RouletteWheel;
   readonly glass = new GlassHousing();
   readonly hub = new CentralHub();
-  readonly arm = new MechanicalArm();
   readonly particles = new ParticleSystem();
   /** Soft light under a seating ball; sits below the balls so it never veils one. */
   readonly seatGlow = new GlowEffect(0x9fe4ff);
@@ -65,21 +62,16 @@ export class RouletteMachine {
       this.ballTrailLayer,
       this.ballLayer,
       this.hub.view,
-      this.arm.view,
       this.particles.view,
       this.glass.front,
     );
   }
 
-  /**
-   * Drives the parts that follow the drum. The arm is deliberately excluded:
-   * it is aimed by the draw sequence, not carried round by the agitator.
-   */
+  /** Drives the parts that follow the drum. */
   update(dt: number, drumAngle: number, drumOmega: number): void {
     this.wheel.setRotation(drumAngle);
     this.hub.setRotation(drumAngle);
     this.hub.update(dt, Math.min(Math.abs(drumOmega) / 8, 1));
-    this.arm.update(dt);
     this.glass.update(dt);
     this.stand.update(dt);
     this.particles.update(dt);

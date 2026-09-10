@@ -38,7 +38,7 @@ const FONT_STACK = 'Inter, "Helvetica Neue", Helvetica, Arial, sans-serif';
  *   root                  letterbox fit of the 1918x980 design space
  *     camera              dolly transform about a world focus point
  *       environment       room, LED wall, light blades, wall monitors, floor
- *       machine           stand, wheel layers, glass, balls, hub, arm
+ *       machine           stand, wheel layers, glass, balls, hub
  *       overlay.numeral   large translucent result numeral
  *       overlay.pill      the "Hasil" readout
  *       debug             collision shapes
@@ -244,7 +244,6 @@ export class Game {
       progress: this.sequence.progressInPhase,
       drumOmega: this.physics.drumOmega,
       drumAngle: this.physics.drumAngle,
-      armAngle: this.machine.arm.currentAngle,
       zoom: this.camera.currentZoom,
       activeBalls,
       contacts: this.physics.lastContactCount,
