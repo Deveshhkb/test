@@ -217,8 +217,10 @@ The solver works in machine-local space, where the origin is the wheel centre.
 
 ## Return lift
 
-After the hold, the drawn ball is taken off the track by the return mechanism
-and drawn up into the machine's core. It is velocity driven throughout: a slow
+After the hold, the mechanism takes hold of the seated ball and spins it up on
+the spot - the reference frames show its printed number whirling and blurring
+for several frames while the ball stays in its holder, before it rises. Only
+then is it drawn up into the machine's core. It is velocity driven throughout: a slow
 take-up while the mechanism closes on the ball, then acceleration along the
 channel toward the centre, with the shake of a driven part and the spin the
 channel imparts. Nothing interpolates between two points.
@@ -229,11 +231,22 @@ sits in its pocket from frame 106 to frame 160 (4.42s to 6.67s, a hold of about
 with the camera pulling back, as it does in the reference, and completes in
 about 0.55s against the reference's 0.67s.
 
-It disappears by occlusion, not by being switched off: the agitator draws over
-the ball layer, and the ball is hidden only once its whole silhouette is inside
-the hub boss. Testing the centre instead would pop, because most of the ball is
-still outside the boss at that point. Once gone it leaves the simulation, so no
-invisible ball falls around inside the empty machine.
+It disappears by receding into the machine rather than being switched off: over
+the last stretch of the channel it shrinks and dims as the core swallows it, and
+is only dropped once there is nothing left to see. Hiding it the moment its
+centre reached the hub pops, because the boss is narrower than the ball and a
+sliver is still showing.
+
+Progress along the channel is measured by projecting onto the channel's fixed
+axis, not as a radius. A radius window small enough to mean "covered by the
+boss" is narrower than one frame's travel at lift speed, so the ball steps over
+it and oscillates about the centre forever; the projection also catches an
+overshoot and does so at any frame rate. The axis is captured once when the lift
+begins, because re-deriving it from the ball's position each frame makes the
+channel re-aim itself and produces the same oscillation.
+
+Once gone the ball leaves the simulation, so no invisible ball falls around
+inside the empty machine.
 
 ## Draw sequence
 

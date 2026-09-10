@@ -3,7 +3,7 @@ import {
   CAM_CLOSE_FOCUS_Y,
   CAM_CLOSE_ZOOM,
   DEFAULT_RESULT,
-  HUB_VISUAL_RADIUS,
+  CORE_ENTRY_DEPTH,
   MACHINE_X,
   NUMBER_MAX,
   NUMBER_MIN,
@@ -12,9 +12,9 @@ import {
   RELEASE_ARC,
   RELEASE_OMEGA,
   LIFT_ACCELERATION,
-  LIFT_ENGAGE_SPEED,
-  LIFT_ENGAGE_TIME,
   LIFT_MAX_SPEED,
+  LIFT_SPINUP_SPIN,
+  LIFT_SPINUP_TIME,
   LIFT_SPIN,
   LIFT_VIBRATION,
   LIFT_VIBRATION_RATE,
@@ -76,6 +76,11 @@ export class DrawSequenceSystem {
   private parkLocalRadius = 0;
   /** Seconds since the return mechanism engaged; negative while it has not. */
   private liftElapsed = -1;
+  /** Seconds the mechanism has been spinning the ball up in its holder. */
+  private engageElapsed = -1;
+  /** Fixed axis of the return channel, captured when the lift begins. */
+  private liftDirX = 0;
+  private liftDirY = -1;
 
   private readonly drain: DrainRecord[] = [];
   private readonly rng = new Rng();
@@ -157,6 +162,7 @@ export class DrawSequenceSystem {
     this.winner = null;
     this.parked = false;
     this.liftElapsed = -1;
+    this.engageElapsed = -1;
     this.machine.particles.reset();
     this.machine.seatGlow.reset();
     this.glow.reset();
@@ -243,6 +249,9 @@ export class DrawSequenceSystem {
 
       case 'revealing':
         this.overlay.setReveal(easeOutCubic(clamp(this.elapsed / REVEAL_MORPH, 0, 1)));
+        // The mechanism takes hold while the result is still up, so the ball is
+        // already spinning by the time the camera starts pulling back.
+        if (this.elapsed >= T_REVEAL_HOLD - LIFT_SPINUP_TIME) this.updateMechanismEngage(dt);
         if (this.elapsed >= T_REVEAL_HOLD) {
           this.camera.dollyToWide(T_RETURN, easeInOutCubic);
           this.beginReturnLift();
@@ -412,15 +421,52 @@ export class DrawSequenceSystem {
    * the track here - the solver stops touching it - and driven by the lift
    * below, so none of the fall or settle behaviour is affected.
    */
+  /**
+   * The mechanism closing on the seated ball.
+   *
+   * The ball does not move: it is spun up on the spot, which is what the
+   * reference shows over the frames before it rises - the printed number whirls
+   * and blurs while the ball stays in its holder. The spin carries into the
+   * lift, so the ball is already turning when it leaves.
+   */
+  private updateMechanismEngage(dt: number): void {
+    const winner = this.winner;
+    if (!winner || !this.parked) return;
+
+    if (this.engageElapsed < 0) this.engageElapsed = 0;
+    this.engageElapsed += dt;
+
+    const t = clamp(this.engageElapsed / LIFT_SPINUP_TIME, 0, 1);
+    const body = winner.body;
+
+    // Spin ramps in rather than snapping on, so the take-up reads mechanical.
+    body.angularVelocity = LIFT_SPINUP_SPIN * easeOutCubic(t);
+    body.rotation += body.angularVelocity * dt;
+
+    // The holder shakes very slightly as the drive engages. Applied to the body
+    // so the ball's own sync carries it; the pocket follower re-pins the ball
+    // each frame, which is what keeps the shake from accumulating into drift.
+    const shake = Math.sin(this.engageElapsed * LIFT_VIBRATION_RATE) * LIFT_VIBRATION * t * 0.6;
+    body.position.add(shake, 0);
+  }
+
   private beginReturnLift(): void {
     const winner = this.winner;
     if (!winner) return;
 
     const body = winner.body;
+    // The channel is a fixed part of the machine, so its axis is captured once
+    // here rather than re-derived from the ball's position every frame. Re-aiming
+    // each frame makes the ball oscillate about the centre instead of leaving.
+    const distance = Math.hypot(body.position.x, body.position.y) || 1;
+    this.liftDirX = -body.position.x / distance;
+    this.liftDirY = -body.position.y / distance;
+
     body.lifting = true;
     body.invMass = 1;
     body.velocity.set(0, 0);
     this.liftElapsed = 0;
+    this.engageElapsed = -1;
 
     // The release port lights as the mechanism takes the ball.
     this.machine.seatGlow.pulse(body.position.x, body.position.y, 70, 300, 0.9);
@@ -444,36 +490,29 @@ export class DrawSequenceSystem {
 
     this.liftElapsed += dt;
 
-    // The channel runs from the pocket toward the centre of the machine, so the
-    // drive direction is simply radially inward from wherever the ball settled.
-    const distance = Math.hypot(body.position.x, body.position.y);
-    if (distance < 1e-4) return;
-    const inwardX = -body.position.x / distance;
-    const inwardY = -body.position.y / distance;
+    const dirX = this.liftDirX;
+    const dirY = this.liftDirY;
 
-    if (this.liftElapsed < LIFT_ENGAGE_TIME) {
-      // Take-up: the ball barely moves while the mechanism closes on it.
-      body.velocity.set(inwardX * LIFT_ENGAGE_SPEED, inwardY * LIFT_ENGAGE_SPEED);
-    } else {
-      body.velocity.x += inwardX * LIFT_ACCELERATION * dt;
-      body.velocity.y += inwardY * LIFT_ACCELERATION * dt;
+    // The mechanism already has the ball and has spun it up, so the rise begins
+    // straight into acceleration rather than with another take-up.
+    body.velocity.x += dirX * LIFT_ACCELERATION * dt;
+    body.velocity.y += dirY * LIFT_ACCELERATION * dt;
 
-      const speed = body.speed;
-      if (speed > LIFT_MAX_SPEED) {
-        const scale = LIFT_MAX_SPEED / speed;
-        body.velocity.x *= scale;
-        body.velocity.y *= scale;
-      }
+    const speed = body.speed;
+    if (speed > LIFT_MAX_SPEED) {
+      const scale = LIFT_MAX_SPEED / speed;
+      body.velocity.x *= scale;
+      body.velocity.y *= scale;
     }
 
     body.position.addScaled(body.velocity, dt);
 
     // Shake of a driven mechanism, across the channel rather than along it.
     const wobble = Math.sin(this.liftElapsed * LIFT_VIBRATION_RATE) * LIFT_VIBRATION;
-    body.position.add(-inwardY * wobble, inwardX * wobble);
+    body.position.add(-dirY * wobble, dirX * wobble);
 
-    // The channel spins the ball as it goes.
-    body.angularVelocity = LIFT_SPIN;
+    // The spin the mechanism put on the ball carries up the channel.
+    body.angularVelocity = Math.max(body.angularVelocity, LIFT_SPIN);
     body.rotation += body.angularVelocity * dt;
 
     // It disappears because the hub covers it, not because it is switched off:
@@ -482,8 +521,20 @@ export class DrawSequenceSystem {
     // against the position after the move, and against the ball's whole
     // silhouette rather than its centre - hiding it as soon as its centre
     // reached the boss would pop, because most of the ball is still outside it.
-    const remaining = Math.hypot(body.position.x, body.position.y);
-    if (remaining + BALL_RADIUS <= HUB_VISUAL_RADIUS) {
+    // Progress is measured along the channel axis, not as a radius: a radius
+    // window small enough to mean "covered by the boss" is smaller than one
+    // frame's travel at lift speed, so the ball steps straight over it and
+    // oscillates about the centre instead of arriving. Projecting onto the axis
+    // also catches an overshoot, and does so at any frame rate.
+    const along = body.position.x * dirX + body.position.y * dirY;
+
+    // Over the last stretch the ball passes behind the boss and on into the
+    // core, so it recedes rather than vanishing: it shrinks and dims as the
+    // mechanism takes it in, and is only dropped once there is nothing left.
+    const recession = clamp((along + CORE_ENTRY_DEPTH) / CORE_ENTRY_DEPTH, 0, 1);
+    winner.setRecession(recession);
+
+    if (along >= 0) {
       winner.setVisible(false);
       body.lifting = false;
       this.liftElapsed = -1;

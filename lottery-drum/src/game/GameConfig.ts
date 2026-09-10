@@ -169,10 +169,18 @@ export const RELEASE_OMEGA_FORCE = 0.6;
 // exactly as it does in the reference.
 // ---------------------------------------------------------------------------
 
-/** Mechanism take-up before the ball actually moves, in seconds. */
-export const LIFT_ENGAGE_TIME = 0.12;
-/** Creep speed during take-up, px/s. */
-export const LIFT_ENGAGE_SPEED = 26;
+/**
+ * Mechanism engagement, before the ball leaves the holder.
+ *
+ * The reference frames show the ball spinning up on the spot first: over four
+ * frames its printed number whirls round and blurs while the ball itself stays
+ * seated, and only then does it rise. That spin-up is the mechanism taking hold,
+ * and it happens while the result is still up, before the camera pulls back.
+ */
+export const LIFT_SPINUP_TIME = 0.35;
+export const LIFT_SPINUP_SPIN = 20;
+/** Distance over which the ball recedes into the core before it is gone. */
+export const CORE_ENTRY_DEPTH = 74;
 /** Acceleration once the mechanism has the ball, px/s^2. */
 export const LIFT_ACCELERATION = 1400;
 export const LIFT_MAX_SPEED = 1350;

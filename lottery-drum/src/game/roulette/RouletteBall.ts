@@ -43,6 +43,8 @@ export class RouletteBall {
   private numberValue = 0;
   /** Which marbling pattern this ball carries; fixed for its lifetime. */
   private readonly variant: number;
+  /** 0 out in the drum, 1 fully swallowed by the core assembly. */
+  private recession = 0;
   private uprightFrom = 0;
   private uprightTarget: number | null = null;
   private uprightElapsed = 0;
@@ -140,6 +142,7 @@ export class RouletteBall {
     this.contactShadow.visible = true;
     this.contactShadow.alpha = 0.4;
     this.trailHead = 0;
+    this.recession = 0;
     this.uprightTarget = null;
     this.uprightElapsed = 0;
     for (let i = 0; i < TRAIL_LENGTH; i++) {
@@ -147,6 +150,16 @@ export class RouletteBall {
       this.trailY[i] = y;
       this.trail[i].visible = false;
     }
+  }
+
+  /**
+   * How far the ball has receded into the machine's core. It shrinks and dims
+   * as it goes in, which is what reads as the mechanism swallowing it - hiding
+   * it outright pops, because the hub boss is narrower than the ball and a
+   * sliver is still showing at the moment the centre reaches it.
+   */
+  setRecession(amount: number): void {
+    this.recession = clamp(amount, 0, 1);
   }
 
   setVisible(visible: boolean): void {
@@ -193,7 +206,9 @@ export class RouletteBall {
     }
 
     const proximity = clamp((depth + 1) * 0.5, 0, 1);
-    this.view.scale.set(0.94 + proximity * 0.1);
+    const recede = this.recession;
+    this.view.scale.set((0.94 + proximity * 0.1) * (1 - recede * 0.6));
+    if (recede > 0) this.view.alpha = 1 - recede;
 
     this.contactShadow.x = position.x + 5;
     this.contactShadow.y = position.y + BALL_RADIUS * 0.72;
