@@ -33,7 +33,7 @@ export function MarketSummary({
           selected={selectedSymbol === config.symbol}
         />
       ))}
-      <VixCard vix={snapshot.vix} />
+      {snapshot.vix && <VixCard vix={snapshot.vix} />}
     </div>
   );
 }

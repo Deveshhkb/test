@@ -30,6 +30,15 @@ import { symbolChanged } from "../store/slices/optionChainSlice";
  * doing, what the option chain says about positioning, and what the bias engine
  * scores from those inputs.
  */
+/** Shown when a provider simply does not carry a data set. Never a zero. */
+function UnavailablePanel({ title, message }: { title: string; message: string }) {
+  return (
+    <Panel title={title}>
+      <StatePanel kind="empty" title="Not available from this provider" message={message} />
+    </Panel>
+  );
+}
+
 export function DashboardPage() {
   const dispatch = useAppDispatch();
   const snapshot = useAppSelector(selectMarketSnapshot);
@@ -102,12 +111,22 @@ export function DashboardPage() {
       </div>
 
       <div className="grid grid--halves">
-        {snapshot ? (
-          <>
-            <BreadthCard breadth={snapshot.breadth} />
-            <InstitutionalFlowCard activity={snapshot.institutional} />
-          </>
-        ) : null}
+        {snapshot?.breadth ? (
+          <BreadthCard breadth={snapshot.breadth} />
+        ) : (
+          <UnavailablePanel
+            title="Market breadth"
+            message="The active data provider does not publish index-wide advance/decline counts."
+          />
+        )}
+        {snapshot?.institutional ? (
+          <InstitutionalFlowCard activity={snapshot.institutional} />
+        ) : (
+          <UnavailablePanel
+            title="FII / DII activity"
+            message="The active data provider does not publish institutional cash-market flow."
+          />
+        )}
       </div>
     </>
   );

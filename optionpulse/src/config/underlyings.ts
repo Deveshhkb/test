@@ -21,6 +21,12 @@ export interface UnderlyingConfig {
   defaultStrikeDepth: number;
 }
 
+/**
+ * Values below were reconciled against the Angel One instrument master
+ * (OpenAPIScripMaster.json) rather than assumed. Re-check them whenever the
+ * exchanges change contract specifications - `npm run verify:contracts`
+ * compares this file against the live master and reports any drift.
+ */
 export const UNDERLYINGS: Record<UnderlyingSymbol, UnderlyingConfig> = {
   NIFTY: {
     symbol: "NIFTY",
@@ -28,8 +34,8 @@ export const UNDERLYINGS: Record<UnderlyingSymbol, UnderlyingConfig> = {
     shortName: "NIFTY",
     exchange: "NSE",
     strikeInterval: 50,
-    lotSize: 75,
-    weeklyExpiryWeekday: 4, // Thursday
+    lotSize: 65,
+    weeklyExpiryWeekday: 2, // Tuesday
     hasWeeklyExpiry: true,
     defaultStrikeDepth: 30,
   },
@@ -40,7 +46,7 @@ export const UNDERLYINGS: Record<UnderlyingSymbol, UnderlyingConfig> = {
     exchange: "NSE",
     strikeInterval: 100,
     lotSize: 30,
-    weeklyExpiryWeekday: 4,
+    weeklyExpiryWeekday: 2, // Tuesday (monthly only - no weekly series)
     hasWeeklyExpiry: false,
     defaultStrikeDepth: 30,
   },
@@ -51,7 +57,7 @@ export const UNDERLYINGS: Record<UnderlyingSymbol, UnderlyingConfig> = {
     exchange: "BSE",
     strikeInterval: 100,
     lotSize: 20,
-    weeklyExpiryWeekday: 2, // Tuesday
+    weeklyExpiryWeekday: 4, // Thursday
     hasWeeklyExpiry: true,
     defaultStrikeDepth: 30,
   },
@@ -69,8 +75,21 @@ export function getUnderlyingConfig(symbol: UnderlyingSymbol): UnderlyingConfig 
 
 /**
  * Contract specifications change from time to time (lot sizes in particular).
- * These values are configuration, not market truth - verify them against the
- * exchange circular before wiring a live provider.
+ * These values are configuration, not market truth.
  */
 export const CONTRACT_SPEC_NOTE =
-  "Strike intervals and lot sizes are configuration values. Verify against the current exchange circular before live use.";
+  "Contract specs are configuration, reconciled against the broker instrument master. Re-verify after any exchange circular.";
+
+const WEEKDAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+export function expiryWeekdayName(symbol: UnderlyingSymbol): string {
+  return WEEKDAY_NAMES[getUnderlyingConfig(symbol).weeklyExpiryWeekday] ?? "Unknown";
+}

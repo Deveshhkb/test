@@ -18,6 +18,7 @@
   },
   "include": [
     "server",
+    "scripts",
     "src/calculations",
     "src/config/marketBias.config.ts",
     "src/config/marketHours.ts",

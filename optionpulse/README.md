@@ -128,15 +128,70 @@ service, and error responses never echo configuration.
 
 ---
 
-## Connecting real market data
+## Connecting real market data (Angel One SmartAPI)
 
-1. Implement `ServerMarketDataProvider` (`server/providers/`) against a **licensed** vendor.
-2. Register it in `server/providers/index.ts`.
-3. Set `MARKET_DATA_MODE=live` and the vendor credentials in `.env`.
-4. Point the frontend at the API with `VITE_API_BASE_URL=/api` and `VITE_DATA_MODE=live`.
+An Angel One SmartAPI provider is implemented in `server/providers/angelone/`. To switch the
+app onto real data:
 
-No UI, store or calculation code changes. Do not scrape exchange or broker websites, and do
-not assume publicly visible market data is licensed for redistribution.
+```bash
+cp .env.example .env
+```
+
+then fill in, in `.env`:
+
+```
+MARKET_DATA_PROVIDER=angelone
+ANGELONE_API_KEY=...          # from https://smartapi.angelone.in (create an app)
+ANGELONE_CLIENT_CODE=...      # your Angel One client code
+ANGELONE_MPIN=...             # account MPIN - SmartAPI logs in with the MPIN, not the password
+ANGELONE_TOTP_SECRET=...      # base32 secret from the account's two-factor setup
+
+VITE_API_BASE_URL=/api        # point the browser at the backend
+VITE_DATA_MODE=live
+```
+
+Then `npm run dev:all`. On startup the server prints which provider it resolved. If any
+credential is missing it names exactly which ones and falls back to mock data rather than
+failing silently or pretending.
+
+### What the provider does
+
+| Piece | How |
+|---|---|
+| Instruments | Downloads Angel One's public instrument master, keeps only the index and index-option rows for the three underlyings, and caches that subset. Trading symbols are **looked up, never constructed** - weekly SENSEX contracts use a compressed form (`SENSEX26O1583100PE`) that no format string reproduces. |
+| Quotes | `POST /market/v1/quote` in FULL mode, batched at the endpoint's 50-token limit and queued at its 1 request/second rate limit. |
+| Option chain | Quotes the strikes nearest the money (configurable depth) rather than the full 180-contract ladder, so a chain fits inside the rate limit. |
+| Greeks & IV | `POST /marketData/v1/optionGreek` for the whole expiry in one call, tagged `source: "MARKET"` to distinguish them from the app's own Black-Scholes values. |
+| Candles | `POST /historical/v1/getCandleData`. SmartAPI has no weekly or monthly interval, so those timeframes are aggregated from daily bars. |
+| Login | TOTP generated in-process (`server/providers/angelone/totp.ts`, verified against the RFC 6238 test vectors). Sessions are reused and re-established on a 401. |
+
+### What SmartAPI does not provide
+
+Index-wide advance/decline breadth and FII/DII cash flow are not published by SmartAPI, so the
+provider returns `null` for them and the dashboard says "Not available from this provider".
+The bias engine skips those factors rather than scoring them neutral. Day-over-day **OI change**
+is likewise not in the quote payload, so it is left at zero and the buildup panel treats zero
+as unclassified - deriving it needs OI snapshots stored between sessions.
+
+### Keeping contract specs honest
+
+Lot sizes and expiry weekdays change by exchange circular, and getting them wrong is silent -
+the app still renders, it just builds the wrong expiry ladder.
+
+```bash
+npm run verify:contracts
+```
+
+compares `src/config/underlyings.ts` against the live instrument master and exits non-zero on
+drift. As of the last run: NIFTY expires **Tuesday** (lot 65), BANK NIFTY **Tuesday**, monthly
+only (lot 30), SENSEX **Thursday** (lot 20).
+
+### Other providers
+
+Implement `ServerMarketDataProvider` (`server/providers/`) and register it in
+`server/providers/index.ts`. No UI, store or calculation code changes. Do not scrape exchange
+or broker websites, and do not assume publicly visible market data is licensed for
+redistribution.
 
 ---
 
@@ -148,6 +203,15 @@ not assume publicly visible market data is licensed for redistribution.
   the strikes that actually moved.
 - Chart instances are created once and mutated; they are never recreated on render.
 - Transient UI state (input drafts, hover, open menus) stays in components, out of Redux.
+
+## Known gaps against a live feed
+
+- The frontend still polls the REST API; it does not yet consume the backend WebSocket, so
+  real-time updates arrive on the provider's cache TTL rather than on tick.
+- Angel One's quote payload has no published machine-readable schema. The mapper accepts
+  several field spellings and logs exactly which expected fields were absent on the first live
+  response, so a schema change announces itself instead of rendering a column of dashes.
+- Open-interest change requires storing OI snapshots across the session; not yet implemented.
 
 ## Not built yet
 

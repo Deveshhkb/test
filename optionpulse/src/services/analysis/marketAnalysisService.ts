@@ -102,10 +102,17 @@ export function buildBiasInput({
     input.changePercent = quote.changePercent;
     input.spot = quote.ltp;
   }
-  if (snapshot) {
+  // Each block is guarded separately: a provider that supplies VIX but not
+  // breadth should still get a VIX factor, and the bias engine simply skips
+  // whatever is missing rather than scoring it neutral.
+  if (snapshot?.breadth) {
     input.advanceDeclineRatio = snapshot.breadth.advanceDeclineRatio;
+  }
+  if (snapshot?.vix) {
     input.vix = snapshot.vix.value;
     input.vixChangePercent = snapshot.vix.changePercent;
+  }
+  if (snapshot?.institutional) {
     input.fiiNetCrore = snapshot.institutional.fiiNetCrore;
     input.diiNetCrore = snapshot.institutional.diiNetCrore;
   }

@@ -65,9 +65,15 @@ export interface InstitutionalActivity {
 
 export interface MarketSnapshot {
   quotes: Record<UnderlyingSymbol, Quote>;
-  vix: VixQuote;
-  breadth: MarketBreadth;
-  institutional: InstitutionalActivity;
+  vix: VixQuote | null;
+  /**
+   * Nullable on purpose. Broker APIs generally do not publish index-wide
+   * breadth or institutional cash flow, and a provider that cannot supply them
+   * must return null so the UI can say "not available from this provider"
+   * instead of showing a number nobody measured.
+   */
+  breadth: MarketBreadth | null;
+  institutional: InstitutionalActivity | null;
   status: MarketStatus;
 }
 
