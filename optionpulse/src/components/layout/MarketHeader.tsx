@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { DATA_MODE } from "../../config/dataMode";
 import { UNDERLYING_LIST } from "../../config/underlyings";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { symbolChanged } from "../../store/slices/optionChainSlice";
 import { toggleTheme } from "../../store/slices/uiSlice";
-import { selectMarketStatus } from "../../store/selectors";
+import {
+  selectActiveDataMode,
+  selectDataModeMismatch,
+  selectMarketStatus,
+} from "../../store/selectors";
 import type { UnderlyingSymbol } from "../../types/market";
 import { formatIstClock } from "../../utils/time";
 import { Badge } from "../common/Badge";
@@ -23,6 +26,8 @@ export function MarketHeader() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectMarketStatus);
   const theme = useAppSelector((state) => state.ui.theme);
+  const dataMode = useAppSelector(selectActiveDataMode);
+  const dataModeMismatch = useAppSelector(selectDataModeMismatch);
   const [clock, setClock] = useState(() => formatIstClock());
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -54,8 +59,16 @@ export function MarketHeader() {
 
       <div className="app-header__actions">
         <span className="app-header__hide-sm">
-          <DataModeBadge mode={DATA_MODE} />
+          <DataModeBadge mode={dataMode} />
         </span>
+        {dataModeMismatch && (
+          <Badge
+            tone="warn"
+            title="This build is configured for a different data mode than the data it is actually receiving. The badge shows what the data really is."
+          >
+            Config mismatch
+          </Badge>
+        )}
 
         {searchOpen ? (
           <SearchBox

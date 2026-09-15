@@ -9,7 +9,8 @@ import {
 } from "../services/analysis/marketAnalysisService";
 import type { RootState } from "./index";
 import { seriesKey } from "./slices/chartSlice";
-import type { Timeframe } from "../types/market";
+import { DATA_MODE } from "../config/dataMode";
+import type { DataMode, Timeframe } from "../types/market";
 
 /** Timeframe the bias engine reads its technical factors from. */
 export const BIAS_TIMEFRAME: Timeframe = "15m";
@@ -18,6 +19,22 @@ export const selectMarketSnapshot = (state: RootState) => state.market.snapshot;
 export const selectMarketStatus = (state: RootState) => state.market.marketStatus;
 export const selectMarketRequestStatus = (state: RootState) => state.market.status;
 export const selectMarketError = (state: RootState) => state.market.error;
+
+/**
+ * Provenance of the data actually loaded, not what configuration claims.
+ *
+ * A build configured as LIVE that is being served simulated payloads must show
+ * MOCK: the payload's own mode always wins, and the configured mode is only a
+ * fallback for the moment before anything has loaded.
+ */
+export const selectActiveDataMode = (state: RootState): DataMode =>
+  state.market.snapshot?.quotes.NIFTY.mode ?? state.optionChain.chain?.mode ?? DATA_MODE;
+
+/** True when configuration and payload disagree - always worth surfacing. */
+export const selectDataModeMismatch = (state: RootState): boolean => {
+  const actual = state.market.snapshot?.quotes.NIFTY.mode ?? state.optionChain.chain?.mode;
+  return actual !== undefined && actual !== DATA_MODE;
+};
 
 export const selectChainSymbol = (state: RootState) => state.optionChain.symbol;
 export const selectChain = (state: RootState) => state.optionChain.chain;
