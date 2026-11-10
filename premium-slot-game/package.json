@@ -1,0 +1,22 @@
+{
+  "name": "premium-slot-game",
+  "private": true,
+  "version": "1.0.0",
+  "description": "NEON BREAK - premium cyberpunk 6x5 ways video slot (virtual credits demo)",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "dev": "concurrently -n server,client -c magenta,cyan \"npm run dev -w @neon/server\" \"npm run dev -w @neon/client\"",
+    "build": "npm run build -w @neon/server && npm run build -w @neon/client",
+    "start": "npm run start -w @neon/server",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e -w @neon/client",
+    "simulate": "tsx scripts/simulate.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.4",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
