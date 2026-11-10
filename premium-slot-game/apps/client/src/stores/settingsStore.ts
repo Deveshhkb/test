@@ -12,14 +12,13 @@ interface SettingsState {
   /** Remaining auto spins (0 = auto off). */
   autoSpinsRemaining: number;
   stopAutoOnFeature: boolean;
-  reducedMotion: boolean;
   setVolume(kind: 'masterVolume' | 'musicVolume' | 'sfxVolume', v: number): void;
   toggleMute(): void;
   toggleTurbo(): void;
   startAuto(count: number): void;
   consumeAuto(): void;
   stopAuto(): void;
-  set(patch: Partial<Pick<SettingsState, 'stopAutoOnFeature' | 'reducedMotion' | 'muted' | 'turbo'>>): void;
+  set(patch: Partial<Pick<SettingsState, 'stopAutoOnFeature' | 'muted' | 'turbo'>>): void;
 }
 
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
@@ -34,7 +33,6 @@ export const useSettingsStore = create<SettingsState>()(
       turbo: false,
       autoSpinsRemaining: 0,
       stopAutoOnFeature: true,
-      reducedMotion: false,
       setVolume: (kind, v) => set({ [kind]: clamp(v) } as Partial<SettingsState>),
       toggleMute: () => set({ muted: !get().muted }),
       toggleTurbo: () => set({ turbo: !get().turbo }),
@@ -46,7 +44,7 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: 'neon-break-settings',
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ masterVolume: s.masterVolume, musicVolume: s.musicVolume, sfxVolume: s.sfxVolume, muted: s.muted, turbo: s.turbo, stopAutoOnFeature: s.stopAutoOnFeature, reducedMotion: s.reducedMotion }),
+      partialize: (s) => ({ masterVolume: s.masterVolume, musicVolume: s.musicVolume, sfxVolume: s.sfxVolume, muted: s.muted, turbo: s.turbo, stopAutoOnFeature: s.stopAutoOnFeature }),
     },
   ),
 );

@@ -175,7 +175,8 @@ export class CelebrationController extends OverlayScene {
     halo.alpha = 0.5;
     this.deco.addChild(halo);
     gsap.to(halo, { alpha: 0.9, duration: 0.6, yoyo: true, repeat: -1 });
-    this.title = titleText('EPIC\nWIN', 220, gradient(['#ffffff', '#ffd23a', '#ff2bd6', '#8b3dff', '#29e6ff']), '#14002a', '#ffd23a');
+    this.title = titleText('EPIC\nWIN', 200, gradient(['#ffffff', '#ffd23a', '#ff2bd6', '#8b3dff', '#29e6ff']), '#14002a', '#ffd23a');
+    this.title.y = -50;
     this.makePlate(0xffd23a, 760);
     this.makeAmount('#14002a', '#ffd23a');
     this.content.addChild(this.title);

@@ -40,7 +40,7 @@ export class FreeSpinsPresenter extends OverlayScene {
     this.frame(0xff2bd6);
     const title = this.add(titleText(isRetrigger ? 'RETRIGGER!' : 'FREE SPINS', 130, gradient(['#ffffff', '#ff7ae6', '#8b3dff']), '#14002a', '#ff2bd6'), -120);
     const count = this.add(titleText(`${spins}`, 180, gradient(['#ffffff', '#7fe8ff', '#29a8ff']), '#06123a', '#29e6ff', { fontStyle: 'normal' }), 50);
-    this.add(titleText(isRetrigger ? 'EXTRA SPINS AWARDED' : 'SPINS AWARDED • MULTIPLIER GROWS WITH EVERY WIN', 30, '#ffffff', '#14002a', '#8b3dff', { fontStyle: 'normal', letterSpacing: 3 }), 190);
+    this.add(titleText(isRetrigger ? 'EXTRA SPINS AWARDED' : 'SPINS AWARDED • MULTIPLIER GROWS', 30, '#ffffff', '#14002a', '#8b3dff', { fontStyle: 'normal', letterSpacing: 3 }), 190);
     return this.run((tl) => {
       tl.to(this.dim, { alpha: 0.7, duration: 0.3 }, 0)
         .fromTo(title.scale, { x: 0.2, y: 0.2 }, { x: 1, y: 1, duration: 0.6, ease: 'back.out(2)' }, 0.1)

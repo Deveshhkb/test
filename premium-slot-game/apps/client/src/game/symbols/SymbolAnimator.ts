@@ -32,6 +32,7 @@ const IDLE_GLOW: Partial<Record<SymbolId, number>> = {
 export class SymbolAnimator {
   private idle: SymbolView[] = [];
   private t = 0;
+  private nextGlint = 1500;
 
   constructor(
     private readonly particles: ParticleManager,
@@ -83,6 +84,15 @@ export class SymbolAnimator {
 
   update(dtMs: number) {
     this.t += dtMs;
+    // light reflection: a short star glint on a random premium/special symbol
+    if (this.t > this.nextGlint && this.idle.length) {
+      this.nextGlint = this.t + 900 + Math.random() * 1400;
+      const v = this.idle[(Math.random() * this.idle.length) | 0];
+      if (v.parent && v.alpha > 0.5) {
+        const p = this.fxContainer.toLocal(v.getGlobalPosition());
+        this.particles.emit({ texture: this.tex.star, x: p.x + 38, y: p.y - 40, count: 1, container: this.fxContainer, speed: [0, 0], life: [550, 550], scale: [0.05, 0.05], scaleEnd: 6, alpha: 0.9, additive: true, spin: 0.004 });
+      }
+    }
     for (let i = 0; i < this.idle.length; i++) {
       const v = this.idle[i];
       const base = IDLE_GLOW[v.symbolId] ?? 0;
