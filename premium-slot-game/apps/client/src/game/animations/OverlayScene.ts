@@ -34,6 +34,16 @@ export function titleText(text: string, size: number, fill: FillGradient | strin
   return t;
 }
 
+/** Pointed-end plate (reference win plates). */
+export function chamferPlate(g: Graphics, w: number, h: number, y: number, border: number, accent = 0xffd23a) {
+  const pts = (o: number) => [-w / 2 + h / 2 - o, y - o, w / 2 - h / 2 + o, y - o, w / 2 + o, y + h / 2, w / 2 - h / 2 + o, y + h + o, -w / 2 + h / 2 - o, y + h + o, -w / 2 - o, y + h / 2];
+  g.poly(pts(12)).stroke({ width: 3, color: accent, alpha: 0.9 });
+  g.poly(pts(0)).fill(gradient(['#2a0a50', '#12052a', '#0a0320'])).stroke({ width: 7, color: border });
+  g.poly(pts(0)).stroke({ width: 22, color: border, alpha: 0.18 });
+  g.moveTo(-w / 2 + h / 2 + 10, y + 8).lineTo(w / 2 - h / 2 - 10, y + 8).stroke({ width: 2, color: 0xffffff, alpha: 0.25 });
+  return g;
+}
+
 /**
  * Base class for full-screen presentations (win tiers, lucky win, free spins banners).
  * Handles dimming, tap-to-skip, a counting payout and complete cleanup.

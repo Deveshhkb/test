@@ -4,7 +4,7 @@ import type { WinTier } from '@neon/game-math';
 import type { AudioManager } from '../audio/AudioManager';
 import type { CharacterAnimator } from '../character/CharacterAnimator';
 import type { ParticleManager } from '../particles/ParticleManager';
-import { OverlayScene, gradient, titleText } from './OverlayScene';
+import { OverlayScene, chamferPlate, gradient, titleText } from './OverlayScene';
 import type { ScreenFx } from './ScreenFx';
 
 interface Deps {
@@ -39,11 +39,9 @@ export class CelebrationController extends OverlayScene {
     this.content.addChild(t);
   }
 
-  private makePlate(color: number, w = 640) {
+  private makePlate(color: number, w = 660) {
     this.plate.clear();
-    this.plate.roundRect(-w / 2, 150, w, 120, 30).fill({ color: 0x12052a, alpha: 0.92 });
-    this.plate.roundRect(-w / 2, 150, w, 120, 30).stroke({ width: 6, color });
-    this.plate.roundRect(-w / 2 - 10, 140, w + 20, 140, 36).stroke({ width: 3, color: 0xffd23a, alpha: 0.8 });
+    chamferPlate(this.plate, w, 124, 148, color);
   }
 
   private beams(count: number, colors: number[], length: number, width: number, speed: number) {

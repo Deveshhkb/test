@@ -3,7 +3,7 @@ import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import type { AudioManager } from '../audio/AudioManager';
 import type { CharacterAnimator } from '../character/CharacterAnimator';
 import type { ParticleManager } from '../particles/ParticleManager';
-import { OverlayScene, gradient, titleText } from './OverlayScene';
+import { OverlayScene, chamferPlate, gradient, titleText } from './OverlayScene';
 
 /** Dedicated LUCKY WIN presentation: neon star, energy rings, clovers and coins. */
 export class LuckyWinController extends OverlayScene {
@@ -66,7 +66,7 @@ export class LuckyWinController extends OverlayScene {
     this.content.addChild(title);
 
     const plate = new Graphics();
-    plate.roundRect(-300, 150, 600, 116, 30).fill({ color: 0x12052a, alpha: 0.92 }).stroke({ width: 6, color: 0xff2bd6 });
+    chamferPlate(plate, 640, 118, 150, 0xff2bd6);
     this.deco.addChild(plate);
     this.amountText = titleText('0.00', 84, gradient(['#ffffff', '#ffe38a', '#ffb020']), '#14002a', '#ff2bd6', { fontStyle: 'normal' });
     this.amountText.y = 208;

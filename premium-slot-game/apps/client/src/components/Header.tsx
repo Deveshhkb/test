@@ -1,12 +1,12 @@
 import { formatCredits } from '../services/format';
 import { useCountUp } from '../hooks/useCountUp';
+import { useBonusStore } from '../stores/bonusStore';
 import { usePlayerStore } from '../stores/playerStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useUiStore } from '../stores/uiStore';
 import { runtime } from '../game/runtime';
-import { useBonusStore } from '../stores/bonusStore';
-import { FreeSpinsTitle } from './FreeSpinsHud';
-import { IconHistory, IconInfo, IconMenu, IconSettings, IconSound, IconTable } from './Icons';
+import { FreeSpinsHeader } from './FreeSpinsHud';
+import { IconInfo, IconMenu, IconSound } from './Icons';
 
 export function Logo() {
   return (
@@ -17,6 +17,7 @@ export function Logo() {
   );
 }
 
+/** Compact top bar like the reference: balance · logo · sound / info / menu. */
 export function Header() {
   const display = usePlayerStore((s) => s.displayBalance);
   const connected = usePlayerStore((s) => s.connected);
@@ -24,9 +25,10 @@ export function Header() {
   const muted = useSettingsStore((s) => s.muted);
   const open = useUiStore((s) => s.open);
   const fs = useBonusStore((s) => s.freeSpinsActive);
+  if (fs) return <FreeSpinsHeader />;
   return (
     <header className="hud-header">
-      <div className="panel balance-panel">
+      <div className="balance">
         <span className="panel-label">
           BALANCE <i className={`conn-dot ${connected ? 'on' : 'off'}`} title={connected ? 'Live connection' : 'Offline – using HTTP'} />
         </span>
@@ -34,7 +36,7 @@ export function Header() {
           {formatCredits(balance)}
         </span>
       </div>
-      {fs ? <FreeSpinsTitle /> : <Logo />}
+      <Logo />
       <nav className="header-actions">
         <button
           type="button"
@@ -48,16 +50,7 @@ export function Header() {
         >
           <IconSound muted={muted} />
         </button>
-        <button type="button" className="icon-btn hide-portrait" aria-label="Paytable" onClick={() => open('paytable')}>
-          <IconTable />
-        </button>
-        <button type="button" className="icon-btn hide-portrait" aria-label="History" onClick={() => open('history')}>
-          <IconHistory />
-        </button>
-        <button type="button" className="icon-btn hide-portrait" aria-label="Settings" onClick={() => open('settings')}>
-          <IconSettings />
-        </button>
-        <button type="button" className="icon-btn" aria-label="Game info" onClick={() => open('info')}>
+        <button type="button" className="icon-btn" aria-label="Game info" data-testid="info-button" onClick={() => open('info')}>
           <IconInfo />
         </button>
         <button type="button" className="icon-btn" aria-label="Menu" data-testid="menu-button" onClick={() => open('menu')}>

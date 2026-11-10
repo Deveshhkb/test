@@ -8,7 +8,7 @@ import { useUiStore } from '../stores/uiStore';
 import { runtime } from '../game/runtime';
 import { IconBolt, IconInfo } from './Icons';
 import { SpinButton } from './SpinButton';
-import { FreeSpinsPanels } from './FreeSpinsHud';
+import { FreeSpinsTotal } from './FreeSpinsHud';
 
 function useBetLocked() {
   const phase = useGameStore((s) => s.phase);
@@ -85,7 +85,8 @@ export function TurboButton() {
   const turbo = useSettingsStore((s) => s.turbo);
   return (
     <button type="button" className={`pill-btn turbo-btn${turbo ? ' is-active' : ''}`} aria-pressed={turbo} data-testid="turbo-button" onClick={() => { click(); useSettingsStore.getState().toggleTurbo(); }}>
-      <IconBolt width={20} height={20} /> TURBO
+      <IconBolt width={22} height={22} />
+      <span>TURBO</span>
     </button>
   );
 }
@@ -105,7 +106,7 @@ export function ControlBar() {
   if (fs)
     return (
       <div className="control-bar is-free-spins">
-        <FreeSpinsPanels />
+        <FreeSpinsTotal />
         <div className="spin-slot">
           <SpinButton />
         </div>

@@ -24,11 +24,15 @@ interface Target {
  */
 export class BossFightScene extends Container {
   private readonly bg = new Graphics();
+  private readonly banner = new Graphics();
+  private readonly hpPanel = new Graphics();
+  private readonly pickPanel = new Graphics();
   private readonly boss: Sprite;
   private readonly bossRig = new Container();
   private readonly core: Sprite;
   private readonly hpBar = new Graphics();
   private readonly hpText: Text;
+  private readonly hpPct: Text;
   private readonly title: Text;
   private readonly hint: Text;
   private readonly targetsLayer = new Container();
@@ -65,11 +69,13 @@ export class BossFightScene extends Container {
     this.core.position.set(BOSS_CORE.x - BOSS_W / 2, BOSS_CORE.y - BOSS_H / 2);
     this.bossRig.addChild(this.boss, this.core);
     this.hpText = new Text({ text: '100%', style: { fontFamily: FONT_DISPLAY, fontWeight: '900', fontSize: 30, fill: '#ffffff', stroke: { color: '#2a0010', width: 5 } } });
-    this.hpText.anchor.set(1, 0.5);
+    this.hpText.anchor.set(0, 0.5);
+    this.hpPct = new Text({ text: '100%', style: { fontFamily: FONT_DISPLAY, fontWeight: '900', fontSize: 30, fill: '#ffffff', stroke: { color: '#2a0010', width: 5 } } });
+    this.hpPct.anchor.set(1, 0.5);
     this.title = titleText('BOSS FIGHT', 96, gradient(['#fff2b0', '#ff7a1a', '#ff1f3d']), '#2a0010', '#ff1f3d');
-    this.hint = new Text({ text: 'PICK A TARGET TO DEAL DAMAGE', style: { fontFamily: FONT_DISPLAY, fontWeight: '700', fontSize: 34, fill: '#ffffff', letterSpacing: 4, stroke: { color: '#1a0030', width: 6 }, dropShadow: { color: '#ff2bd6', blur: 10, distance: 0 } } });
+    this.hint = new Text({ text: 'PICK A TARGET TO DEAL DAMAGE', style: { fontFamily: FONT_DISPLAY, fontWeight: '700', fontSize: 28, fill: '#ffffff', letterSpacing: 4, stroke: { color: '#1a0030', width: 6 }, dropShadow: { color: '#ff2bd6', blur: 10, distance: 0 } } });
     this.hint.anchor.set(0.5);
-    this.addChild(this.bg, this.heroSlot, this.bossRig, this.hpBar, this.hpText, this.title, this.hint, this.targetsLayer, this.fxLayer);
+    this.addChild(this.bg, this.heroSlot, this.bossRig, this.banner, this.hpPanel, this.hpBar, this.hpText, this.hpPct, this.title, this.pickPanel, this.hint, this.targetsLayer, this.fxLayer);
   }
 
   setLayout(l: Layout) {
@@ -92,15 +98,46 @@ export class BossFightScene extends Container {
     } else {
       this.bossRig.scale.set(0.85);
       this.bossRig.position.set(W * 0.64, 400);
-      this.title.position.set(Math.max(420, W * 0.24), 170);
+      this.title.position.set(Math.max(420, W * 0.24), 140);
       this.hpBar.position.set(W * 0.64 - 330, 724);
       this.hpText.position.set(W * 0.64 + 330, 698);
-      this.hint.position.set(W / 2, 822);
-      this.targetsLayer.position.set(W / 2, 950);
+      this.hint.position.set(W / 2, 806);
+      this.targetsLayer.position.set(W / 2, 925);
       this.targetsLayer.scale.set(0.9);
     }
+    this.drawDecor();
     this.drawHp();
     this.layoutTargets();
+  }
+
+  /** Reference-style chrome: angled title banner, HP panel and the pick panel. */
+  private drawDecor() {
+    const t = this.title;
+    const bw = 760;
+    const bh = 120;
+    this.banner.clear();
+    this.banner.position.set(t.x, t.y);
+    const skew = 34;
+    const pts = [-bw / 2 + skew, -bh / 2, bw / 2 + skew, -bh / 2, bw / 2 - skew, bh / 2, -bw / 2 - skew, bh / 2];
+    this.banner.poly(pts).fill(gradient(['#3a0a36', '#1a0418'])).stroke({ width: 5, color: 0xff7a1a });
+    this.banner.poly(pts).stroke({ width: 20, color: 0xff2bd6, alpha: 0.18 });
+    this.banner.moveTo(-bw / 2 + skew + 30, -bh / 2 + 10).lineTo(bw / 2 + skew - 30, -bh / 2 + 10).stroke({ width: 2, color: 0xffd23a, alpha: 0.6 });
+
+    const hx = this.hpBar.x - 30;
+    const hy = this.hpBar.y - 64;
+    this.hpPanel.clear();
+    this.hpPanel.roundRect(hx, hy, 720, 124, 18).fill({ color: 0x120420, alpha: 0.85 }).stroke({ width: 3, color: 0x8b3dff });
+    this.hpText.position.set(this.hpBar.x, this.hpBar.y - 30);
+    this.hpPct.position.set(this.hpBar.x + 660, this.hpBar.y - 30);
+
+    const portrait = this.layout?.orientation === 'portrait';
+    const tl = this.targetsLayer;
+    const pw = (portrait ? 270 : 280) * this.targets.length * tl.scale.x + 60;
+    const top = this.hint.y - 34;
+    const bottom = tl.y + 135 * tl.scale.y;
+    this.pickPanel.clear();
+    this.pickPanel.roundRect(tl.x - pw / 2, top, pw, bottom - top, 26).fill({ color: 0x0c0624, alpha: 0.86 }).stroke({ width: 3, color: 0x8b3dff });
+    this.pickPanel.roundRect(tl.x - pw / 2, top, pw, 66, 26).fill({ color: 0x2a0f5a, alpha: 0.6 });
   }
 
   private drawHp() {
@@ -109,7 +146,8 @@ export class BossFightScene extends Container {
     this.hpBar.roundRect(0, 0, 660, 40, 20).fill({ color: 0x1a0612 }).stroke({ width: 4, color: 0xff2bd6 });
     if (pct > 0) this.hpBar.roundRect(5, 5, 650 * pct, 30, 15).fill(gradient(['#ff6a7a', '#ff1f3d', '#a0001a']));
     this.hpBar.roundRect(5, 7, 650 * pct, 8, 4).fill({ color: 0xffffff, alpha: 0.35 });
-    this.hpText.text = `BOSS HP   ${Math.round(pct * 100)}%`;
+    this.hpText.text = 'BOSS HP';
+    this.hpPct.text = `${Math.round(pct * 100)}%`;
   }
 
   private buildTargets(count: number) {
@@ -118,7 +156,7 @@ export class BossFightScene extends Container {
     for (let i = 0; i < count; i++) {
       const c = new Container();
       const hex = new Graphics();
-      const label = new Text({ text: '?', style: { fontFamily: FONT_DISPLAY, fontWeight: '900', fontSize: 70, fill: '#ffffff', stroke: { color: '#14002a', width: 8 }, dropShadow: { color: '#29e6ff', blur: 14, distance: 0 } } });
+      const label = new Text({ text: '?', style: { fontFamily: FONT_DISPLAY, fontWeight: '900', fontSize: 40, fill: '#ffffff', stroke: { color: '#14002a', width: 8 }, dropShadow: { color: '#29e6ff', blur: 14, distance: 0 } } });
       label.anchor.set(0.5);
       c.addChild(hex, label);
       c.eventMode = 'static';
@@ -148,10 +186,21 @@ export class BossFightScene extends Container {
       pts.push(Math.cos(a) * r, Math.sin(a) * r);
     }
     t.hex.clear();
-    t.hex.poly(pts).fill({ color: revealed ? 0x2a1206 : 0x0c0a2a, alpha: 0.95 });
-    t.hex.poly(pts).stroke({ width: 18, color, alpha: 0.25 });
+    t.hex.poly(pts).fill(gradient(revealed ? ['#4a2a06', '#1a0c02'] : ['#1c1650', '#08061e']));
+    t.hex.poly(pts).stroke({ width: 20, color, alpha: 0.25 });
     t.hex.poly(pts).stroke({ width: 5, color });
-    t.hex.roundRect(-46, -34, 92, 68, 10).fill({ color: 0x1a2a50, alpha: revealed ? 0 : 0.8 }).stroke({ width: 3, color: 0x5a7ac8, alpha: revealed ? 0 : 1 });
+    // isometric supply crate (reference targets)
+    const top = revealed ? 0xffd23a : 0x6fa8ff;
+    const left = revealed ? 0xc27a10 : 0x2f4fa8;
+    const right = revealed ? 0x8a4a00 : 0x1d2f70;
+    const edge = revealed ? 0xfff2b0 : 0x29e6ff;
+    const cy = -18;
+    t.hex.poly([0, cy - 46, 52, cy - 20, 0, cy + 6, -52, cy - 20]).fill(top).stroke({ width: 3, color: edge });
+    t.hex.poly([-52, cy - 20, 0, cy + 6, 0, cy + 58, -52, cy + 32]).fill(left).stroke({ width: 3, color: edge });
+    t.hex.poly([52, cy - 20, 0, cy + 6, 0, cy + 58, 52, cy + 32]).fill(right).stroke({ width: 3, color: edge });
+    t.hex.moveTo(-26, cy - 33).lineTo(26, cy - 7).stroke({ width: 4, color: edge, alpha: 0.7 });
+    t.hex.circle(26, cy + 22, 6).fill(revealed ? 0xffffff : 0x29e6ff);
+    t.label.position.set(0, 66);
   }
 
   private setTargetsEnabled(on: boolean) {
@@ -161,7 +210,7 @@ export class BossFightScene extends Container {
   private resetTargets() {
     this.targets.forEach((t) => {
       t.label.text = '?';
-      t.label.style.fontSize = 70;
+      t.label.style.fontSize = 40;
       t.c.alpha = 1;
       t.c.scale.set(1);
       this.drawHex(t, 0x29e6ff, false);
@@ -310,7 +359,7 @@ export class BossFightScene extends Container {
       const isChosen = t.index === chosen;
       const value = isChosen ? multiplier : decoys[d++] ?? 5;
       t.label.text = `${value}x`;
-      t.label.style.fontSize = 64;
+      t.label.style.fontSize = 46;
       this.drawHex(t, isChosen ? 0xffb020 : 0x55507a, true);
       t.c.alpha = isChosen ? 1 : 0.45;
       if (isChosen) {

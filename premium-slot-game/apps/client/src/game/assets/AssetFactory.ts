@@ -48,25 +48,34 @@ function drawLowSymbol(ctx: CanvasRenderingContext2D, x: number, y: number, id: 
   // italic skew for speed feel
   ctx.translate(cx, cy);
   ctx.transform(1, 0, -0.12, 1, 0, 0);
-  const g = ctx.createLinearGradient(0, -size / 2, 0, size / 2);
-  g.addColorStop(0, '#ffffff');
-  g.addColorStop(0.2, st.top);
-  g.addColorStop(1, st.bottom);
+  // neon-tube letter: dark glass fill, wide coloured bloom, bright tube, white-hot core
+  const fill = ctx.createLinearGradient(0, -size / 2, 0, size / 2);
+  fill.addColorStop(0, 'rgba(255,255,255,0.18)');
+  fill.addColorStop(0.5, hexA(st.bottom, 0.32));
+  fill.addColorStop(1, 'rgba(10,4,24,0.6)');
+  ctx.lineJoin = 'round';
   ctx.shadowColor = st.glow;
-  ctx.shadowBlur = 26;
-  ctx.lineWidth = 16;
-  ctx.strokeStyle = '#0a0418';
-  ctx.strokeText(st.text, 0, 0);
-  ctx.lineWidth = 7;
-  ctx.strokeStyle = st.glow;
+  ctx.shadowBlur = 34;
+  ctx.lineWidth = 20;
+  ctx.strokeStyle = hexA(st.glow, 0.45);
   ctx.strokeText(st.text, 0, 0);
   ctx.shadowBlur = 0;
-  ctx.fillStyle = g;
+  ctx.fillStyle = fill;
   ctx.fillText(st.text, 0, 0);
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-  ctx.strokeText(st.text, 0, -2);
+  ctx.shadowBlur = 14;
+  ctx.lineWidth = 9;
+  ctx.strokeStyle = st.top;
+  ctx.strokeText(st.text, 0, 0);
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+  ctx.strokeText(st.text, 0, 0);
   ctx.restore();
+}
+
+function hexA(hex: string, a: number) {
+  const v = parseInt(hex.slice(1), 16);
+  return `rgba(${(v >> 16) & 255},${(v >> 8) & 255},${v & 255},${a})`;
 }
 
 function drawLabel(ctx: CanvasRenderingContext2D, x: number, y: number, id: SymbolId) {
